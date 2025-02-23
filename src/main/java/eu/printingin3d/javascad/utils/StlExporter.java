@@ -1,10 +1,15 @@
 package eu.printingin3d.javascad.utils;
 
 import eu.printingin3d.javascad.vrl.VertexHolder;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 public class StlExporter {
 
@@ -54,6 +59,24 @@ public class StlExporter {
 
             writer.println("endsolid exported");
         }
+    }
+    /**
+     * Сохраняет строку в текстовый файл
+     * @param content  - содержимое для сохранения
+     * @param filePath - путь к файлу для записи
+     * @throws IOException при ошибках записи
+     */
+    public static void saveStringToFile(VertexHolder vertexHolder, String filePath) throws IOException {
+        String stl = exportToSTL(vertexHolder);
+        Path path = new File(filePath).toPath();
+        Files.writeString(
+            path,
+            stl,
+            StandardCharsets.UTF_8,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.TRUNCATE_EXISTING,
+            StandardOpenOption.WRITE
+        );
     }
 
     public static String exportToSTL(VertexHolder vertexHolder) {

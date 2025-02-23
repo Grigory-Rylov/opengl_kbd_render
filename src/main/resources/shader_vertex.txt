@@ -1,13 +1,26 @@
-  #version 330 core
+#version 330 core
+layout(location = 0) in vec3 position;  // Позиция вершины
+layout(location = 1) in vec3 normal;    // Нормаль вершины
+layout(location = 2) in vec3 color;     // Цвет вершины
 
-   layout (location = 0) in vec3 position;
-   layout (location = 1) in vec3 color;
+out vec3 FragPos;       // Позиция фрагмента в мировых координатах
+out vec3 Normal;         // Нормаль в мировых координатах
+out vec3 Color;          // Цвет вершины
 
-   out vec3 fragColor;
+uniform mat4 model;      // Матрица модели
+uniform mat4 view;       // Матрица вида
+uniform mat4 projection; // Матрица проекции
 
-   void main()
-   {
-       gl_Position = vec4(position, 1.0);
-       fragColor = color;
-   }
-   
+void main() {
+    // Преобразуем позицию вершины в мировые координаты
+    FragPos = vec3(model * vec4(position, 1.0));
+
+    // Преобразуем нормаль в мировые координаты
+    Normal = mat3(transpose(inverse(model))) * normal;
+
+    // Передаем цвет
+    Color = color;
+
+    // Преобразуем позицию в координаты отсечения
+    gl_Position = projection * view * model * vec4(position, 1.0);
+}

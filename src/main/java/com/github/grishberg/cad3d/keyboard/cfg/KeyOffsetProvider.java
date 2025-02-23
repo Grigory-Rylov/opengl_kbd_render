@@ -17,7 +17,7 @@ public class KeyOffsetProvider {
          case 4:
             return new V3d(OFFSET + 10, -15.0, 5.64);
          case 5:
-            return new V3d(OFFSET + 10, -20.0, 5.64);
+            return new V3d(OFFSET + 12, -20.0, 5.64);
          default:
             return new V3d(0.0, -2.0, 0.0);
       }

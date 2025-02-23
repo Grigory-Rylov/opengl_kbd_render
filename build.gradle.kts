@@ -10,13 +10,13 @@ group = "org.example"
 version = "1.0-SNAPSHOT"
 
 dependencies {
-// https://mvnrepository.com/artifact/org.jogamp.jogl/jogl-all
-    //implementation("org.jogamp.jogl:jogl-all:2.3.2")
-    implementation (files("libs/jogamp-fat.jar"))
-    implementation("org.jogamp.gluegen:gluegen-rt-main:2.3.2")
-    testImplementation(platform("org.junit:junit-bom:5.9.1"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    implementation(kotlin("stdlib-jdk8"))
+    // https://mvnrepository.com/artifact/org.jogamp.jogl/jogl-all
+    //implementation (files("libs/jogamp-fat.jar"))
+
+    implementation("org.jogamp.gluegen:gluegen-rt-main:2.5.0")
+//    implementation("org.jogamp.jogl:jogl-all:2.5.0")
+    implementation (files("libs/jogl-all-2.5.0.jar"))
+    implementation (files("libs/jogl-all-2.5.0-natives-macosx-universal.jar"))
 }
 
 tasks.test {

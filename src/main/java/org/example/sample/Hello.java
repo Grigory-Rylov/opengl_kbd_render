@@ -41,8 +41,7 @@ import com.jogamp.opengl.GLCapabilities;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.JoglVersion;
-import com.jogamp.opengl.util.Animator;
-import jogamp.nativewindow.ios.IOSUtil;
+//import jogamp.nativewindow.ios.IOSUtil;
 
 public class Hello {
 
@@ -231,21 +230,21 @@ public class Hello {
                     hasSurfacePixelScale1[0] + "x" + hasSurfacePixelScale1[1] + " (has)");
             {
                 final long uiWindow = glWindow.getWindowHandle();
-                final long uiView = IOSUtil.GetUIView(uiWindow, true);
-                final long caeaglLayer = IOSUtil.GetCAEAGLLayer(uiView);
-                System.out.println("EAGL: UIWindow 0x" + Long.toHexString(uiWindow));
-                System.out.println("EAGL: UIView 0x" + Long.toHexString(uiView));
-                System.out.println("EAGL: EAGLLayer 0x" + Long.toHexString(caeaglLayer));
-                System.out.println("isUIWindow " + IOSUtil.isUIWindow(uiWindow) + ", isUIView " +
-                    IOSUtil.isUIView(uiView) +
-                    ", isCAEAGLLayer " + IOSUtil.isCAEAGLLayer(caeaglLayer));
+//                final long uiView = IOSUtil.GetUIView(uiWindow, true);
+//                final long caeaglLayer = IOSUtil.GetCAEAGLLayer(uiView);
+//                System.out.println("EAGL: UIWindow 0x" + Long.toHexString(uiWindow));
+//                System.out.println("EAGL: UIView 0x" + Long.toHexString(uiView));
+//                System.out.println("EAGL: EAGLLayer 0x" + Long.toHexString(caeaglLayer));
+//                System.out.println("isUIWindow " + IOSUtil.isUIWindow(uiWindow) + ", isUIView " +
+//                    IOSUtil.isUIView(uiView) +
+//                    ", isCAEAGLLayer " + IOSUtil.isCAEAGLLayer(caeaglLayer));
             }
 
-            final Animator animator = new Animator(0 /* w/o AWT */);
+            //final Animator animator = new Animator(0 /* w/o AWT */);
             // animator.setExclusiveContext(exclusiveContext);
-            animator.setUpdateFPSFrames(60, System.err);
-            animator.add(glWindow);
-            animator.start();
+            //animator.setUpdateFPSFrames(60, System.err);
+            //animator.add(glWindow);
+            //animator.start();
 
             for (int i = 0; i < secondsDuration; i++) {
                 try {
@@ -254,7 +253,7 @@ public class Hello {
                     e.printStackTrace();
                 }
             }
-            animator.stop();
+            //animator.stop();
 
         } finally {
             System.err.println("");

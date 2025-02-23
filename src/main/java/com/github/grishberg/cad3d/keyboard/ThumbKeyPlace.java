@@ -15,15 +15,15 @@ public class ThumbKeyPlace {
     }
 
     public static Abstract3dModel place1(Abstract3dModel obj) {
-        return place(obj, 14, -40, 10, new V3d(-15, -10 + OFFSET_Y, 5 + OFFSET_Z));
+        return place(obj, 14, -40, 10, new V3d(-5, -10 + OFFSET_Y, 5 + OFFSET_Z));
     }
 
     public static Abstract3dModel place2(Abstract3dModel obj) {
-        return place(obj, 10, -32, 34, new V3d(-32, -17 + OFFSET_Y, -8 + OFFSET_Z));
+        return place(obj, 12, -39, 22, new V3d(-22, -14 + OFFSET_Y, -7 + OFFSET_Z));
     }
 
     public static Abstract3dModel place3(Abstract3dModel obj) {
-        return place(obj, 6, -30, 40, new V3d(-46.0, -28.5 + OFFSET_Y, -19 + OFFSET_Z));
+        return place(obj, 8, -44, 28, new V3d(-35.0, -20.5 + OFFSET_Y, -21 + OFFSET_Z));
     }
 
     private static Abstract3dModel place(

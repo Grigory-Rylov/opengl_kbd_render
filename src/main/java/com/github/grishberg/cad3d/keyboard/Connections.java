@@ -28,6 +28,18 @@ public class Connections {
 
     public Abstract3dModel buildConnections() {
         models.clear();
+        // diagonals
+        for (int column = 0; column < cfg.getColumnsCount() - 1; column++) {
+            for (int row = 0; row < cfg.getRowsCount() - 1; row++) {
+                addHull(
+                    keyPlace.place(column, row, placeHolderBottomRight()),
+                    keyPlace.place(column + 1, row, placeHolderBottomLeft()),
+                    keyPlace.place(column + 1, row + 1, placeHolderTopLeft()),
+                    keyPlace.place(column, row + 1, placeHolderTopRight())
+                );
+            }
+        }
+
         //columns
         for (int column = 0; column < cfg.getColumnsCount() - 1; column++) {
             for (int row = 0; row < cfg.getRowsCount(); row++) {
@@ -48,41 +60,29 @@ public class Connections {
 
         }
         //side
-        for (int row = 0; row < cfg.getRowsCount(); row++) {
-            addHull(
-                keyPlace.place(0, row, placeHolderTopLeft()),
-                keyPlace.place(0, row, placeHolderBottomLeft())
-            );
-
-            addHull(
-                keyPlace.place(cfg.getColumnsCount() - 1, row, placeHolderTopRight()),
-                keyPlace.place(cfg.getColumnsCount() - 1, row, placeHolderBottomRight())
-            );
-        }
-        for (int row = 0; row < cfg.getRowsCount(); row++) {
-            addHull(
-                keyPlace.place(0, row, placeHolderBottomLeft()),
-                keyPlace.place(0, row + 1, placeHolderTopLeft())
-            );
-
-            addHull(
-                keyPlace.place(cfg.getColumnsCount() - 1, row, placeHolderBottomRight()),
-                keyPlace.place(cfg.getColumnsCount() - 1, row + 1, placeHolderTopRight())
-            );
-
-        }
-
-        // diagonals
-        for (int column = 0; column < cfg.getColumnsCount() - 1; column++) {
-            for (int row = 0; row < cfg.getRowsCount() - 1; row++) {
-                addHull(
-                    keyPlace.place(column, row, placeHolderBottomRight()),
-                    keyPlace.place(column + 1, row, placeHolderBottomLeft()),
-                    keyPlace.place(column + 1, row + 1, placeHolderTopLeft()),
-                    keyPlace.place(column, row + 1, placeHolderTopRight())
-                );
-            }
-        }
+//        for (int row = 0; row < cfg.getRowsCount(); row++) {
+//            addHull(
+//                keyPlace.place(0, row, placeHolderTopLeft()),
+//                keyPlace.place(0, row, placeHolderBottomLeft())
+//            );
+//
+//            addHull(
+//                keyPlace.place(cfg.getColumnsCount() - 1, row, placeHolderTopRight()),
+//                keyPlace.place(cfg.getColumnsCount() - 1, row, placeHolderBottomRight())
+//            );
+//        }
+//        for (int row = 0; row < cfg.getRowsCount(); row++) {
+//            addHull(
+//                keyPlace.place(0, row, placeHolderBottomLeft()),
+//                keyPlace.place(0, row + 1, placeHolderTopLeft())
+//            );
+//
+//            addHull(
+//                keyPlace.place(cfg.getColumnsCount() - 1, row, placeHolderBottomRight()),
+//                keyPlace.place(cfg.getColumnsCount() - 1, row + 1, placeHolderTopRight())
+//            );
+//
+//        }
 
         return union(models);
     }

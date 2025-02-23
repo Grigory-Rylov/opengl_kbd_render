@@ -7,6 +7,7 @@ public class KeyZAngleProvider {
          case 1: return 2.0;
          case 3: return  -7.0;
          case 4: return -13.0;
+         case 5: return -15.0;
          default: return  0.0;
       }
    }

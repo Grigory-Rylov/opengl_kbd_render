@@ -1,6 +1,7 @@
 package eu.printingin3d.javascad.models.surfaces;
 
 import eu.printingin3d.javascad.coords.V3d;
+import eu.printingin3d.javascad.models.SurfaceStrategy;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +35,20 @@ public class S5x5 {
             }
         }
         return surface;
+    }
+
+    public SurfaceStrategy buildSurfaceStrategy(int resolution){
+        final List<V3d> points  = buildSurface(resolution);
+        int h = controlPoints.length;
+        int w = controlPoints[0].length;
+        int outWidth = (resolution - 1) * (w - 1) + 1;
+        int outHeight = (resolution - 1) * (h - 1) + 1;
+        return new SurfaceStrategy(){
+            @Override
+            public Result buildSurface() {
+                return new Result(points, outWidth, outHeight);
+            }
+        };
     }
 	
 	private static V3d bezierPoint0(double t, V3d p0, V3d p1, V3d p2, V3d p3, V3d p4) {
