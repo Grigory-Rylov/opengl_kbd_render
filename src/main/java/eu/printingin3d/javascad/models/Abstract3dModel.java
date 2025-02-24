@@ -65,6 +65,25 @@ public abstract class Abstract3dModel implements IModel {
 		return result;
 	}
 
+	public Abstract3dModel moveY(double y) {
+		Abstract3dModel result = cloneModel();
+		result.move = this.move.add(new V3d(0, y, 0));
+		return result;
+	}
+
+	public Abstract3dModel moveX(double x) {
+		Abstract3dModel result = cloneModel();
+		result.move = this.move.add(new V3d(x, 0, 0));
+		return result;
+	}
+
+	public Abstract3dModel moveZ(double z) {
+		Abstract3dModel result = cloneModel();
+		result.move = this.move.add(new V3d(0, 0, z));
+		return result;
+	}
+
+
 	/**
 	 * <p>Add moves to this model, which converts this to an {@link Union}, representing more than one model.</p>
 	 * @param delta the collection of coordinates used by the move operation

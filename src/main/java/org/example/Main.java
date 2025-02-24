@@ -26,10 +26,15 @@ import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.math.Vec2i;
 import com.jogamp.opengl.util.Animator;
 import eu.printingin3d.javascad.vrl.VertexHolder;
-import java.awt.*;
 import java.awt.event.MouseMotionListener;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 
 public class Main implements GLEventListener, MouseListener, MouseMotionListener, KeyListener {
@@ -47,6 +52,7 @@ public class Main implements GLEventListener, MouseListener, MouseMotionListener
     private static final float ZOOM_SENSITIVITY = 5.0f;
     private static final float ZOOM_MIN_OFFSET = -1200.0f;
     private static final float ZOOM_MAX_OFFSET = 0.0f;
+    private static final String SETTINGS_FILE = "settings.properties";
 
     //public Caps caps;
     // Установка позиции источника света
@@ -78,12 +84,12 @@ public class Main implements GLEventListener, MouseListener, MouseMotionListener
         new KeyOffsetProvider(),
         PowerSwitcherType.None,
         true, // hasHotswap
-        false // magneticWristRestHolder
+        false, // magneticWristRestHolder
+        6//borders offset
     );
 
     private List<VertexHolder> vertexHolderList = new ArrayList<>();
 
-    public static DisplayMode dm, dm_old;
     private GLU glu = new GLU();
     private float rotateX = -55.0f;
     private float rotateY = 0.0f;
@@ -104,6 +110,7 @@ public class Main implements GLEventListener, MouseListener, MouseMotionListener
     private ControlPointsController pointsController = new ControlPointsController(cfg, keyPlace);
 
     public Main() {
+        loadSettings();
 
         SceneBuilder builder = new SceneBuilderKeyboard(cfg, keyPlace, pointsController);
 
@@ -148,19 +155,55 @@ public class Main implements GLEventListener, MouseListener, MouseMotionListener
         window.addWindowListener(new WindowAdapter() {
             @Override
             public void windowDestroyed(WindowEvent e) {
-                new Thread(new Runnable() {
-                    public void run() {
-
-                        //stop the animator thread when user close the window
-                        animator.stop();
-                        // This is actually redundant since the JVM will terminate when all
-                        // threads are closed.
-                        // It's useful just in case you create a thread and you forget to stop it.
-                        System.exit(1);
-                    }
+                new Thread(() -> {
+                    saveSettings(); // Сохраняем настройки перед выходом
+                    //stop the animator thread when user close the window
+                    animator.stop();
+                    // This is actually redundant since the JVM will terminate when all
+                    // threads are closed.
+                    // It's useful just in case you create a thread and you forget to stop it.
+                    System.exit(1);
                 }).start();
             }
         });
+    }
+
+    private void saveSettings() {
+        Properties props = new Properties();
+        props.setProperty("rotateX", Float.toString(rotateX));
+        props.setProperty("rotateY", Float.toString(rotateY));
+        props.setProperty("translateX", Float.toString(translateX));
+        props.setProperty("translateY", Float.toString(translateY));
+        props.setProperty("translateZ", Float.toString(translateZ));
+        props.setProperty("scaleFactor", Float.toString(scaleFactor));
+        props.setProperty("xOffset", Float.toString(xOffset));
+
+        try (OutputStream output = Files.newOutputStream(Paths.get(SETTINGS_FILE))) {
+            props.store(output, "3D Viewer Settings");
+        } catch (IOException ex) {
+            System.err.println("Error saving settings: " + ex.getMessage());
+        }
+    }
+
+    // Метод загрузки настроек
+    private void loadSettings() {
+        if (!Files.exists(Paths.get(SETTINGS_FILE))) return;
+
+        Properties props = new Properties();
+        try (InputStream input = Files.newInputStream(Paths.get(SETTINGS_FILE))) {
+            props.load(input);
+
+            rotateX = Float.parseFloat(props.getProperty("rotateX", "-55.0"));
+            rotateY = Float.parseFloat(props.getProperty("rotateY", "0.0"));
+            translateX = Float.parseFloat(props.getProperty("translateX", "0.0"));
+            translateY = Float.parseFloat(props.getProperty("translateY", "0.0"));
+            translateZ = Float.parseFloat(props.getProperty("translateZ", "-300.0"));
+            scaleFactor = Float.parseFloat(props.getProperty("scaleFactor", "1.0"));
+            xOffset = Float.parseFloat(props.getProperty("xOffset", "0.0"));
+
+        } catch (IOException | NumberFormatException ex) {
+            System.err.println("Error loading settings: " + ex.getMessage());
+        }
     }
 
     @Override

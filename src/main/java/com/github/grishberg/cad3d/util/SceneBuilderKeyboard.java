@@ -11,6 +11,7 @@ import com.github.grishberg.cad3d.keyboard.KeyPlaceHoles;
 import com.github.grishberg.cad3d.keyboard.KeySwitchHoles;
 import com.github.grishberg.cad3d.keyboard.ThumbConnections;
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace;
+import com.github.grishberg.cad3d.keyboard.Walls;
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig;
 import com.github.grishberg.cad3d.keyboard.wristrest.WristRest;
 import eu.printingin3d.javascad.coords.V3d;
@@ -88,6 +89,8 @@ public class SceneBuilderKeyboard implements SceneBuilder {
             createThumbKeyPlace();
 
             Abstract3dModel connections = createConnections();
+
+            createBorders();
 
             createKeycaps();
 
@@ -188,6 +191,12 @@ public class SceneBuilderKeyboard implements SceneBuilder {
         createAndAdd(connections, DEFAULT_COLOR);
         createAndAdd(new ThumbConnections(cfg, keyPlace).buildThumbPlaceConnections(), DEFAULT_COLOR);
         return connections;
+    }
+
+    private Abstract3dModel createBorders() {
+        Abstract3dModel borders = new Walls(cfg, keyPlace).borders();
+        createAndAdd(borders, Color.lightGray);
+        return borders;
     }
 
     private void createKeyMatrix() {

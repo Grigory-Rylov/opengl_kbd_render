@@ -28,6 +28,8 @@ public class KeyboardConfig {
     private final boolean hasHotswap;
     private final boolean magneticWristRestHolder;
 
+    private final double bordersOffset;
+
     public KeyboardConfig(
         int fn,
         double plateZOffset,
@@ -52,7 +54,8 @@ public class KeyboardConfig {
         KeyOffsetProvider columnOffsetProvider,
         PowerSwitcherType powerSwitcherType,
         boolean hasHotswap,
-        boolean magneticWristRestHolder
+        boolean magneticWristRestHolder,
+        double bordersOffset
     ) {
         this.fn = fn;
         this.plateZOffset = plateZOffset;
@@ -78,6 +81,7 @@ public class KeyboardConfig {
         this.powerSwitcherType = powerSwitcherType;
         this.hasHotswap = hasHotswap;
         this.magneticWristRestHolder = magneticWristRestHolder;
+        this.bordersOffset = bordersOffset;
     }
 
     public int getFn() {
@@ -183,4 +187,8 @@ public class KeyboardConfig {
 	public int getLastRow(){
 		return rowsCount - 1;
 	}
+
+    public double getBordersOffset() {
+        return bordersOffset;
+    }
 }
