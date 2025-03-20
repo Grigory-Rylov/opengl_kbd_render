@@ -106,11 +106,12 @@ class SceneBuilderKeyboard(
 
         val topEdgeOffsetZ = -2.0
         val walls = Walls(
-            this.cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ, isPlateMode = false
+            this.cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ,
         )
 
         val wallsForPlate = Walls(
-            this.cfg, wallsSettings.copy(borderThickness = cfg.plateThickness, borderHeight = cfg.plateThickness), keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ, isPlateMode = true
+            this.cfg, wallsSettings.copy(borderThickness = cfg.plateThickness,
+                borderHeight = cfg.plateThickness), keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ,
         )
 
         coroutineScope.launch {
@@ -313,7 +314,7 @@ class SceneBuilderKeyboard(
             val plate = Plate(cfg, walls).create()
 
             result.addAll(plate.vertexHolders)
-            //saveModel("controller_holder.stl", controllerHolder.model)
+            saveModel("plate.stl", plate.model)
         }
 
         val delta = System.currentTimeMillis() - startTime
@@ -422,7 +423,7 @@ class SceneBuilderKeyboard(
 
         )
         val borders =
-            Walls(cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0, isPlateMode = false).createBorders(
+            Walls(cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0, ).createBorders(
                 1.5, borderHeigth
             ).subtractModel(screws)
 
@@ -454,7 +455,6 @@ class SceneBuilderKeyboard(
             keyPlace,
             thumbKeyPlace,
             topEdgeOffsetZ = holeVerticalExtra / 2,
-            isPlateMode = false,
         ).createBorders(
             1.7, borderHeight + holeVerticalExtra
         )

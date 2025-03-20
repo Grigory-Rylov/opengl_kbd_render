@@ -1,10 +1,5 @@
 package eu.printingin3d.javascad.models;
 
-import eu.printingin3d.javascad.utils.Color;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import eu.printingin3d.javascad.basic.Angle;
 import eu.printingin3d.javascad.basic.Radius;
 import eu.printingin3d.javascad.context.IColorGenerationContext;
@@ -17,10 +12,16 @@ import eu.printingin3d.javascad.coords2d.LineSegment2d;
 import eu.printingin3d.javascad.enums.PointRelation;
 import eu.printingin3d.javascad.models2d.Abstract2dModel;
 import eu.printingin3d.javascad.models2d.Area2d;
+import eu.printingin3d.javascad.utils.Color;
 import eu.printingin3d.javascad.utils.DoubleUtils;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Linear extrude the given 2D model to create a 3D object.
@@ -31,6 +32,18 @@ public class LinearExtrude extends Atomic3dModel {
 	private final double height;
 	private final Angle twist;
 	private final double scale;
+
+	/**
+	 * Constructs a 3D object based on the given parameters.
+	 * @param model the 2D model to be extruded
+	 * @param height the length of the extrusion. That will be the height of the resulted 3D model
+	 */
+	public LinearExtrude(Abstract2dModel model, double height) {
+		this.model = model;
+		this.height = height;
+		this.twist = Angle.ZERO;
+		this.scale = 1;
+	}
 
 	/**
 	 * Constructs a 3D object based on the given parameters.
@@ -131,9 +144,23 @@ public class LinearExtrude extends Atomic3dModel {
 		}
 		return result;
 	}
-	
+
 	@Override
 	protected CSG toInnerCSG(FacetGenerationContext context) {
+		// Получаем 2D-области из проекции
+		Collection<Area2d> areas = model.getPointCircle(context);
+
+		// Экструдируем каждую область в 3D
+		List<Polygon> polygons = new ArrayList<>();
+		for (Area2d area : areas) {
+			polygons.addAll(extrudeArea(area, height));
+		}
+
+		return new CSG(polygons);
+	}
+
+	//@Override
+	protected CSG toInnerCSG1(FacetGenerationContext context) {
 		Color color = context.getColor();
 		List<Polygon> polygons = new ArrayList<>();
 		
@@ -179,5 +206,39 @@ public class LinearExtrude extends Atomic3dModel {
 		}
 		
 		return new CSG(polygons);
+	}
+
+	private List<Polygon> extrudeArea(Area2d area, double height) {
+		List<Polygon> polygons = new ArrayList<>();
+		List<Coords2d> points = area.getPoints();
+		int n = points.size();
+
+		// Создаем верхнюю и нижнюю грани
+		List<V3d> topFace = points.stream()
+			.map(p -> p.withZ(height))
+			.collect(Collectors.toList());
+		List<V3d> bottomFace = points.stream()
+			.map(p -> p.withZ(0))
+			.collect(Collectors.toList());
+
+		polygons.add(Polygon.fromPolygons(topFace, Color.RED));    // Верхняя грань
+		polygons.add(Polygon.fromPolygons(bottomFace, Color.BLUE)); // Нижняя грань
+
+		// Создаем боковые грани
+		for (int i = 0; i < n; i++) {
+			Coords2d current = points.get(i);
+			Coords2d next = points.get((i + 1) % n);
+
+			List<V3d> side = Arrays.asList(
+				current.withZ(0),
+				next.withZ(0),
+				next.withZ(height),
+				current.withZ(height)
+			);
+
+			polygons.add(Polygon.fromPolygons(side, Color.GREEN)); // Боковая грань
+		}
+
+		return polygons;
 	}
 }
