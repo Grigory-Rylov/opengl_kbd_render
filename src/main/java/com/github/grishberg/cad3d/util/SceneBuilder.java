@@ -14,6 +14,6 @@ public interface SceneBuilder {
    void setConfig(@NotNull KeyboardConfig cfg);
 
    interface ReadyListener{
-      void  onReady(List<VertexHolder> buffers);
+      void  onReady(List<VertexHolder> buffers, boolean isAll);
    }
 }

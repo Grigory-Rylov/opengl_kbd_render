@@ -233,13 +233,7 @@ public class Area2d extends AbstractCollection<Coords2d> {
 		prev = c;
 		result.add(c);
 
-		while (true) {
-			Area2dIterator value2 = iterators.getValue2();
-			if (value2 == null) {
-				break;
-			}
-			if (!(iterators.getValue1().hasNext() || value2.hasNext()))
-				break;
+		while (iterators.getValue1().hasNext() || (iterators.getValue2() != null && iterators.getValue2().hasNext())) {
 			c = iterators.getValue1().next();
 			LineSegment2d current = new LineSegment2d(c, prev);
 
@@ -252,7 +246,7 @@ public class Area2d extends AbstractCollection<Coords2d> {
 				if (areas.getValue2().calculatePointRelation(c)==PointRelation.OUTSIDE) {
 					iterators.getValue1().reuseLast();
 				}
-				if (value2 ==null) {
+				if (iterators.getValue2()==null) {
 					Pair<Coords2d, Area2dIterator> pair =
 						areas.getValue2().getIteratorCrossing(current);
 					iterators = new Pair<>(pair.getValue2(), iterators.getValue1());
@@ -268,13 +262,13 @@ public class Area2d extends AbstractCollection<Coords2d> {
 					iterators.getValue1().reuseLast();
 				}
 				Coords2d cross;
-				if (value2 ==null) {
+				if (iterators.getValue2()==null) {
 					Pair<Coords2d, Area2dIterator> pair =
 						areas.getValue2().getIteratorCrossing(current);
 					cross = pair.getValue1();
 					iterators = new Pair<>(pair.getValue2(), iterators.getValue1());
 				} else {
-					cross = value2.skipTillOutside(areas.getValue1());
+					cross = iterators.getValue2().skipTillOutside(areas.getValue1());
 					iterators = iterators.reverse();
 				}
 				if (cross!=null) {

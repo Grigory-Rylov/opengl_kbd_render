@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm") version "1.8.0"
     id("java")
     kotlin("plugin.serialization") version "1.9.0"
+    id("org.bytedeco.gradle-javacpp-platform") version "1.5.9"
     //application
 }
 

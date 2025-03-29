@@ -7,17 +7,17 @@ public class KeyOffsetProvider {
    public V3d getOffset(int column) {
       switch (column) {
          case 0:
-            return new V3d(-OFFSET - 2, -7.8, 3.0);
+            return new V3d(-OFFSET - 4, -7.8, 3.0);
          case 1:
             return new V3d(-OFFSET, -5.8, 3.0);
          case 2:
             return new V3d(1.5, 2.82, -3.5);
          case 3:
-            return new V3d(OFFSET + 3, -2.0, 0);
+            return new V3d(OFFSET + 5, -2.0, 0);
          case 4:
-            return new V3d(OFFSET + 7, -15.0, 5.64);
+            return new V3d(OFFSET + 9, -15.0, 5.64);
          case 5:
-            return new V3d(OFFSET + 9, -20.0, 5.64);
+            return new V3d(OFFSET + 14, -20.0, 5.64);
          default:
             return new V3d(0.0, -2.0, 0.0);
       }

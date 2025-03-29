@@ -57,11 +57,13 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     init {
         settingsHolder.loadSettings()
         sceneBuilder = SceneBuilderKeyboard(settingsHolder.settings.getKeyboardConfig(), pointsController)
-        sceneBuilder.setListener { buffers: List<VertexHolder>? ->
-            val timeDelta = System.currentTimeMillis() - requestRenderingTime
-            println("Rendering time = $timeDelta ms")
+        sceneBuilder.setListener { buffers: List<VertexHolder>, isReady: Boolean ->
+            if (isReady) {
+                val timeDelta = System.currentTimeMillis() - requestRenderingTime
+                println("Rendering time = $timeDelta ms")
+            }
             vertexHolderList.clear()
-            vertexHolderList.addAll(buffers!!)
+            vertexHolderList.addAll(buffers)
         }
         rebuildConfigAndRequestRendering()
         setup()
@@ -107,10 +109,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             settingsHolder.showTrackballSensorCap = it
             rebuildConfigAndRequestRendering()
         }
-        val showControllerHolderButton = createToggleButton("Держатель контроллера", settingsHolder.showControllerHolder) {
-            settingsHolder.showControllerHolder = it
-            rebuildConfigAndRequestRendering()
-        }
+        val showControllerHolderButton =
+            createToggleButton("Держатель контроллера", settingsHolder.showControllerHolder) {
+                settingsHolder.showControllerHolder = it
+                rebuildConfigAndRequestRendering()
+            }
 
         val showControllerButton = createToggleButton("Контроллера", settingsHolder.showController) {
             settingsHolder.showController = it
