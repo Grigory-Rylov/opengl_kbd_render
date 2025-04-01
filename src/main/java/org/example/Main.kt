@@ -120,6 +120,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             rebuildConfigAndRequestRendering()
         }
 
+        val showAmoebaButton = createToggleButton("Амебы", settingsHolder.showAmoeba) {
+            settingsHolder.showAmoeba = it
+            rebuildConfigAndRequestRendering()
+        }
+
         controlPanel.add(keysButton)
         controlPanel.add(caseButton)
         controlPanel.add(matrixButton)
@@ -130,6 +135,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         controlPanel.add(trackballSensorCapButton)
         controlPanel.add(showControllerHolderButton)
         controlPanel.add(showControllerButton)
+        controlPanel.add(showAmoebaButton)
 
         val configButton = JButton("Конфигурации")
         configButton.addActionListener {

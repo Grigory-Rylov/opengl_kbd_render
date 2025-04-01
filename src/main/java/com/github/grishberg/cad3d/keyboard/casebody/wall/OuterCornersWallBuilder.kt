@@ -6,6 +6,7 @@ import com.github.grishberg.cad3d.keyboard.Utils.hull
 import com.github.grishberg.cad3d.keyboard.Utils.union
 import com.github.grishberg.cad3d.keyboard.casebody.CornerWallBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.DefaultBottomEdgePatcher
+import com.github.grishberg.cad3d.keyboard.casebody.Offset
 import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import eu.printingin3d.javascad.basic.Radius
@@ -59,10 +60,9 @@ class OuterCornersWallBuilder(
         return Union(border, wall)
     }
 
-    override fun backRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun backRight(offset: Offset?, keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         val back = keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
         val right = keyPlace(KeyPlaceholder.placeHolderTopRight().move(cfg.outerRightOffset, 0.0, cfg.outerBorderZOffset))
-        val right2 = keyPlace(KeyPlaceholder.placeHolderTopRight().move(cfg.outerRightOffset, -2.0, cfg.outerBorderZOffset))
         val border = hull(
             verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, cfg.verticalOffset, cfg.borderZOffset))),
             verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(cfg.rightOffset, 0.0, cfg.borderZOffset))),

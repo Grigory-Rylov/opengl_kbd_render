@@ -33,7 +33,10 @@ class OuterWallsBuilder(
 ) : WallsBuilder {
 
     override fun backWall(
-        onlyBorder: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel
+        onlyBorder: Boolean,
+        leftVerticalOffset: Double?,
+        rightVerticalOffset: Double?,
+        keyPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val left =
             keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
@@ -80,6 +83,8 @@ class OuterWallsBuilder(
 
     override fun backMidWall(
         onlyBorder: Boolean,
+        leftVerticalOffset: Double?,
+        rightVerticalOffset: Double?,
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
         rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {

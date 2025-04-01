@@ -3,6 +3,7 @@ package com.github.grishberg.cad3d.keyboard.casebody.matrix
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.casebody.CornerWallBuilder
+import com.github.grishberg.cad3d.keyboard.casebody.Offset
 import eu.printingin3d.javascad.models.Abstract3dModel
 
 class InnerCorners(
@@ -22,10 +23,12 @@ class InnerCorners(
         )
     }
 
-    override fun backRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun backRight(offset: Offset?, keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+        val x = offset?.right ?: rightOffset
+        val y = offset?.top ?:verticalOffset
         return Utils.hull(
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset))),
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(rightOffset, 0.0, borderZOffset))),
+            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, y, borderZOffset))),
+            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(x, 0.0, borderZOffset))),
             keyPlace(KeyPlaceholder.placeHolderTopRight())
         )
     }

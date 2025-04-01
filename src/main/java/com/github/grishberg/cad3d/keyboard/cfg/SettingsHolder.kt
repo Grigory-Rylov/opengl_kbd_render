@@ -76,6 +76,12 @@ class SettingsHolder(
             settings = settings.copy(assemblySettings = settings.assemblySettings.copy(showController = value))
         }
 
+    var showAmoeba: Boolean
+        get() = settings.assemblySettings.showAmoeba
+        set(value) {
+            settings = settings.copy(assemblySettings = settings.assemblySettings.copy(showAmoeba = value))
+        }
+
     private fun createDefaultSettings() = SettingsContainer(
         assemblySettings = AssemblySettings(),
         viewerSettings = createViewerSettings(),

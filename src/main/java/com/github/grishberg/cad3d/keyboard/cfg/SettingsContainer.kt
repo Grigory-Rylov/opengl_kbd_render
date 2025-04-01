@@ -25,6 +25,7 @@ data class AssemblySettings(
     val showTrackbalSensorCap: Boolean = false,
     val showTrackbalBall: Boolean = false,
     val showControllerHolder: Boolean = false,
+    val showAmoeba: Boolean = false,
 )
 
 @Serializable

@@ -1,7 +1,10 @@
 package com.github.grishberg.cad3d.keyboard
 
 import com.github.grishberg.cad3d.keyboard.Utils.cube
+import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
+import eu.printingin3d.javascad.basic.Radius
 import eu.printingin3d.javascad.models.Abstract3dModel
+import eu.printingin3d.javascad.models.Cylinder
 
 object KeyPlaceholder {
 
@@ -22,7 +25,23 @@ object KeyPlaceholder {
     private const val VERTICAL_TOP_OFFSET = BASE_TOP_OFFSET - VERTICAL_WALL_HEIGHT / 2 + 2.6 / 2
     private const val HORIZONTAL_TOP_OFFSET = BASE_TOP_OFFSET - HORIZONTAL_WALL_HEIGHT / 2 + 2.6 / 2
 
-    fun placeHolder(): Abstract3dModel {
+    fun placeHolder(cfg: KeyboardConfig): Abstract3dModel {
+        return if (cfg.isLowProfile) lowProfilePlaceholder() else standardProfilePlaceholder()
+    }
+
+    private fun lowProfilePlaceholder(): Abstract3dModel {
+        val cornerCubeHeight = 2.0
+        val cornerObject = Cylinder(cornerCubeHeight, Radius.fromDiameter(2.0))
+        val cornerCubes = cornerObject.move(-KEY_HOLE_INNER_WIDTH/2, -KEY_HOLE_INNER_WIDTH/2, cornerCubeHeight/2)
+            .addModel(
+                cornerObject.move(KEY_HOLE_INNER_WIDTH/2, -KEY_HOLE_INNER_WIDTH/2, cornerCubeHeight/2)
+            )
+            .addModel(
+                cornerObject.move(KEY_HOLE_INNER_WIDTH/2, KEY_HOLE_INNER_WIDTH/2, cornerCubeHeight/2)
+            )
+            .addModel(
+                cornerObject.move(-KEY_HOLE_INNER_WIDTH/2, KEY_HOLE_INNER_WIDTH/2, cornerCubeHeight/2)
+            )
         return cube(OUTER_WIDTH, OUTER_HEIGHT, TOP_THICKNESS).move(0.0, 0.0, BASE_TOP_OFFSET)
             .subtractModel(cube(KEY_HOLE_INNER_WIDTH, KEY_HOLE_HEIGHT, 10.0)).subtractModel(
                 cube(KEY_HOLE_OUTER_WIDTH, KEY_HOLE_HEIGHT, TOP_THICKNESS).move(
@@ -34,8 +53,22 @@ object KeyPlaceholder {
                 )
             ).subtractModel(
                 cube(5.0, 15.0, 1.0).moveZ(0.7 + 1.8 - 1.3 + EDGE_HEIGHT)
-            )
+            ).addModel(cornerCubes)
     }
+
+    private fun standardProfilePlaceholder(): Abstract3dModel =
+        cube(OUTER_WIDTH, OUTER_HEIGHT, TOP_THICKNESS).move(0.0, 0.0, BASE_TOP_OFFSET)
+            .subtractModel(cube(KEY_HOLE_INNER_WIDTH, KEY_HOLE_HEIGHT, 10.0)).subtractModel(
+                cube(KEY_HOLE_OUTER_WIDTH, KEY_HOLE_HEIGHT, TOP_THICKNESS).move(
+                    0.0, 0.0, VERTICAL_TOP_OFFSET - EDGE_HEIGHT
+                )
+            ).subtractModel(
+                cube(KEY_HOLE_INNER_WIDTH, KEY_HOLE_HEIGHT, 2.0).move(
+                    0.0, CORNER_OFFSET, VERTICAL_TOP_OFFSET - 2
+                )
+            ).subtractModel(
+                cube(5.0, 15.0, 1.0).moveZ(0.7 + 1.8 - 1.3 + EDGE_HEIGHT)
+            )
 
     @JvmStatic
     @JvmOverloads

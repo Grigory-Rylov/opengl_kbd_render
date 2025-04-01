@@ -18,20 +18,27 @@ class InnerBordersBuilder(
     ) : WallsBuilder {
 
     override fun backWall(
-        onlyBorder: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel
+        onlyBorder: Boolean,
+        leftVerticalOffset: Double?,
+        rightVerticalOffset: Double?,
+        keyPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
+
+        val leftOffsetY = leftVerticalOffset?: verticalOffset
+        val rightOffsetY = rightVerticalOffset?: verticalOffset
+
         return Utils.hull(
             keyPlace(KeyPlaceholder.placeHolderTop()),
 
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderTopLeft().move(0.0, leftOffsetY, borderZOffset)
                 )
             ),
 
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderTopRight().move(0.0, rightOffsetY, borderZOffset)
                 )
             )
         )
@@ -39,20 +46,26 @@ class InnerBordersBuilder(
 
     override fun backMidWall(
         onlyBorder: Boolean,
+        leftVerticalOffset: Double?,
+        rightVerticalOffset: Double?,
         leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
+
+        val leftOffsetY = leftVerticalOffset?: verticalOffset
+        val rightOffsetY = rightVerticalOffset?: verticalOffset
+
         return Utils.hull(
             leftPlace.invoke(KeyPlaceholder.placeHolderTopRight()),
             rightPlace.invoke(KeyPlaceholder.placeHolderTopLeft()),
 
             verticalCube(
                 leftPlace.invoke(
-                    KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderTopRight().move(0.0, leftOffsetY, borderZOffset)
                 )
             ),
             verticalCube(
                 rightPlace.invoke(
-                    KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderTopLeft().move(0.0, rightOffsetY, borderZOffset)
                 )
             )
         )
