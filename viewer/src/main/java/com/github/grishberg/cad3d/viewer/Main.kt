@@ -2,8 +2,8 @@ package com.github.grishberg.cad3d.viewer
 
 import com.github.grishberg.cad3d.debug.DebugCmd
 import com.github.grishberg.cad3d.keyboard.ControlPointsController
-import com.github.grishberg.cad3d.keyboard.KeyboardPart
-import com.github.grishberg.cad3d.plugin.cfg.SettingsHolder
+import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig.Companion.getKeyboardConfig
+import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
 import com.github.grishberg.cad3d.plugin.Cad3dPlugin
 import com.github.grishberg.cad3d.plugin.ResultListener
 import com.github.grishberg.cad3d.plugin.VertexHolder
@@ -323,7 +323,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         plugins.forEach {
             println("Request from ${it.name} , ver ${it.version}")
             it.requestModels(
-                settingsHolder.settings.getKeyboardConfig(modifiedKeyboardParts), object : ResultListener {
+                settingsHolder.settings, modifiedKeyboardParts, object : ResultListener {
                     override fun onReady(result: List<VertexHolder>) {
                         // TODO: remove
                         vertexHolderList.clear()

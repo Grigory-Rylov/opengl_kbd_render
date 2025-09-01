@@ -1,4 +1,4 @@
-package com.github.grishberg.cad3d.keyboard.cfg
+package com.github.grishberg.cad3d.plugin.cfg
 
 enum class KeyPlaceholderType {
     None,

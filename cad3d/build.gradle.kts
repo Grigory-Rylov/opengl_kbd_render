@@ -9,7 +9,6 @@ dependencies {
     implementation(project(":javascad"))
     implementation(project(":plugin"))
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
     testImplementation("junit:junit:4.13.1")

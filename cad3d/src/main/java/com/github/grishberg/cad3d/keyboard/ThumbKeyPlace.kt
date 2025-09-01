@@ -1,8 +1,8 @@
 package com.github.grishberg.cad3d.keyboard
 
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import com.github.grishberg.cad3d.keyboard.cfg.ThumbClusterMode
-import com.github.grishberg.cad3d.keyboard.cfg.ThumbClusterSettings
+import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
+import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterSettings
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 

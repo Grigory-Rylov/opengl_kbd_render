@@ -1,6 +1,5 @@
-package com.github.grishberg.cad3d.keyboard.cfg
+package com.github.grishberg.cad3d.plugin.cfg
 
-import com.github.grishberg.cad3d.keyboard.KeyboardPart
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -97,45 +96,4 @@ data class SettingsContainer(
     val keyboardSettings: KeyboardSettings,
     val thumbClusterSettings: ThumbClusterSettings,
     val trackballSettings: TrackballConfig,
-) {
-
-    fun getKeyboardConfig(modifiedKeyboardParts: Set<KeyboardPart>): KeyboardConfig = KeyboardConfig(
-        fn = keyboardSettings.fn,
-        stlFn = keyboardSettings.stlFn,
-        plateZOffset = keyboardSettings.plateZOffset,
-        rowCurvature = keyboardSettings.rowCurvature,
-        tentingAngle = keyboardSettings.tentingAngle,
-        columnCurvature = keyboardSettings.columnCurvature,
-        keyswitchHeight = 18.0,
-        keyswitchWidth = 18.0,
-        extraWidth = 2.5,
-        extraHeight = 1.0,
-        keyPlaceHolderWidth = 15.7,
-        keyPlaceHolderDepth = 15.7,
-        keyPlaceHolderHeight = 4.0,
-        horizontalExtraSpace = keyboardSettings.horizontalExtraSpace,
-        verticalExtraSpace = keyboardSettings.verticalExtraSpace,
-        zAngleProvider = KeyZAngleProvider(),
-        columnOffsetProvider = KeyOffsetProvider(),
-        plateThickness = keyboardSettings.plateThickness,
-        saProfileKeyHeight = keyboardSettings.saProfileKeyHeight,
-        columnsCount = keyboardSettings.columnsCount,
-        rowsCount = keyboardSettings.rowsCount,
-        centerCol = keyboardSettings.centerCol,
-        centerRow = keyboardSettings.centerRow,
-        isLowProfile = keyboardSettings.isLowProfile,
-        powerSwitcherType = keyboardSettings.powerSwitcherType,
-        isHasHotswap = keyboardSettings.isHasHotswap,
-        isMagneticWristRestHolder = keyboardSettings.isMagneticWristRestHolder,
-        bordersOffset = keyboardSettings.bordersOffset,
-        visibleKeyboardParts = assemblySettings.toKeyboardPartsList(),
-        modifiedKeyboardParts = modifiedKeyboardParts,
-        thumbClusterSettings = thumbClusterSettings,
-        screwNutHoleDiameter = keyboardSettings.screwNutHoleDiameter,
-        screwHolderWallhickness = keyboardSettings.screwHolderWallhickness,
-        isSkeletonMode = keyboardSettings.isSkeletonMode,
-        trackball = trackballSettings,
-        wallsSettings = WallsSettings(),
-        keyPlaceholderType = keyboardSettings.keyPlaceholderType,
-    )
-}
+)

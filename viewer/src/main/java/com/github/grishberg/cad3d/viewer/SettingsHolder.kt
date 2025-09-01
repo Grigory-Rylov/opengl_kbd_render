@@ -1,5 +1,14 @@
-package com.github.grishberg.cad3d.keyboard.cfg
+package com.github.grishberg.cad3d.viewer
 
+import com.github.grishberg.cad3d.plugin.cfg.TrackballConfig
+import com.github.grishberg.cad3d.plugin.cfg.AssemblySettings
+import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
+import com.github.grishberg.cad3d.plugin.cfg.KeyboardSettings
+import com.github.grishberg.cad3d.plugin.cfg.PowerSwitcherType
+import com.github.grishberg.cad3d.plugin.cfg.SettingsContainer
+import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterSettings
+import com.github.grishberg.cad3d.plugin.cfg.TrackballMode
+import com.github.grishberg.cad3d.plugin.cfg.ViewerSettings
 import java.io.File
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -196,4 +205,3 @@ class SettingsHolder(
         private const val STANDART_KEYCAP_HEIGHT = 12.7
     }
 }
-

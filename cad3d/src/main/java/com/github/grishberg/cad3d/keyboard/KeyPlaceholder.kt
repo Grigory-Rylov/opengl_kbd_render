@@ -1,7 +1,7 @@
 package com.github.grishberg.cad3d.keyboard
 
 import com.github.grishberg.cad3d.keyboard.Utils.cube
-import com.github.grishberg.cad3d.keyboard.cfg.KeyPlaceholderType
+import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import eu.printingin3d.javascad.basic.Radius
 import eu.printingin3d.javascad.models.Abstract3dModel

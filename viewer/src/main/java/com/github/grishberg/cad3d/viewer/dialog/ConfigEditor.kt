@@ -1,9 +1,9 @@
 package com.github.grishberg.cad3d.viewer.dialog
 
-import com.github.grishberg.cad3d.keyboard.cfg.KeyboardSettings
-import com.github.grishberg.cad3d.keyboard.cfg.SettingsContainer
-import com.github.grishberg.cad3d.keyboard.cfg.ThumbClusterSettings
-import com.github.grishberg.cad3d.keyboard.cfg.TrackballConfig
+import com.github.grishberg.cad3d.plugin.cfg.KeyboardSettings
+import com.github.grishberg.cad3d.plugin.cfg.SettingsContainer
+import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterSettings
+import com.github.grishberg.cad3d.plugin.cfg.TrackballConfig
 import java.awt.GridLayout
 import javax.swing.BorderFactory
 import javax.swing.BoxLayout

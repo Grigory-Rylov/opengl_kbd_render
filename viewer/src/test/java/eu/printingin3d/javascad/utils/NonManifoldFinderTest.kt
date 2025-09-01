@@ -2,16 +2,16 @@ package eu.printingin3d.javascad.utils
 
 import com.github.grishberg.cad3d.keyboard.KeyPlace
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
-import com.github.grishberg.cad3d.keyboard.cfg.AssemblySettings
+import com.github.grishberg.cad3d.plugin.cfg.AssemblySettings
 import com.github.grishberg.cad3d.keyboard.cfg.KeyOffsetProvider
-import com.github.grishberg.cad3d.keyboard.cfg.KeyPlaceholderType
+import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
 import com.github.grishberg.cad3d.keyboard.cfg.KeyZAngleProvider
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import com.github.grishberg.cad3d.keyboard.cfg.PowerSwitcherType
-import com.github.grishberg.cad3d.keyboard.cfg.ThumbClusterMode
-import com.github.grishberg.cad3d.keyboard.cfg.ThumbClusterSettings
-import com.github.grishberg.cad3d.keyboard.cfg.TrackballConfig
-import com.github.grishberg.cad3d.keyboard.cfg.TrackballMode
+import com.github.grishberg.cad3d.plugin.cfg.PowerSwitcherType
+import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
+import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterSettings
+import com.github.grishberg.cad3d.plugin.cfg.TrackballConfig
+import com.github.grishberg.cad3d.plugin.cfg.TrackballMode
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.keyboard.matrix.KeyMatrix
 import eu.printingin3d.javascad.coords.Triangulator

@@ -5,7 +5,7 @@ import com.github.grishberg.cad3d.keyboard.KeyHolderBottomWalls
 import com.github.grishberg.cad3d.keyboard.KeyPlace
 import com.github.grishberg.cad3d.keyboard.KeyPlaceHoles
 import com.github.grishberg.cad3d.keyboard.KeySwitchHoles
-import com.github.grishberg.cad3d.keyboard.KeyboardPart
+import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
 import com.github.grishberg.cad3d.keyboard.ModelHolder
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.Utils
@@ -20,9 +20,9 @@ import com.github.grishberg.cad3d.keyboard.casebody.controllers.SuperMiniNRF5284
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.battery.BatteryFactory
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.switcher.SwitcherFactory
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
-import com.github.grishberg.cad3d.keyboard.cfg.KeyPlaceholderType
+import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import com.github.grishberg.cad3d.keyboard.cfg.TrackballMode
+import com.github.grishberg.cad3d.plugin.cfg.TrackballMode
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.keyboard.matrix.KeyMatrix
 import com.github.grishberg.cad3d.keyboard.plate.Plate

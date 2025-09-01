@@ -8,7 +8,7 @@ import com.github.grishberg.cad3d.keyboard.ThumbConnections
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.amoeba.Amoeba
 import com.github.grishberg.cad3d.keyboard.casebody.Walls
-import com.github.grishberg.cad3d.keyboard.cfg.KeyPlaceholderType
+import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
