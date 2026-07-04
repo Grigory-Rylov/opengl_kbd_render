@@ -64,7 +64,6 @@ public class Hull extends Atomic3dModel {
     ) {
         points = new ArrayList<>(new HashSet<>(points));
 
-        // Выполняем алгоритм QuickHull
         QuickHull3D hull = new QuickHull3D(points);
         List<Polygon> hullPolygons = new ArrayList<>();
 
@@ -73,7 +72,6 @@ public class Hull extends Atomic3dModel {
 
         for (int[] face : faces) {
             if (face.length == 3) {
-                // Если грань уже треугольник, просто добавляем его
                 hullPolygons.add(Polygon.fromPolygons(
                     vertices[face[0]].toCoords3d(),
                     vertices[face[1]].toCoords3d(),
@@ -81,19 +79,32 @@ public class Hull extends Atomic3dModel {
                     context.getColor()
                 ));
             } else {
-                // Если грань - многоугольник, разбиваем его на треугольники
-                Point3d firstPoint = vertices[face[0]];
+                V3d p0 = vertices[face[0]].toCoords3d();
+                V3d p1 = vertices[face[1]].toCoords3d();
+                V3d p2 = vertices[face[2]].toCoords3d();
+                V3d faceNormal = p1.add(p0.inverse()).cross(p2.add(p0.inverse())).unit();
+                double faceDist = faceNormal.dot(p0);
+
+                V3d sp0 = snapToPlane(p0, faceNormal, faceDist);
                 for (int i = 1; i < face.length - 1; i++) {
+                    V3d vi = snapToPlane(vertices[face[i]].toCoords3d(), faceNormal, faceDist);
+                    V3d vi1 = snapToPlane(vertices[face[i + 1]].toCoords3d(), faceNormal, faceDist);
                     hullPolygons.add(Polygon.fromPolygons(
-                        firstPoint.toCoords3d(),
-                        vertices[face[i]].toCoords3d(),
-                        vertices[face[i + 1]].toCoords3d(),
+                        sp0, vi, vi1,
                         context.getColor()
                     ));
                 }
             }
         }
         return hullPolygons;
+    }
+
+    private static V3d snapToPlane(V3d point, V3d normal, double dist) {
+        double deviation = normal.dot(point) - dist;
+        if (Math.abs(deviation) > 1e-10) {
+            return point.add(normal.mul(-deviation));
+        }
+        return point;
     }
 
     private static List<Polygon> quickHull(List<V3d> points, FacetGenerationContext context) {
