@@ -12,7 +12,7 @@ public class ShaderLoader {
          BufferedReader reader = new BufferedReader(new InputStreamReader(is));
          String line;
          while ((line = reader.readLine()) != null) {
-            shaderSource.append(line).append("n");
+            shaderSource.append(line).append("\n");
          }
          reader.close();
       } catch (Exception e) {

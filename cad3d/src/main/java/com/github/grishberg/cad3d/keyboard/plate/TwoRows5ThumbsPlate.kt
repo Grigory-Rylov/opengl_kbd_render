@@ -84,9 +84,9 @@ class TwoRows5ThumbsPlate(
             platePoint(bottomPoints.T5),
             platePoint(bottomPoints.T7),
             platePoint(bottomPoints.T6),
-            platePoint(bottomPoints.TR2L1),
-            platePoint(bottomPoints.TR2L2),
-            platePoint(bottomPoints.TR2L3),
+            platePoint(bottomPoints.TR2L1!!),
+            platePoint(bottomPoints.TR2L2!!),
+            platePoint(bottomPoints.TR2L3!!),
             platePoint(bottomPoints.F0),
 
             ).subtractModel(screws)
@@ -94,9 +94,9 @@ class TwoRows5ThumbsPlate(
 
         //thumb1
         val thumbPart2 = Hull(
-            platePoint(bottomPoints.TR2R2),
-            platePoint(bottomPoints.TR2R1),
-            platePoint(bottomPoints.TR2L3),
+            platePoint(bottomPoints.TR2R2!!),
+            platePoint(bottomPoints.TR2R1!!),
+            platePoint(bottomPoints.TR2L3!!),
             platePoint(bottomPoints.T4),
         ).subtractModel(screws)
         models.add(thumbPart2)
@@ -155,11 +155,11 @@ class TwoRows5ThumbsPlate(
             fromModel(debugObject.move(bottomPoints.L5).moveZ(offsetZ), Color.GREEN, cfg.fn),
             fromModel(debugObject.move(bottomPoints.LB).moveZ(offsetZ), Color.RED, cfg.fn),
 
-            fromModel(debugObject.move(bottomPoints.TR2L1).moveZ(offsetZ), Color.BEIGE, cfg.fn),
-            fromModel(debugObject.move(bottomPoints.TR2L2).moveZ(offsetZ), Color.BLACK, cfg.fn),
-            fromModel(debugObject.move(bottomPoints.TR2R1).moveZ(offsetZ), Color.LIGHT_BLUE, cfg.fn),
-            fromModel(debugObject.move(bottomPoints.TR2R2).moveZ(offsetZ), Color.LIGHT_SKY_BLUE, cfg.fn),
-            fromModel(debugObject.move(bottomPoints.TR2L3).moveZ(offsetZ), Color.RED, cfg.fn),
+            fromModel(debugObject.move(bottomPoints.TR2L1!!).moveZ(offsetZ), Color.BEIGE, cfg.fn),
+            fromModel(debugObject.move(bottomPoints.TR2L2!!).moveZ(offsetZ), Color.BLACK, cfg.fn),
+            fromModel(debugObject.move(bottomPoints.TR2R1!!).moveZ(offsetZ), Color.LIGHT_BLUE, cfg.fn),
+            fromModel(debugObject.move(bottomPoints.TR2R2!!).moveZ(offsetZ), Color.LIGHT_SKY_BLUE, cfg.fn),
+            fromModel(debugObject.move(bottomPoints.TR2L3!!).moveZ(offsetZ), Color.RED, cfg.fn),
  */
         )
     }

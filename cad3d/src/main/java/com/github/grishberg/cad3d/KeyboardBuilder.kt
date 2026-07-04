@@ -119,7 +119,9 @@ class KeyboardBuilder(
 
         val topEdgeOffsetZ = -2.0
 
-        val thumbPoints = ThumbPoints(cfg, keyPlace, thumbKeyPlace)
+        val thumbPoints = if (cfg.thumbClusterSettings.type == ThumbClusterMode.TwoRows5Buttons) {
+            ThumbPoints(cfg, keyPlace, thumbKeyPlace)
+        } else null
         val bottomEdgePatcher = DefaultBottomEdgePatcher(
             wallsSettings.borderThickness, wallsSettings.bottomBorderHeight
         )
@@ -133,7 +135,7 @@ class KeyboardBuilder(
             )
 
             ThumbClusterMode.TwoRows5Buttons -> TwoRowsButtonsFrontRightToMatrixWallBuilder(
-                cfg, bottomEdgePatcher, topEdgeOffsetZ, thumbPoints
+                cfg, bottomEdgePatcher, topEdgeOffsetZ, thumbPoints!!
             )
         }
 
@@ -153,7 +155,7 @@ class KeyboardBuilder(
             )
 
             ThumbClusterMode.TwoRows5Buttons -> TwoRows5ButtonsThumbWalls(
-                cfg, keyPlace, thumbKeyPlace, thumbPoints, frontRightToMatrixWallBuilder
+                cfg, keyPlace, thumbKeyPlace, thumbPoints!!, frontRightToMatrixWallBuilder
             )
         }
         val walls = Walls(
@@ -165,6 +167,7 @@ class KeyboardBuilder(
         val resultsChannel = Channel<List<VertexHolder>>()
         var additional = 3
         coroutineScope.launch {
+            /*
             launch {
                 val stlModel = StlModel(StlImporter().loadBinarySTL("import/Rev_11_-_Slider.stl", Color.PINK))
                 val modelHolder = ModelHolder(cfg, stlModel)
@@ -180,6 +183,8 @@ class KeyboardBuilder(
                 val modelHolder = ModelHolder(cfg, stlModel)
                 resultsChannel.send(modelHolder.vertexHolders)
             }
+
+             */
 
             createIfNeeded(resultsChannel, KeyboardPart.KeyMatrix, visibleModels) {
                 createMatrix(cfg, keyPlace, thumbKeyPlace, thumbBorders, thumbWalls)
@@ -629,7 +634,9 @@ class KeyboardBuilder(
 
         // Prepare same helpers as in rebuild flow
         val topEdgeOffsetZ = -2.0
-        val thumbPoints = ThumbPoints(cfg, keyPlace, thumbKeyPlace)
+        val thumbPoints = if (cfg.thumbClusterSettings.type == ThumbClusterMode.TwoRows5Buttons) {
+            ThumbPoints(cfg, keyPlace, thumbKeyPlace)
+        } else null
         val bottomEdgePatcher = DefaultBottomEdgePatcher(
             wallsSettings.borderThickness, wallsSettings.bottomBorderHeight
         )
@@ -643,7 +650,7 @@ class KeyboardBuilder(
             )
 
             ThumbClusterMode.TwoRows5Buttons -> TwoRowsButtonsFrontRightToMatrixWallBuilder(
-                cfg, bottomEdgePatcher, topEdgeOffsetZ, thumbPoints
+                cfg, bottomEdgePatcher, topEdgeOffsetZ, thumbPoints!!
             )
         }
 
@@ -663,7 +670,7 @@ class KeyboardBuilder(
             )
 
             ThumbClusterMode.TwoRows5Buttons -> TwoRows5ButtonsThumbWalls(
-                cfg, keyPlace, thumbKeyPlace, thumbPoints, frontRightToMatrixWallBuilder
+                cfg, keyPlace, thumbKeyPlace, thumbPoints!!, frontRightToMatrixWallBuilder
             )
         }
 
