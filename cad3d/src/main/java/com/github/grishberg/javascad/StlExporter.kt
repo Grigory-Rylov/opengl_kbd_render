@@ -61,9 +61,13 @@ object StlExporter {
             "saveStl: " + fileName + " triangulation completed, takes " + (System.currentTimeMillis() - triangulationStartTime) + " ms"
         )
 
+        println("saveStl: validating and repairing ${facetsFromPolygons.size} facets...")
+        val validatedFacets = StlValidator.validateAndRepair(facetsFromPolygons) as MutableList<Facet>
+        println("saveStl: after repair: ${validatedFacets.size} facets")
+
         try {
             FileOutputStream(fileName).getChannel().use { channel ->
-                writeBinaryStl(facetsFromPolygons, channel)
+                writeBinaryStl(validatedFacets, channel)
                 println("Export to " + fileName + " is done.")
             }
         } catch (e: IOException) {
