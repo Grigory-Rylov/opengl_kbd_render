@@ -13,126 +13,101 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.WritableByteChannel
 
-/** Key for shared vertex map — exact float32 matching (OpenSCAD Reindexer approach). */
-data class FloatTriple(val x: Float, val y: Float, val z: Float)
+/** Key for shared vertex map — EXACT double precision matching. */
+data class DoubleTriple(val x: Double, val y: Double, val z: Double)
 
 object StlExporter {
-
-    private const val X = 0
-    private const val Y = 0
-    private const val Z = 0
-
     fun saveStl(polygons: List<Polygon>, fileName: String) {
         saveStl(polygons, fileName, null)
     }
 
     fun saveStl(polygons: List<Polygon>, fileName: String, onProgress: ((String) -> Unit)?) {
-        val file = File(fileName)
         val startTime = System.currentTimeMillis()
 
-        val fixPolygons = PolygonValidatorMultithreading().fixPolygons(
+        // Step 1: fixPolygons (double precision)
+        val fixedPolygons = PolygonValidatorMultithreading().fixPolygons(
             polygons, object : ProgressObserver {
                 override fun onProgress(progress: Int) {
                     onProgress?.invoke("Fix polygons $progress%")
                 }
             })
-
         onProgress?.invoke("Fix polygons done")
 
-        onProgress?.invoke("Триангуляция...")
-
-        // OpenSCAD approach: collect ALL vertices into a shared vertex array first,
-        // so that adjacent polygons share the exact same vertex instances.
+        // Step 2: Triangulation with SHARED double-precision vertices
+        // CRITICAL: keep everything in double precision until STL write.
         // This eliminates floating-point gaps between neighboring facets.
-        val sharedVertices: MutableMap<FloatTriple, V3d> = mutableMapOf()
+        onProgress?.invoke("Триангуляция...")
+        val sharedVertices: MutableMap<DoubleTriple, V3d> = mutableMapOf()
 
         fun getSharedVertex(v: V3d): V3d {
-            // Round to float32 precision first, then share.
-            val key = FloatTriple(v.x.toFloat(), v.y.toFloat(), v.z.toFloat())
-            return sharedVertices.getOrPut(key) { V3d(key.x.toDouble(), key.y.toDouble(), key.z.toDouble()) }
+            val key = DoubleTriple(v.x, v.y, v.z)
+            return sharedVertices.getOrPut(key) { v }
         }
 
-        val facetsFromPolygons: MutableList<Facet> = ArrayList<Facet>()
-        for (p in fixPolygons) {
-            // Round polygon vertices to float32 precision BEFORE triangulation.
-            // This ensures adjacent polygons share exactly the same vertices.
-            val roundedVerts = p.getVertices().map { getSharedVertex(it) }
-            val triangles = Triangulator.triangulate(roundedVerts, p.getNormal())
+        val facetsFromPolygons: MutableList<Facet> = ArrayList()
+        for (p in fixedPolygons) {
+            // Share vertices at EXACT double precision BEFORE triangulation
+            val sharedVerts = p.getVertices().map { getSharedVertex(it) }
+            val triangles = Triangulator.triangulate(sharedVerts, p.getNormal())
             for (t in triangles) {
-                val shared = arrayOf(
-                    getSharedVertex(t.getPoints()[0]),
-                    getSharedVertex(t.getPoints()[1]),
-                    getSharedVertex(t.getPoints()[2])
-                )
-                // Skip degenerate triangles (collapsed after sharing)
-                if (shared[0] == shared[1] || shared[1] == shared[2] || shared[0] == shared[2]) continue
-                val newT = Triangle3d(shared[0], shared[1], shared[2])
-                facetsFromPolygons.add(Facet(newT, p.getNormal(), p.getColor()))
+                val pts = t.getPoints()
+                val s0 = getSharedVertex(pts[0])
+                val s1 = getSharedVertex(pts[1])
+                val s2 = getSharedVertex(pts[2])
+                if (s0 == s1 || s1 == s2 || s0 == s2) continue
+                facetsFromPolygons.add(Facet(Triangle3d(s0, s1, s2), p.getNormal(), p.getColor()))
             }
         }
 
-        println(
-            "saveStl: " + fileName + " triangulation completed, takes " + (System.currentTimeMillis() - startTime) + " ms"
-        )
+        println("saveStl: ${fileName} triangulation completed, ${facetsFromPolygons.size} facets, ${sharedVertices.size} unique vertices, takes ${System.currentTimeMillis() - startTime} ms")
 
+        // Step 3: Validate and repair (double precision)
         onProgress?.invoke("Валидация и репарация ${facetsFromPolygons.size} facets...")
         val validatedFacets = StlValidator.validateAndRepair(facetsFromPolygons) as MutableList<Facet>
         println("saveStl: after repair: ${validatedFacets.size} facets")
 
+        // Step 4: Write binary STL (ONLY HERE we convert to float32)
         try {
             FileOutputStream(fileName).getChannel().use { channel ->
                 writeBinaryStl(validatedFacets, channel)
-                println("Export to " + fileName + " is done.")
+                println("Export to $fileName is done.")
             }
         } catch (e: IOException) {
             e.printStackTrace()
         }
     }
 
-    fun writeBinaryStl(
-        facets: MutableList<Facet>, fileName: String
-    ) {
+    fun writeBinaryStl(facets: MutableList<Facet>, fileName: String) {
         try {
             FileOutputStream(fileName).getChannel().use { channel ->
                 writeBinaryStl(facets, channel)
-                println("Export to " + fileName + " is done.")
+                println("Export to $fileName is done.")
             }
         } catch (e: IOException) {
             e.printStackTrace()
         }
     }
 
+    /** Write binary STL — converts double -> float32 ONLY at this final step */
     @Throws(IOException::class)
-    fun writeBinaryStl(
-        facets: MutableList<Facet>, channel: WritableByteChannel
-    ) {
-        // Заголовок файла (80 байт)
-
+    fun writeBinaryStl(facets: MutableList<Facet>, channel: WritableByteChannel) {
         val header = ByteArray(80)
         val buffer = ByteBuffer.allocate(84 + 50 * facets.size).order(ByteOrder.LITTLE_ENDIAN).put(header)
-
-        // Количество треугольников (4 байта)
         buffer.putInt(facets.size)
 
-        // Запись каждого треугольника
         for (facet in facets) {
             val normal = facet.getNormal()
-            val triangle = facet.getTriangle()
-            val points = triangle.getPoints()
+            val points = facet.getTriangle().getPoints()
 
-            // Нормаль (3 float)
+            // Convert to float32 for STL format (OpenSCAD does the same at export time)
             buffer.putFloat(normal.getX().toFloat())
             buffer.putFloat(normal.getY().toFloat())
             buffer.putFloat(normal.getZ().toFloat())
-
-            // Координаты вершин (3 точки по 3 float)
             for (point in points) {
                 buffer.putFloat(point.getX().toFloat())
                 buffer.putFloat(point.getY().toFloat())
                 buffer.putFloat(point.getZ().toFloat())
             }
-
-            // Атрибуты (2 байта)
             buffer.putShort(0.toShort())
         }
 
