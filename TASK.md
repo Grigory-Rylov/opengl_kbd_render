@@ -1,4 +1,25 @@
-# TASK.md — STL Validation & Repair для opengl_kbd_render
+# TASK.md — STL Validation & Repair + CSG BSP Render для opengl_kbd_render
+
+## 0. Где склонирован OpenSCAD
+
+```
+/home/orangepi/data/projects/cpp/openscad/
+```
+
+Клон полный (`git clone https://github.com/openscad/openscad.git`).
+
+**Что нужно изучить:**
+- CSG BSP tree rendering — как OpenSCAD строит и рендерит CSG-деревья (класс `CGAL_Nef_polyhedron`, `CSGTreeEvaluator`, `Renderer`)
+- Вывод в STL — как OpenSCAD конвертирует CSG в STL (через CGAL's `Nef_polyhedron_3` → `Polyhedron_3` → triangulation → binary STL)
+- Отличия от текущего подхода (javascad — Java-based CSG, OpenSCAD — C++ with CGAL)
+- OpenSCAD клавиатура работает корректно, значит CSG BSP pipeline в OpenSCAD надёжный — нужно адаптировать его логику для Kotlin
+
+**Ключевые директории:**
+- `src/core/` — CSG tree, evaluators
+- `src/geometry/` — CGAL-обёртки, полиэдры
+- `src/io/` — импорт/экспорт (STL, OFF и т.д.)
+
+---
 
 ## 1. Где склонирован OrcaSlicer
 
@@ -95,7 +116,7 @@
 
 ---
 
-## 3. Что нужно сделать в текущем проекте (opengl_kbd_render)
+## 3. Текущее состояние (opengl_kbd_render)
 
 ### Задача 1: Создать StlValidator.kt ✅ СДЕЛАНО
 
@@ -260,7 +281,26 @@ cad3d/src/main/java/com/github/grishberg/javascad/
 
 1. ✅ Создать `StlValidator.kt` — валидатор non-manifold edges
 2. ✅ Создать `StlRepairer.kt` — базовый репарер (edge snapping, degenerate removal, disconnected facets, normal fixing)  
-3. ⬜ Интегрировать валидацию/репару в `StlExporter.saveStl()` с опцией auto-repair
-4. ⬜ Написать тест для генерации matrix_right.stl и проверки non-manifold edges до/после репары
-5. ⬜ Реализовать hole filling (boundary cycle extraction + triangulation)  
-6. ⬜ Добавить GUI отображение ошибок mesh в viewer (как в OrcaSlicer's `GUI_ObjectList.cpp`)
+3. ✅ Интегрировать валидацию/репару в `StlExporter.saveStl()` с опцией auto-repair
+4. ✅ Написать тест для matrix_right.stl и проверки non-manifold edges до/после репары
+5. ✅ Реализовать hole filling (boundary cycle extraction + ear-clipping triangulation)  
+6. ✅ Добавить GUI отображение прогресса экспорта в viewer (проценты в StlExportDialog)
+7. ✅ Создать `StlRepairerTest` — тест ремонта куба с дыркой
+8. ✅ Исправить `StlValidator`: edge-map counting (как OrcaSlicer) + findSharedEdge (оба направления)
+9. ⬜ **Изучить OpenSCAD CSG BSP** — понять как OpenSCAD строит CSG-деревья и рендерит в STL, перенести подход в Kotlin
+10. ⬜ Переписать CSG pipeline (BSP tree) — текущий javascad генерирует не-manifold меши, нужно сделать правильно как в OpenSCAD
+11. ⬜ Оптимизировать StlRepairer.fillHoles — на больших мешах (257k треугольников) ремонт может быть медленным, нужно профилировать
+12. ⬜ Добавить GUI отображение ошибок mesh в viewer (как в OrcaSlicer's `GUI_ObjectList.cpp`)
+
+### Примечание по производительности
+
+На файле `matrix_right_test.stl` (257635 треугольников):
+- Валидация (`StlValidator.validate()`): 5 секунд ✅
+- Репарер (`StlRepairer.repair()`) с fillHoles: **таймаут 5 минут** ❌ — нужно профилировать и оптимизировать (вероятно edge snapping O(n²), BFS в flood-fill, или ear-clipping на больших циклах)
+
+### OpenSCAD как референс
+
+OpenSCAD использует CGAL для построения CSG, что гарантирует manifold-результат:
+- `CGAL::Nef_polyhedron_3` — boolean операции всегда дают корректную 2-manifold геометрию
+- `CGAL::Polyhedron_3` → triangulation → STL — конвертация в треугольники сохраняет manifold
+- Для Kotlin нужно либо портировать логику CGAL, либо реализовать собственный BSP tree с корректным разрезанием и триангуляцией
