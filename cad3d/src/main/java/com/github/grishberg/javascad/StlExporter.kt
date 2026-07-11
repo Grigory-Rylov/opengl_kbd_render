@@ -23,29 +23,23 @@ object StlExporter {
     private const val Z = 0
 
     fun saveStl(polygons: List<Polygon>, fileName: String) {
-        println(
-            "saveStl: Start generating polygons from: " + polygons.size + " " + fileName
-        )
+        saveStl(polygons, fileName, null)
+    }
 
+    fun saveStl(polygons: List<Polygon>, fileName: String, onProgress: ((String) -> Unit)?) {
         val file = File(fileName)
         val startTime = System.currentTimeMillis()
-
-        println(
-            "saveStl to bin: " + fileName + " fix polygons completed, takes " + (System.currentTimeMillis() - startTime) + " ms"
-        )
 
         val fixPolygons = PolygonValidatorMultithreading().fixPolygons(
             polygons, object : ProgressObserver {
                 override fun onProgress(progress: Int) {
-                    println(file.getName() + " : progress = " + progress)
+                    onProgress?.invoke("Fix polygons $progress%")
                 }
             })
 
-        println(
-            "saveStl: " + fileName + " fix polygons completed, takes " + (System.currentTimeMillis() - startTime) + " ms"
-        )
+        onProgress?.invoke("Fix polygons done")
 
-        val triangulationStartTime = System.currentTimeMillis()
+        onProgress?.invoke("Триангуляция...")
 
         // OpenSCAD approach: collect ALL vertices into a shared vertex array first,
         // so that adjacent polygons share the exact same vertex instances.
@@ -78,10 +72,10 @@ object StlExporter {
         }
 
         println(
-            "saveStl: " + fileName + " triangulation completed, takes " + (System.currentTimeMillis() - triangulationStartTime) + " ms"
+            "saveStl: " + fileName + " triangulation completed, takes " + (System.currentTimeMillis() - startTime) + " ms"
         )
 
-        println("saveStl: validating and repairing ${facetsFromPolygons.size} facets...")
+        onProgress?.invoke("Валидация и репарация ${facetsFromPolygons.size} facets...")
         val validatedFacets = StlValidator.validateAndRepair(facetsFromPolygons) as MutableList<Facet>
         println("saveStl: after repair: ${validatedFacets.size} facets")
 

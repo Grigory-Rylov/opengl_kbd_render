@@ -54,6 +54,17 @@ class StlExportDialog(owner: JFrame) : JDialog(owner, "Экспорт STL", true
         }
     }
 
+    override fun onExportProgress(fileName: String, stage: String) {
+        SwingUtilities.invokeLater {
+            val text = "$fileName — $stage"
+            val idx = itemIndexByName[fileName]
+            if (idx != null) {
+                model.set(idx, text)
+            }
+            statusLabel.text = text
+        }
+    }
+
     override fun onExportFinish(fileName: String, success: Boolean, errorMessage: String?) {
         SwingUtilities.invokeLater {
             val status = if (success) "Готово" else "Ошибка"
