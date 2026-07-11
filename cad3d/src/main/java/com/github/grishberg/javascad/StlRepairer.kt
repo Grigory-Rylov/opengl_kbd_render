@@ -260,6 +260,8 @@ class StlRepairer {
         val trianglesMutable = triangles.toMutableList()
         var normalsFlippedCount = 0
 
+        val edgeIndex = buildCanonicalEdgeIndex(trianglesMutable, 1e-4)
+
         // 4. Flood-fill to make normals consistent between neighbors
         val visited = BooleanArray(trianglesMutable.size)
         
@@ -274,7 +276,11 @@ class StlRepairer {
                 val faceIdx = queue.poll()!!
                 
                 for (edgeIdx in 0 until 3) {
-                    val neighborIdx = findNeighborByEdge(trianglesMutable, faceIdx, edgeIdx)
+                    val tri = trianglesMutable[faceIdx]
+                    val e = tri.getEdgeVertices(edgeIdx)
+                    val key = canonicalEdgeKey(e.first, e.second, 1e-4)
+                    val faces = edgeIndex[key]
+                    val neighborIdx = faces?.firstOrNull { it != faceIdx } ?: -1
 
                     if (neighborIdx >= 0 && !visited[neighborIdx]) {
                         visited[neighborIdx] = true
@@ -325,27 +331,7 @@ class StlRepairer {
         return volume / 6.0
     }
 
-    private fun findNeighborByEdge(
-        triangles: List<Triangle>, faceIdx: Int, edgeIdx: Int
-    ): Int {
-        val tri = triangles[faceIdx]
-        val edgeVerts = tri.getEdgeVertices(edgeIdx)
-        
-        for ((candidateFaceIdx, candTri) in triangles.withIndex()) {
-            if (candidateFaceIdx == faceIdx) continue
-            
-            val vertices = listOf(candTri.v0, candTri.v1, candTri.v2)
 
-            for (cEdge in 0 until 3) {
-                if (V3dKey(vertices[cEdge], 1e-4) == V3dKey(edgeVerts.second, 1e-4) && 
-                    V3dKey(vertices[(cEdge + 1) % 3], 1e-4) == V3dKey(edgeVerts.first, 1e-4)) {
-                    return candidateFaceIdx
-                }
-            }
-        }
-
-        return -1
-    }
 
     // ==================== Шаг 4: Fill Holes (Boundary Triangulation) ====================
 
