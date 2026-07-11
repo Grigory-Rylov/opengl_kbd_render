@@ -5,6 +5,7 @@ import static eu.printingin3d.javascad.vrl.Const.EPSILON;
 import eu.printingin3d.javascad.coords.Triangle3d;
 import com.github.grishberg.javascad.Triangulator;
 import eu.printingin3d.javascad.coords.V3d;
+import com.github.grishberg.javascad.StlRepairer;
 import com.github.grishberg.javascad.StlValidator;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
@@ -257,13 +258,14 @@ public class PolygonValidator {
 
         System.out.println("PolygonValidator: получили " + facets.size() + " треугольников");
 
-        // Исправляем naked edges через StlValidator
-        List<Facet> repairedFacets = StlValidator.validateAndRepair(facets);
-        System.out.println(
-            "PolygonValidator: после исправления: " + repairedFacets.size() + " треугольников");
-
-        // Конвертируем обратно в простые треугольные полигоны
-        return convertFacetsToSimplePolygons(repairedFacets);
+        // Конвертируем в треугольные полигоны и исправляем через StlRepairer
+        List<Polygon> trianglePolygons = convertFacetsToSimplePolygons(facets);
+        var repairer = new StlRepairer();
+        var repairPair = repairer.repair(trianglePolygons, new StlRepairer.RepairOptions());
+        List<Polygon> repairedPolygons = repairPair.getFirst();
+        System.out.println("PolygonValidator: после исправления: " + repairedPolygons.size()
+            + " треугольников");
+        return repairedPolygons;
     }
 
     /**
@@ -293,6 +295,11 @@ public class PolygonValidator {
      * Детальный анализ висящих рёбер с возвратом структурированной информации
      */
     public List<PolygonNakedEdgeInfo> analyzeNakedEdges(List<Polygon> polygons) {
+        var validator = new StlValidator();
+        var validationResult = validator.validate(polygons);
+
+        System.out.println("PolygonValidator: анализ naked edges — " + validationResult);
+
         // Конвертируем полигоны в треугольники для анализа
         List<Facet> facets = new ArrayList<>();
         Map<Facet, Polygon> facetToPolygon = new HashMap<>();
@@ -312,21 +319,26 @@ public class PolygonValidator {
             }
         }
 
-        // Получаем информацию о naked edges
-        List<StlValidator.NakedEdgeInfo> nakedEdgesInfo = StlValidator.analyzeNakedEdges(facets);
-
-        // Преобразуем в информацию о полигонах
         List<PolygonNakedEdgeInfo> result = new ArrayList<>();
 
-        for (StlValidator.NakedEdgeInfo edgeInfo : nakedEdgesInfo) {
-            Polygon polygon = facetToPolygon.get(edgeInfo.getFacet());
-            if (polygon != null) {
+        if (validationResult.isManifold()) {
+            return result;
+        }
+
+        // Если есть open edges, сообщаем о каждом полигоне
+        for (Map.Entry<Facet, Polygon> entry : facetToPolygon.entrySet()) {
+            Facet facet = entry.getKey();
+            Polygon polygon = entry.getValue();
+            List<V3d> verts = facet.getTriangle().getPoints();
+            if (verts.size() >= 2) {
                 PolygonNakedEdgeInfo polygonInfo = new PolygonNakedEdgeInfo(
                     polygon,
-                    edgeInfo.getPointA(),
-                    edgeInfo.getPointB(),
-                    edgeInfo.getFacet(),
-                    "Полигон с " + polygon.getVertices().size() + " вершинами имеет висящее ребро"
+                    verts.get(0),
+                    verts.get(1),
+                    facet,
+                    "Полигон с " + polygon.getVertices().size()
+                        + " вершинами, mesh имеет " + validationResult.getOpenEdges()
+                        + " open edges"
                 );
                 result.add(polygonInfo);
             }

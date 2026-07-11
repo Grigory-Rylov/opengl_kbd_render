@@ -19,17 +19,13 @@ object StlExporter {
     private const val Y = 0
     private const val Z = 0
 
-    fun saveStl(polygons: List<Polygon>, fileName: String) {
+    fun saveStl(polygons: List<Polygon>, fileName: String, autoRepair: Boolean = false) {
         println(
             "saveStl: Start generating polygons from: " + polygons.size + " " + fileName
         )
 
         val file = File(fileName)
         val startTime = System.currentTimeMillis()
-
-        println(
-            "saveStl to bin: " + fileName + " fix polygons completed, takes " + (System.currentTimeMillis() - startTime) + " ms"
-        )
 
         val fixPolygons = PolygonValidatorMultithreading().fixPolygons(
             polygons, object : ProgressObserver {
@@ -43,7 +39,7 @@ object StlExporter {
         )
 
         val triangulationStartTime = System.currentTimeMillis()
-        val facetsFromPolygons: MutableList<Facet> = ArrayList<Facet>()
+        val facetsFromPolygons: MutableList<Facet> = ArrayList()
         for (p in fixPolygons) {
             val triangles = Triangulator.triangulate(p.getVertices(), p.getNormal())
             for (t in triangles) {
@@ -51,15 +47,50 @@ object StlExporter {
                 for (trianglePoint in t.getPoints()) {
                     rounded.add(trianglePoint.roundedToEpsilon())
                 }
-                //facetsFromPolygons.add(Facet(t, p.getNormal(), p.getColor()))
-                val newT = Triangle3d(rounded.get(0), rounded.get(1), rounded.get(2))
-                facetsFromPolygons.add(Facet(newT, p.getNormal(), p.getColor()));
+                val newT = Triangle3d(rounded[0], rounded[1], rounded[2])
+                facetsFromPolygons.add(Facet(newT, p.getNormal(), p.getColor()))
             }
         }
 
         println(
             "saveStl: " + fileName + " triangulation completed, takes " + (System.currentTimeMillis() - triangulationStartTime) + " ms"
         )
+
+        if (autoRepair) {
+            val repairStartTime = System.currentTimeMillis()
+            val facetsAsPolygons = facetsFromPolygons.map { f ->
+                Polygon.fromPolygons(f.getTriangle().getPoints(), f.getNormal(), f.getColor())
+            }
+            val validationResult = StlValidator().validate(facetsAsPolygons)
+            if (!validationResult.isManifold) {
+                println(
+                    "saveStl: non-manifold mesh detected — " +
+                        "${validationResult.openEdges} open edges, " +
+                        "${validationResult.degenerateTriangles} degenerate"
+                )
+                val (repairedPolygons, repairResult) = StlRepairer().repair(facetsAsPolygons)
+                println("saveStl: repair result — $repairResult")
+
+                facetsFromPolygons.clear()
+                for (p in repairedPolygons) {
+                    val triangles = Triangulator.triangulate(p.getVertices(), p.getNormal())
+                    for (t in triangles) {
+                        val rounded = ArrayList<V3d>()
+                        for (point in t.getPoints()) {
+                            rounded.add(point.roundedToEpsilon())
+                        }
+                        val newT = Triangle3d(rounded[0], rounded[1], rounded[2])
+                        facetsFromPolygons.add(Facet(newT, p.getNormal(), p.getColor()))
+                    }
+                }
+                println(
+                    "saveStl: repair completed, takes " +
+                        (System.currentTimeMillis() - repairStartTime) + " ms"
+                )
+            } else {
+                println("saveStl: mesh is already manifold, no repair needed")
+            }
+        }
 
         try {
             FileOutputStream(fileName).getChannel().use { channel ->
