@@ -90,6 +90,15 @@ class MatrixStlValidationTest {
 
         assertTrue(permanentFile.exists(), "STL file should be generated")
         assertTrue(permanentFile.length() > 0, "STL file should not be empty")
+
+        // Validate non-manifold edges on generated STL
+        val facets = StlValidator.loadStl(permanentFile.absolutePath)
+        println("Loaded ${facets.size} facets from generated STL")
+        val openEdges = StlValidator.countOpenEdgesOrcaStyle(facets)
+        val nonManifold = StlValidator.countNonManifoldEdgesOrcaStyle(facets)
+        println("Generated matrix - open edges: $openEdges, non-manifold (Orca-style): $nonManifold")
+        assertTrue(openEdges <= 10, "Open edges should be low, got $openEdges")
+        assertTrue(nonManifold <= 100, "Non-manifold should be low, got $nonManifold")
     }
 
     private fun createDefaultKeyboardConfig(): com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig {

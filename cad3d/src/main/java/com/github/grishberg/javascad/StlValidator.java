@@ -1,5 +1,10 @@
 package com.github.grishberg.javascad;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,6 +18,7 @@ import java.util.stream.Stream;
 
 import eu.printingin3d.javascad.coords.Triangle3d;
 import eu.printingin3d.javascad.coords.V3d;
+import eu.printingin3d.javascad.utils.Color;
 import eu.printingin3d.javascad.vrl.Const;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
@@ -30,6 +36,28 @@ public class StlValidator {
      * manifold edges with conflicting normals (adjacent facets nearly antiparallel).
      * Matches Orca Slicer's "non-manifold edges" count more closely than raw open-edge count.
      */
+    /**
+     * Load a binary STL file and return a list of Facet objects.
+     */
+    public static List<Facet> loadStl(String path) throws IOException {
+        byte[] data = Files.readAllBytes(Path.of(path));
+        ByteBuffer buf = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN);
+        buf.position(80);
+        int count = buf.getInt();
+
+        List<Facet> facets = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            buf.getFloat(); buf.getFloat(); buf.getFloat(); // normal
+            V3d[] pts = new V3d[3];
+            for (int v = 0; v < 3; v++) {
+                pts[v] = new V3d(buf.getFloat(), buf.getFloat(), buf.getFloat());
+            }
+            buf.position(buf.position() + 2); // attribute byte count
+            facets.add(new Facet(new Triangle3d(pts[0], pts[1], pts[2]), new V3d(0, 0, 1), Color.GRAY));
+        }
+        return facets;
+    }
+
     public static int countNonManifoldEdgesOrcaStyle(List<Facet> facets) {
         int N = facets.size();
         if (N == 0) return 0;
