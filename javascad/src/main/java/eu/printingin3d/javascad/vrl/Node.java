@@ -94,18 +94,24 @@ public final class Node {
     	
     	Polygon newPlane = polygons.get(0);
 
-    	List<Polygon> newPolygons = new ArrayList<>();
+    	List<Polygon> coplanarFront = new ArrayList<>();
+    	List<Polygon> coplanarBack = new ArrayList<>();
         List<Polygon> frontP = new ArrayList<>();
         List<Polygon> backP = new ArrayList<>();
 
         for (Polygon polygon : polygons) {
         	newPlane.splitPolygon(
-                    polygon, newPolygons, newPolygons, frontP, backP);
+                    polygon, coplanarFront, coplanarBack, frontP, backP);
+        }
+
+        // Push back-facing coplanar polygons to the back subtree (they face away from the plane)
+        for (Polygon p : coplanarBack) {
+            backP.add(p.flip());
         }
         
         Node newFront = fromPoligons(frontP);
         Node newBack = fromPoligons(backP);
-        return new Node(newPolygons, newFront, newBack);
+        return new Node(coplanarFront, newFront, newBack);
     }
 
     /**
@@ -142,12 +148,22 @@ public final class Node {
         }
         Polygon plane = getPlane();
 
+        List<Polygon> coplanarFront = new ArrayList<>();
+        List<Polygon> coplanarBack = new ArrayList<>();
         List<Polygon> frontP = new ArrayList<>();
         List<Polygon> backP = new ArrayList<>();
 
         for (Polygon polygon : polys) {
-        	plane.splitPolygon(polygon, frontP, backP, frontP, backP);
+        	plane.splitPolygon(polygon, coplanarFront, coplanarBack, frontP, backP);
         }
+
+        // Coplanar polygons facing the same direction stay at this level
+        // Coplanar polygons facing opposite direction go to back (they're on the "solid" side)
+        frontP.addAll(coplanarFront);
+        for (Polygon p : coplanarBack) {
+            backP.add(p.flip());
+        }
+
         if (this.front != null) {
             frontP = this.front.clipPolygons(frontP);
         }
@@ -202,21 +218,28 @@ public final class Node {
 	 * @param polygons the polygons to be added
 	 * @return a new node with the added polygons
 	 */
-	public Node build(List<Polygon> polygons) {
+    public Node build(List<Polygon> polygons) {
     	if (polygons==null || polygons.isEmpty()) {
 			return this;
 		}
     	
     	Polygon newPlane = (this.polygons.isEmpty() ? polygons : this.polygons).get(0);
 
-    	List<Polygon> newPolygons = new ArrayList<>(this.polygons);
+    	List<Polygon> coplanarFront = new ArrayList<>(this.polygons);
+    	List<Polygon> coplanarBack = new ArrayList<>();
         List<Polygon> frontP = new ArrayList<>();
         List<Polygon> backP = new ArrayList<>();
 
         for (Polygon polygon : polygons) {
-        	newPlane.splitPolygon(polygon, newPolygons, newPolygons, frontP, backP);
+        	newPlane.splitPolygon(polygon, coplanarFront, coplanarBack, frontP, backP);
         }
-        return new Node(newPolygons, combinePoligons(front, frontP), combinePoligons(back, backP));
+
+        // Push back-facing coplanar to back subtree
+        for (Polygon p : coplanarBack) {
+            backP.add(p.flip());
+        }
+
+        return new Node(coplanarFront, combinePoligons(front, frontP), combinePoligons(back, backP));
     }
 	
 	private Polygon getPlane() {
