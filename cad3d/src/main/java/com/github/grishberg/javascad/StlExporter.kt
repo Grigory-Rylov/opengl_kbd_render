@@ -1,5 +1,6 @@
 package com.github.grishberg.javascad
 
+import com.github.grishberg.cad3d.plugin.StlExportListener
 import com.github.grishberg.javascad.optimizator.PolygonValidatorMultithreading
 import com.github.grishberg.javascad.optimizator.ProgressObserver
 import eu.printingin3d.javascad.coords.Triangle3d
@@ -19,7 +20,12 @@ object StlExporter {
     private const val Y = 0
     private const val Z = 0
 
-    fun saveStl(polygons: List<Polygon>, fileName: String, autoRepair: Boolean = false) {
+    fun saveStl(
+        polygons: List<Polygon>,
+        fileName: String,
+        autoRepair: Boolean = false,
+        progressListener: StlExportListener? = null
+    ) {
         println(
             "saveStl: Start generating polygons from: " + polygons.size + " " + fileName
         )
@@ -27,10 +33,13 @@ object StlExporter {
         val file = File(fileName)
         val startTime = System.currentTimeMillis()
 
+        progressListener?.onExportProgress(fileName, 0)
+
         val fixPolygons = PolygonValidatorMultithreading().fixPolygons(
             polygons, object : ProgressObserver {
                 override fun onProgress(progress: Int) {
                     println(file.getName() + " : progress = " + progress)
+                    progressListener?.onExportProgress(fileName, (progress * 0.5).toInt())
                 }
             })
 
@@ -38,9 +47,12 @@ object StlExporter {
             "saveStl: " + fileName + " fix polygons completed, takes " + (System.currentTimeMillis() - startTime) + " ms"
         )
 
+        progressListener?.onExportProgress(fileName, 50)
+
         val triangulationStartTime = System.currentTimeMillis()
         val facetsFromPolygons: MutableList<Facet> = ArrayList()
-        for (p in fixPolygons) {
+        val fixPolygonsSize = fixPolygons.size
+        for ((idx, p) in fixPolygons.withIndex()) {
             val triangles = Triangulator.triangulate(p.getVertices(), p.getNormal())
             for (t in triangles) {
                 val rounded = ArrayList<V3d>()
@@ -50,11 +62,17 @@ object StlExporter {
                 val newT = Triangle3d(rounded[0], rounded[1], rounded[2])
                 facetsFromPolygons.add(Facet(newT, p.getNormal(), p.getColor()))
             }
+            if (fixPolygonsSize > 0) {
+                val pct = 50 + ((idx + 1) * 30 / fixPolygonsSize)
+                progressListener?.onExportProgress(fileName, pct)
+            }
         }
 
         println(
             "saveStl: " + fileName + " triangulation completed, takes " + (System.currentTimeMillis() - triangulationStartTime) + " ms"
         )
+
+        progressListener?.onExportProgress(fileName, 80)
 
         if (autoRepair) {
             val repairStartTime = System.currentTimeMillis()
@@ -90,6 +108,7 @@ object StlExporter {
             } else {
                 println("saveStl: mesh is already manifold, no repair needed")
             }
+            progressListener?.onExportProgress(fileName, 95)
         }
 
         try {
@@ -100,6 +119,8 @@ object StlExporter {
         } catch (e: IOException) {
             e.printStackTrace()
         }
+
+        progressListener?.onExportProgress(fileName, 100)
     }
 
     fun writeBinaryStl(

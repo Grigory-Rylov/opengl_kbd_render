@@ -40,9 +40,20 @@ class StlExportDialog(owner: JFrame) : JDialog(owner, "Экспорт STL", true
         }
     }
 
+    override fun onExportProgress(fileName: String, percent: Int) {
+        SwingUtilities.invokeLater {
+            val text = "$fileName — $percent%"
+            val idx = itemIndexByName[fileName]
+            if (idx != null) {
+                model.set(idx, text)
+            }
+            statusLabel.text = "Экспорт: $fileName — $percent%"
+        }
+    }
+
     override fun onExportStart(fileName: String) {
         SwingUtilities.invokeLater {
-            val text = "$fileName — Рендеринг"
+            val text = "$fileName — 0%"
             val idx = itemIndexByName[fileName]
             if (idx == null) {
                 model.addElement(text)

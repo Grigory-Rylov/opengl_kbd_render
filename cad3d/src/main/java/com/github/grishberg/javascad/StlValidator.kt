@@ -44,10 +44,7 @@ class StlValidator {
         val uniqueVertices = vertexIndex.groupedVertices.size
         val faceNeighbors = createFaceNeighborsIndex(vertexIndex, triangles)
 
-        var openEdgesCount = 0
-        for (neighbors in faceNeighbors) {
-            for (n in neighbors) if (n < 0) openEdgesCount++
-        }
+        val openEdgesCount = countOpenEdges(triangles)
 
         val disconnectedComponents = countDisconnectedComponents(faceNeighbors, triangles.size)
 
@@ -89,7 +86,7 @@ class StlValidator {
 
         val faceCounts = IntArray(nextId + 1)
         
-        for ((faceIdx, tri) in triangles.withIndex()) {
+        for (tri in triangles) {
             for (v in listOf(tri.v0, tri.v1, tri.v2)) {
                 val id = vertexToId[v.toV3dKey()]!!
                 faceCounts[id]++
@@ -130,7 +127,6 @@ class StlValidator {
         for (faceIdx in 0 until numTriangles) {
             val tri = triangles[faceIdx]
             
-            // Ребра: edgeIdx=0 -> v0->v1, edgeIdx=1 -> v1->v2, edgeIdx=2 -> v2->v0
             for (edgeIdx in 0 until 3) {
                 if (neighbors[faceIdx][edgeIdx] != -1) continue
                 
@@ -139,6 +135,7 @@ class StlValidator {
                 val vB = vertices[(edgeIdx + 1) % 3]
 
                 val aKey = vA.toV3dKey()
+                val bKey = vB.toV3dKey()
                 val groupId = index.vertexToId[aKey] ?: continue
                 
                 if (groupId >= index.faceStarts.size - 1) continue
@@ -151,8 +148,10 @@ class StlValidator {
                     
                     if (candidateFaceIdx <= faceIdx) continue
                     
-                    val bKey = vB.toV3dKey()
-                    val candidateEdgeIdx = findOppositeEdge(triangles[candidateFaceIdx], aKey, bKey)
+                    val candTri = triangles[candidateFaceIdx]
+                    val candVertexList = listOf(candTri.v0, candTri.v1, candTri.v2)
+
+                    val candidateEdgeIdx = findSharedEdge(candVertexList, aKey, bKey)
 
                     if (candidateEdgeIdx >= 0) {
                         if (neighbors[candidateFaceIdx][candidateEdgeIdx] != -1) continue
@@ -167,15 +166,27 @@ class StlValidator {
         return neighbors
     }
 
-    private fun findOppositeEdge(candidateTri: Triangle, vAKey: V3dKey, vBKey: V3dKey): Int {
-        val vertices = listOf(candidateTri.v0, candidateTri.v1, candidateTri.v2)
-
+    private fun findSharedEdge(candidateVertices: List<V3d>, vAKey: V3dKey, vBKey: V3dKey): Int {
         for (edgeIdx in 0 until 3) {
-            if (vertices[edgeIdx].toV3dKey() == vBKey && 
-                vertices[(edgeIdx + 1) % 3].toV3dKey() == vAKey) return edgeIdx
+            if ((candidateVertices[edgeIdx].toV3dKey() == vBKey && 
+                 candidateVertices[(edgeIdx + 1) % 3].toV3dKey() == vAKey) ||
+                (candidateVertices[edgeIdx].toV3dKey() == vAKey && 
+                 candidateVertices[(edgeIdx + 1) % 3].toV3dKey() == vBKey)) return edgeIdx
         }
-
         return -1
+    }
+
+    private fun countOpenEdges(triangles: List<Triangle>): Int {
+        val edgeFaceCounts = mutableMapOf<EdgeKey, Int>()
+        for (tri in triangles) {
+            for (edge in listOf(
+                tri.v0 to tri.v1, tri.v1 to tri.v2, tri.v2 to tri.v0
+            )) {
+                val key = EdgeKey(edge.first.toV3dKey(), edge.second.toV3dKey())
+                edgeFaceCounts[key] = (edgeFaceCounts[key] ?: 0) + 1
+            }
+        }
+        return edgeFaceCounts.count { it.value < 2 }
     }
 
     private fun countDisconnectedComponents(neighbors: Array<IntArray>, totalTriangles: Int): Int {
@@ -221,6 +232,12 @@ class StlValidator {
             Math.round(v.x / 1e-6),
             Math.round(v.y / 1e-6), 
             Math.round(v.z / 1e-6)
+        )
+    }
+
+    private data class EdgeKey(val key: Pair<V3dKey, V3dKey>) {
+        constructor(a: V3dKey, b: V3dKey) : this(
+            if (a.x < b.x || (a.x == b.x && (a.y < b.y || (a.y == b.y && a.z <= b.z)))) Pair(a, b) else Pair(b, a)
         )
     }
 

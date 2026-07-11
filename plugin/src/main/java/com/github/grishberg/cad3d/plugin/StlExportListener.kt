@@ -6,6 +6,8 @@ interface StlExportListener {
 
     fun onExportStart(fileName: String)
 
+    fun onExportProgress(fileName: String, percent: Int)
+
     fun onExportFinish(fileName: String, success: Boolean, errorMessage: String? = null)
 
     fun onAllFinished()

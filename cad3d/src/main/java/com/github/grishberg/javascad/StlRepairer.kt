@@ -19,7 +19,8 @@ class StlRepairer {
         val edgesFixed: Int,
         val degenerateRemoved: Int,
         val disconnectedRemoved: Int,
-        val normalsFlipped: Int
+        val normalsFlipped: Int,
+        val holesFilled: Int = 0
     ) {
         override fun toString(): String {
             return """StlRepairer.RepairResult(
@@ -27,7 +28,8 @@ class StlRepairer {
                 |  edgesFixed=$edgesFixed,
                 |  degenerateRemoved=$degenerateRemoved, 
                 |  disconnectedRemoved=$disconnectedRemoved,
-                |  normalsFlipped=$normalsFlipped
+                |  normalsFlipped=$normalsFlipped,
+                |  holesFilled=$holesFilled
             """.trimMargin()
         }
     }
@@ -36,7 +38,8 @@ class StlRepairer {
         val snapTolerance: Double = 1e-4,
         val maxSnapIterations: Int = 2,
         val removeDisconnectedFacets: Boolean = true,
-        val fixNormals: Boolean = true
+        val fixNormals: Boolean = true,
+        val fillHoles: Boolean = true
     )
 
     fun repair(polygons: List<Polygon>, options: RepairOptions = RepairOptions()): Pair<List<Polygon>, RepairResult> {
@@ -76,7 +79,16 @@ class StlRepairer {
             println("StlRepairer: Removed $disconnectedRemoved disconnected facets")
         }
 
-        // Шаг 4-5: Fix normals  
+        // Шаг 4: Fill holes (boundary triangulation)
+        var holesFilled = 0
+        if (options.fillHoles && triangles.isNotEmpty()) {
+            val (filledTris, holesFilledCount) = fillHoles(triangles)
+            holesFilled = holesFilledCount
+            triangles = filledTris
+            println("StlRepairer: Filled $holesFilled holes")
+        }
+
+        // Шаг 5-6: Fix normals  
         var normalsFlipped = 0
         if (options.fixNormals && triangles.isNotEmpty()) {
             val fixed = fixNormalDirections(triangles)
@@ -99,7 +111,8 @@ class StlRepairer {
             edgesFixed = edgesFixed,
             degenerateRemoved = degenerateRemoved,
             disconnectedRemoved = disconnectedRemoved,
-            normalsFlipped = normalsFlipped
+            normalsFlipped = normalsFlipped,
+            holesFilled = holesFilled
         ))
     }
 
@@ -168,7 +181,7 @@ class StlRepairer {
         val snappedVertices = mutableMapOf<V3d, V3d>()
         var edgesFixedCount = 0
         
-        for ((key, group) in vertexGroups) {
+        for ((_, group) in vertexGroups) {
             if (group.size <= 1) continue
             
             val center = computeGroupCenter(group)
@@ -378,6 +391,199 @@ class StlRepairer {
         }
 
         return -1
+    }
+
+    // ==================== Шаг 4: Fill Holes (Boundary Triangulation) ====================
+
+    private data class CanonicalEdgeKey(val a: V3dKey, val b: V3dKey)
+
+    private fun canonicalEdgeKey(v0: V3d, v1: V3d, tolerance: Double): CanonicalEdgeKey {
+        val k0 = V3dKey(v0, tolerance)
+        val k1 = V3dKey(v1, tolerance)
+        return if (k0.x < k1.x || (k0.x == k1.x && (k0.y < k1.y || (k0.y == k1.y && k0.z <= k1.z))))
+            CanonicalEdgeKey(k0, k1) else CanonicalEdgeKey(k1, k0)
+    }
+
+    private fun fillHoles(triangles: List<Triangle>): Pair<List<Triangle>, Int> {
+        if (triangles.isEmpty()) return Pair(emptyList(), 0)
+
+        val edgeFaces = mutableMapOf<CanonicalEdgeKey, MutableList<Int>>()
+        for ((faceIdx, tri) in triangles.withIndex()) {
+            for (edgeIdx in 0 until 3) {
+                val e = tri.getEdgeVertices(edgeIdx)
+                val key = canonicalEdgeKey(e.first, e.second, 1e-4)
+                edgeFaces.getOrPut(key) { mutableListOf() }.add(faceIdx)
+            }
+        }
+
+        val boundaryEdges = mutableListOf<Pair<Int, Int>>()
+        for ((faceIdx, tri) in triangles.withIndex()) {
+            for (edgeIdx in 0 until 3) {
+                val e = tri.getEdgeVertices(edgeIdx)
+                val key = canonicalEdgeKey(e.first, e.second, 1e-4)
+                if (edgeFaces[key]?.size == 1) {
+                    boundaryEdges.add(faceIdx to edgeIdx)
+                }
+            }
+        }
+
+        if (boundaryEdges.isEmpty()) return Pair(triangles, 0)
+
+        val vertexOutEdges = mutableMapOf<V3dKey, MutableList<Pair<V3d, V3d>>>()
+        for ((faceIdx, edgeIdx) in boundaryEdges) {
+            val tri = triangles[faceIdx]
+            val e = tri.getEdgeVertices(edgeIdx)
+            val key = V3dKey(e.first, 1e-4)
+            vertexOutEdges.getOrPut(key) { mutableListOf() }.add(e.first to e.second)
+        }
+
+        val visited = mutableSetOf<Pair<V3dKey, V3dKey>>()
+        val cycles = mutableListOf<List<V3d>>()
+
+        for ((faceIdx, edgeIdx) in boundaryEdges) {
+            val tri = triangles[faceIdx]
+            val e = tri.getEdgeVertices(edgeIdx)
+            val keyA = V3dKey(e.first, 1e-4)
+            val keyB = V3dKey(e.second, 1e-4)
+
+            if (visited.contains(keyA to keyB)) continue
+
+            val cycle = mutableListOf(e.first, e.second)
+            visited.add(keyA to keyB)
+
+            var currentEnd = e.second
+            var maxSteps = boundaryEdges.size
+
+            while (maxSteps-- > 0) {
+                val curKey = V3dKey(currentEnd, 1e-4)
+                val outgoing = vertexOutEdges[curKey] ?: break
+
+                var found = false
+                for (outEdge in outgoing) {
+                    val outKey = V3dKey(outEdge.second, 1e-4)
+                    if (!visited.contains(curKey to outKey)) {
+                        visited.add(curKey to outKey)
+                        currentEnd = outEdge.second
+                        cycle.add(currentEnd)
+                        found = true
+                        break
+                    }
+                }
+
+                if (!found) break
+                if (V3dKey(currentEnd, 1e-4) == keyA) break
+            }
+
+            if (cycle.size >= 4 && V3dKey(cycle.last(), 1e-4) == V3dKey(cycle.first(), 1e-4)) {
+                cycle.removeAt(cycle.lastIndex)
+            }
+
+            if (cycle.size >= 3) {
+                cycles.add(cycle.toList())
+            }
+        }
+
+        val resultTriangles = triangles.toMutableList()
+        for (cycle in cycles) {
+            val newTris = triangulatePolygon(cycle)
+            resultTriangles.addAll(newTris)
+        }
+
+        return Pair(resultTriangles, cycles.size)
+    }
+
+    private fun triangulatePolygon(vertices: List<V3d>): List<Triangle> {
+        if (vertices.size < 3) return emptyList()
+        if (vertices.size == 3) return listOf(Triangle(vertices[0], vertices[1], vertices[2]))
+
+        var nx = 0.0; var ny = 0.0; var nz = 0.0
+        for (i in vertices.indices) {
+            val p1 = vertices[i]
+            val p2 = vertices[(i + 1) % vertices.size]
+            nx += (p1.y - p2.y) * (p1.z + p2.z)
+            ny += (p1.z - p2.z) * (p1.x + p2.x)
+            nz += (p1.x - p2.x) * (p1.y + p2.y)
+        }
+        val normal = V3d(nx, ny, nz)
+        val mag = normal.magnitude()
+        if (mag < 1e-10) return emptyList()
+        val n = normal.scale(1.0 / mag)
+
+        val ref = if (Math.abs(n.x) < 0.9) V3d(1.0, 0.0, 0.0) else V3d(0.0, 1.0, 0.0)
+        var u = n.cross(ref)
+        val uMag = u.magnitude()
+        if (uMag < 1e-10) return emptyList()
+        u = u.scale(1.0 / uMag)
+        val v = u.cross(n)
+
+        class Point2D(val x: Double, val y: Double)
+
+        fun cross2D(a: Point2D, b: Point2D, c: Point2D): Double =
+            (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
+
+        fun pointInTriangle(a: Point2D, b: Point2D, c: Point2D, p: Point2D): Boolean {
+            val d1 = cross2D(a, b, p)
+            val d2 = cross2D(b, c, p)
+            val d3 = cross2D(c, a, p)
+            val hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0)
+            val hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0)
+            return !(hasNeg && hasPos)
+        }
+
+        val origin = vertices[0]
+        val pts = vertices.map { vert ->
+            val d = vert.subtract(origin)
+            Point2D(d.dot(u), d.dot(v))
+        }
+
+        val indices = mutableListOf<Int>()
+        for (i in pts.indices) indices.add(i)
+
+        val result = mutableListOf<Triangle>()
+
+        while (indices.size > 3) {
+            var earFound = false
+            for (i in 0 until indices.size) {
+                val prev = indices[(i - 1 + indices.size) % indices.size]
+                val curr = indices[i]
+                val next = indices[(i + 1) % indices.size]
+
+                val cross = cross2D(pts[prev], pts[curr], pts[next])
+                if (cross <= 0) continue
+
+                var isEar = true
+                for (j in indices) {
+                    if (j == prev || j == curr || j == next) continue
+                    if (pointInTriangle(pts[prev], pts[curr], pts[next], pts[j])) {
+                        isEar = false
+                        break
+                    }
+                }
+
+                if (isEar) {
+                    result.add(Triangle(vertices[prev], vertices[curr], vertices[next]))
+                    indices.removeAt(i)
+                    earFound = true
+                    break
+                }
+            }
+
+            if (!earFound) {
+                result.clear()
+                for (i in 1 until vertices.size - 1) {
+                    result.add(Triangle(vertices[0], vertices[i], vertices[i + 1]))
+                }
+                break
+            }
+        }
+
+        if (indices.size == 3) {
+            result.add(Triangle(
+                vertices[indices[0]], vertices[indices[1]], vertices[indices[2]]
+            ))
+        }
+
+        return result
     }
 
     // ==================== Утилиты ====================
