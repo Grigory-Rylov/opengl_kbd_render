@@ -213,89 +213,43 @@ class StlRepairer {
 
     // ==================== Шаг 3: Remove Disconnected Facets ====================
     
-    private fun removeDisconnectedFacets(triangles: List<Triangle>): SnapResult {
-        if (triangles.isEmpty()) return SnapResult(emptyList(), 0)
+    private data class CanonicalEdgeKey(val a: V3dKey, val b: V3dKey)
 
-        val vertexIndex = buildVertexFaceIndexForRepair(triangles)
-        
-        // Удаляем грани без правильно соединенных ребер  
-        var disconnectedCount = 0
-        
-        for ((faceIdx, tri) in triangles.withIndex()) {
-            var hasConnectedEdge = false
-            
-            for (edgeIdx in 0 until 3) {
-                val edgeVerts = tri.getEdgeVertices(edgeIdx)
-
-                if (findNeighborFace(vertexIndex, triangles, faceIdx, edgeVerts.first, edgeVerts.second)) {
-                    hasConnectedEdge = true
-                    break
-                }
-            }
-            
-            if (!hasConnectedEdge) disconnectedCount++
-        }
-
-        val newTriangles = triangles.filterIndexed { faceIdx, tri -> 
-            var hasConnectedEdge = false
-            
-            for (edgeIdx in 0 until 3) {
-                val edgeVerts = tri.getEdgeVertices(edgeIdx)
-                
-                if (findNeighborFace(vertexIndex, triangles, faceIdx, edgeVerts.first, edgeVerts.second)) {
-                    hasConnectedEdge = true
-                    break
-                }
-            }
-            
-            hasConnectedEdge
-        }
-
-        return SnapResult(newTriangles, disconnectedCount)
+    private fun canonicalEdgeKey(v0: V3d, v1: V3d, tolerance: Double): CanonicalEdgeKey {
+        val k0 = V3dKey(v0, tolerance)
+        val k1 = V3dKey(v1, tolerance)
+        return if (k0.x < k1.x || (k0.x == k1.x && (k0.y < k1.y || (k0.y == k1.y && k0.z <= k1.z))))
+            CanonicalEdgeKey(k0, k1) else CanonicalEdgeKey(k1, k0)
     }
 
-    private fun buildVertexFaceIndexForRepair(triangles: List<Triangle>): Map<V3dKey, MutableList<Int>> {
-        val index = mutableMapOf<V3dKey, MutableList<Int>>()
-        
+    private fun buildCanonicalEdgeIndex(triangles: List<Triangle>, tolerance: Double): Map<CanonicalEdgeKey, MutableList<Int>> {
+        val index = mutableMapOf<CanonicalEdgeKey, MutableList<Int>>()
         for ((faceIdx, tri) in triangles.withIndex()) {
-            for (v in listOf(tri.v0, tri.v1, tri.v2)) {
-                val key = V3dKey(v, 1e-4)
-                if (!index.containsKey(key)) index[key] = mutableListOf()
-                index[key]?.add(faceIdx)
+            for (edgeIdx in 0 until 3) {
+                val e = tri.getEdgeVertices(edgeIdx)
+                val key = canonicalEdgeKey(e.first, e.second, tolerance)
+                index.getOrPut(key) { mutableListOf() }.add(faceIdx)
             }
         }
-
         return index
     }
 
-    private fun findNeighborFace(
-        vertexIndex: Map<V3dKey, MutableList<Int>>, 
-        triangles: List<Triangle>,
-        faceIdx: Int, vA: V3d, vB: V3d
-    ): Boolean {
-        val aKey = V3dKey(vA, 1e-4)
-        val bKey = V3dKey(vB, 1e-4)
+    private fun removeDisconnectedFacets(triangles: List<Triangle>): SnapResult {
+        if (triangles.isEmpty()) return SnapResult(emptyList(), 0)
 
-        val candidateFaces = vertexIndex[aKey] ?: return false
-        
-        for (candidateFaceIdx in candidateFaces) {
-            if (candidateFaceIdx == faceIdx) continue
-            
-            if (hasOppositeEdge(triangles[candidateFaceIdx], aKey, bKey)) return true
+        val edgeIndex = buildCanonicalEdgeIndex(triangles, 1e-4)
+
+        val newTriangles = triangles.filterIndexed { faceIdx, _ ->
+            (0 until 3).any { edgeIdx ->
+                val e = triangles[faceIdx].getEdgeVertices(edgeIdx)
+                val key = canonicalEdgeKey(e.first, e.second, 1e-4)
+                val faces = edgeIndex[key]
+                faces != null && faces.any { it != faceIdx }
+            }
         }
 
-        return false
-    }
-
-    private fun hasOppositeEdge(candidateTri: Triangle, vAKey: V3dKey, vBKey: V3dKey): Boolean {
-        val vertices = listOf(candidateTri.v0, candidateTri.v1, candidateTri.v2)
-
-        for (edgeIdx in 0 until 3) {
-            if (V3dKey(vertices[edgeIdx], 1e-4) == vBKey && 
-                V3dKey(vertices[(edgeIdx + 1) % 3], 1e-4) == vAKey) return true
-        }
-
-        return false
+        val disconnectedCount = triangles.size - newTriangles.size
+        return SnapResult(newTriangles, disconnectedCount)
     }
 
     // ==================== Шаг 4-5: Fix Normal Directions ====================
@@ -394,15 +348,6 @@ class StlRepairer {
     }
 
     // ==================== Шаг 4: Fill Holes (Boundary Triangulation) ====================
-
-    private data class CanonicalEdgeKey(val a: V3dKey, val b: V3dKey)
-
-    private fun canonicalEdgeKey(v0: V3d, v1: V3d, tolerance: Double): CanonicalEdgeKey {
-        val k0 = V3dKey(v0, tolerance)
-        val k1 = V3dKey(v1, tolerance)
-        return if (k0.x < k1.x || (k0.x == k1.x && (k0.y < k1.y || (k0.y == k1.y && k0.z <= k1.z))))
-            CanonicalEdgeKey(k0, k1) else CanonicalEdgeKey(k1, k0)
-    }
 
     private fun fillHoles(triangles: List<Triangle>): Pair<List<Triangle>, Int> {
         if (triangles.isEmpty()) return Pair(emptyList(), 0)
