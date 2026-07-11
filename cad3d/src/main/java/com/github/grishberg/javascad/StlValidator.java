@@ -21,6 +21,79 @@ public class StlValidator {
 
     private static final int PRECISION = 6;
 
+    /**
+     * Count ALL non-manifold edges: open edges (1 neighbor) + internal non-manifold (3+ neighbors).
+     * This matches what Orca Slicer reports as "non-manifold edges".
+     */
+    /**
+     * Count non-manifold issues: half-edges on edges with != 2 neighbors +
+     * manifold edges with conflicting normals (adjacent facets nearly antiparallel).
+     * Matches Orca Slicer's "non-manifold edges" count more closely than raw open-edge count.
+     */
+    public static int countNonManifoldEdgesOrcaStyle(List<Facet> facets) {
+        int N = facets.size();
+        if (N == 0) return 0;
+
+        float[][][] verts = new float[N][3][3];
+        float[][] normals = new float[N][3];
+        for (int i = 0; i < N; i++) {
+            var points = facets.get(i).getTriangle().getPoints();
+            for (int j = 0; j < 3; j++) {
+                V3d v = points.get(j);
+                verts[i][j][0] = (float)v.getX();
+                verts[i][j][1] = (float)v.getY();
+                verts[i][j][2] = (float)v.getZ();
+            }
+            // Compute normal from vertices
+            float ex1 = verts[i][1][0] - verts[i][0][0], ey1 = verts[i][1][1] - verts[i][0][1], ez1 = verts[i][1][2] - verts[i][0][2];
+            float ex2 = verts[i][2][0] - verts[i][0][0], ey2 = verts[i][2][1] - verts[i][0][1], ez2 = verts[i][2][2] - verts[i][0][2];
+            float nx = ey1 * ez2 - ez1 * ey2;
+            float ny = ez1 * ex2 - ex1 * ez2;
+            float nz = ex1 * ey2 - ey1 * ex2;
+            float len = (float) Math.sqrt(nx * nx + ny * ny + nz * nz);
+            if (len > 0) { nx /= len; ny /= len; nz /= len; }
+            normals[i] = new float[]{nx, ny, nz};
+        }
+
+        // Exact edge matching: edge -> list of facet indices
+        Map<OrcaEdgeKey, List<Integer>> edgeMap = new HashMap<>();
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < 3; j++) {
+                float[] a = verts[i][j];
+                float[] b = verts[i][(j + 1) % 3];
+                OrcaEdgeKey key = exactEdgeKey(a, b);
+                edgeMap.computeIfAbsent(key, k -> new ArrayList<>()).add(i);
+            }
+        }
+
+        // Count non-manifold half-edges (all half-edges of edges with != 2 neighbors)
+        int nonManifoldHE = 0;
+        int openEdges = 0, manifoldEdges = 0, multiNeighborEdges = 0;
+        for (List<Integer> neighbors : edgeMap.values()) {
+            int c = neighbors.size();
+            if (c == 1) { openEdges++; nonManifoldHE += c; }
+            else if (c == 2) manifoldEdges++;
+            else { multiNeighborEdges++; nonManifoldHE += c; }
+        }
+
+        // Count manifold edges with conflicting normals (dot < -0.99)
+        int conflictingNormals = 0;
+        for (Map.Entry<OrcaEdgeKey, List<Integer>> entry : edgeMap.entrySet()) {
+            List<Integer> neighbors = entry.getValue();
+            if (neighbors.size() != 2) continue;
+            float[] n1 = normals[neighbors.get(0)];
+            float[] n2 = normals[neighbors.get(1)];
+            float dot = n1[0] * n2[0] + n1[1] * n2[1] + n1[2] * n2[2];
+            if (dot < -0.99f) conflictingNormals++;
+        }
+
+        int total = nonManifoldHE + conflictingNormals;
+        System.out.println("Non-manifold: open=" + openEdges + ", multi=" + multiNeighborEdges +
+            ", nonManifoldHE=" + nonManifoldHE + ", conflictingNormals=" + conflictingNormals +
+            ", total=" + total + ", unique_edges=" + edgeMap.size());
+        return total;
+    }
+
     public static List<Facet> validateAndRepair(List<Facet> facets) {
         int initialCount = facets.size();
         int initialOpen = countOpenEdgesOrcaStyle(facets);
