@@ -65,7 +65,7 @@ class StlRepairer {
         // Шаг 2: Remove degenerate triangles  
         val beforeDegenerate = triangles.size
         triangles = triangles.filter { !isDegenerate(it) }
-        val degenerateRemoved = beforeDegenerate - triangles.size
+        var degenerateRemoved = beforeDegenerate - triangles.size
         
         println("StlRepairer: Removed $degenerateRemoved degenerate triangles")
 
@@ -86,6 +86,15 @@ class StlRepairer {
             holesFilled = holesFilledCount
             triangles = filledTris
             println("StlRepairer: Filled $holesFilled holes")
+        }
+
+        // Шаг 4b: Remove degenerate triangles created by hole filling
+        val beforeDegenerate2 = triangles.size
+        triangles = triangles.filter { !isDegenerate(it) }
+        val degenerateRemoved2 = beforeDegenerate2 - triangles.size
+        if (degenerateRemoved2 > 0) {
+            degenerateRemoved += degenerateRemoved2
+            println("StlRepairer: Removed $degenerateRemoved2 degenerate triangles from fill")
         }
 
         // Шаг 5-6: Fix normals  
@@ -185,8 +194,9 @@ class StlRepairer {
             if (group.size <= 1) continue
             
             val center = computeGroupCenter(group)
-            edgesFixedCount += group.size - 1
+            if (group.all { distanceSquared(it, center) < 1e-20 }) continue
             
+            edgesFixedCount += group.size - 1
             for (v in group) snappedVertices[v] = center
         }
 
@@ -437,13 +447,16 @@ class StlRepairer {
         }
         val normal = V3d(nx, ny, nz)
         val mag = normal.magnitude()
-        if (mag < 1e-10) return emptyList()
+        if (mag < 1e-10) {
+            // Degenerate polygon - fall back to fan triangulation
+            return fanTriangulate(vertices)
+        }
         val n = normal.scale(1.0 / mag)
 
         val ref = if (Math.abs(n.x) < 0.9) V3d(1.0, 0.0, 0.0) else V3d(0.0, 1.0, 0.0)
         var u = n.cross(ref)
         val uMag = u.magnitude()
-        if (uMag < 1e-10) return emptyList()
+        if (uMag < 1e-10) return fanTriangulate(vertices)
         u = u.scale(1.0 / uMag)
         val v = u.cross(n)
 
@@ -500,11 +513,7 @@ class StlRepairer {
             }
 
             if (!earFound) {
-                result.clear()
-                for (i in 1 until vertices.size - 1) {
-                    result.add(Triangle(vertices[0], vertices[i], vertices[i + 1]))
-                }
-                break
+                return fanTriangulate(vertices)
             }
         }
 
@@ -514,6 +523,19 @@ class StlRepairer {
             ))
         }
 
+        return result
+    }
+
+    private fun fanTriangulate(vertices: List<V3d>): List<Triangle> {
+        val cx = vertices.sumOf { it.x } / vertices.size
+        val cy = vertices.sumOf { it.y } / vertices.size
+        val cz = vertices.sumOf { it.z } / vertices.size
+        val center = V3d(cx, cy, cz)
+        val result = mutableListOf<Triangle>()
+        for (i in vertices.indices) {
+            val j = (i + 1) % vertices.size
+            result.add(Triangle(vertices[i], vertices[j], center))
+        }
         return result
     }
 
