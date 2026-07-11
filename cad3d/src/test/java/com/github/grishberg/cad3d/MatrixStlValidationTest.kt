@@ -17,6 +17,7 @@ import com.github.grishberg.cad3d.kbd.core.cfg.KeyPlaceConfig
 import com.github.grishberg.cad3d.kbd.core.cfg.KeyZAngleProvider
 import com.github.grishberg.javascad.StlExporter
 import com.github.grishberg.javascad.StlValidator
+import com.github.grishberg.javascad.ScadExporter
 import com.github.grishberg.cad3d.plugin.cfg.*
 import eu.printingin3d.javascad.utils.Color
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
@@ -90,6 +91,80 @@ class MatrixStlValidationTest {
 
         assertTrue(permanentFile.exists(), "STL file should be generated")
         assertTrue(permanentFile.length() > 0, "STL file should not be empty")
+
+        // Validate final BSP result with non-manifold count
+        val finalFacets = StlValidator.loadStl(permanentFile.absolutePath)
+        val finalOpen = StlValidator.countOpenEdgesOrcaStyle(finalFacets)
+        val finalNM = StlValidator.countNonManifoldEdgesOrcaStyle(finalFacets)
+        println("BSP fn=${cfg.stlFn}: facets=${finalFacets.size}, open=$finalOpen, non-manifold=$finalNM")
+    }
+
+    @Test
+    @Timeout(value = 600, unit = TimeUnit.SECONDS)
+    fun `generate matrix_right via OpenSCAD Nef and validate`() {
+        val cfg = createDefaultKeyboardConfig()
+        val keyPlace = KeyPlace(cfg.keyPlaceConfig)
+        val thumbKeyPlace = ThumbKeyPlace(cfg)
+
+        val thumbBorders: ThumbBorders = when (cfg.thumbClusterSettings.type) {
+            ThumbClusterMode.SingleColumn3Buttons,
+            ThumbClusterMode.SingleColumn4Buttons -> SingleColumn3ButtonsThumbsBordersBuilder(thumbKeyPlace)
+            ThumbClusterMode.TwoRows5Buttons -> throw UnsupportedOperationException()
+        }
+
+        val wallsSettings = WallsSettings(bottomBorderHeight = 1.0)
+        val bottomEdgePatcher = DefaultBottomEdgePatcher(
+            wallsSettings.borderThickness,
+            wallsSettings.bottomBorderHeight
+        )
+        val frontRightToMatrixWallBuilder: FrontRightToMatrixWallBuilder =
+            SingleRow3ButtonsFrontRightToMatrixWallBuilder(cfg, bottomEdgePatcher, topEdgeOffsetZ = -2.0)
+
+        val thumbWalls: ThumbWalls = SingleColumn3ButtonsThumbWalls(
+            cfg, keyPlace, thumbKeyPlace, frontRightToMatrixWallBuilder
+        )
+
+        val keyMatrix = KeyMatrix(cfg, keyPlace, thumbKeyPlace)
+        val connections = keyMatrix.createConnectionsModel()
+        val borders = keyMatrix.createBordersModel(
+            amoebaHoles = null,
+            thumbBorders = thumbBorders,
+            thumbWalls = thumbWalls
+        )
+        val placeHolders = keyMatrix.createPlaceholders()
+        val matrix = placeHolders.model.addModel(connections.model.addModel(borders.model))
+
+        val context = ColorFacetGenerationContext(Color.GRAY)
+        context.setFn(cfg.stlFn)
+        val csg = matrix.toCSG(context)
+
+        println("BSP polygons for ScadExporter: ${csg.polygons.size}")
+
+        // Export via OpenSCAD Nef (tree-based, no BSP!)
+        val scadStlFile = File(tempDir, "matrix_right_nef.stl")
+        println("ScadExporter: generating script...")
+        val script = ScadExporter.generateScript(matrix, cfg.stlFn)
+        println("Script size: ${script.length} chars, lines: ${script.lines().size}")
+        // Save script for debugging
+        File("/tmp/matrix_right.scad").writeText(script)
+        println("Script saved to /tmp/matrix_right.scad")
+        
+        ScadExporter.export(matrix, scadStlFile.absolutePath, cfg.stlFn)
+        println("ScadExporter done: ${scadStlFile.absolutePath} (${scadStlFile.length()} bytes)")
+
+        assertTrue(scadStlFile.exists(), "STL file should be generated")
+        assertTrue(scadStlFile.length() > 0, "STL file should not be empty")
+
+        // Validate raw
+        val rawFacets = StlValidator.loadStl(scadStlFile.absolutePath)
+        println("Nef raw: ${rawFacets.size} facets, openEdges: ${StlValidator.countOpenEdgesOrcaStyle(rawFacets)}, nonManifold: ${StlValidator.countNonManifoldEdgesOrcaStyle(rawFacets)}")
+
+        // Apply repair pipeline to Nef STL
+        println("Applying repair to Nef STL...")
+        val repairedFacets = StlValidator.validateAndRepair(rawFacets)
+        val repairedFile = File(tempDir, "matrix_right_nef_repaired.stl")
+        com.github.grishberg.javascad.StlExporter.writeBinaryStl(repairedFacets, repairedFile.absolutePath)
+        println("Repaired: ${repairedFacets.size} facets, openEdges: ${StlValidator.countOpenEdgesOrcaStyle(repairedFacets)}, nonManifold: ${StlValidator.countNonManifoldEdgesOrcaStyle(repairedFacets)}")
     }
 
     private fun createDefaultKeyboardConfig(): com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig {
@@ -101,7 +176,7 @@ class MatrixStlValidationTest {
             ),
             keyboardSettings = KeyboardSettings(
                 fn = 3,
-                stlFn = 5,
+                stlFn = 20,
                 columnsCount = 6,
                 rowsCount = 3,
                 plateZOffset = 8.0,

@@ -1,13 +1,9 @@
 package com.github.grishberg.javascad;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Objects;
+import java.io.*;
+import java.nio.*;
+import java.nio.file.*;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -20,6 +16,31 @@ import eu.printingin3d.javascad.vrl.Polygon;
 public class StlValidator {
 
     private static final int PRECISION = 6;
+
+    /** Load binary STL into Facet list */
+    public static List<Facet> loadStl(String path) throws IOException {
+        byte[] data = Files.readAllBytes(java.nio.file.Paths.get(path));
+        return loadStl(data);
+    }
+
+    public static List<Facet> loadStl(byte[] data) {
+        List<Facet> facets = new ArrayList<>();
+        ByteBuffer buf = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN);
+        buf.position(80);
+        if (buf.remaining() < 4) return facets;
+        int count = buf.getInt();
+        for (int i = 0; i < count && buf.remaining() >= 50; i++) {
+            float nx = buf.getFloat(), ny = buf.getFloat(), nz = buf.getFloat();
+            float v0x = buf.getFloat(), v0y = buf.getFloat(), v0z = buf.getFloat();
+            float v1x = buf.getFloat(), v1y = buf.getFloat(), v1z = buf.getFloat();
+            float v2x = buf.getFloat(), v2y = buf.getFloat(), v2z = buf.getFloat();
+            buf.position(buf.position() + 2);
+            V3d n = new V3d(nx, ny, nz);
+            Triangle3d t = new Triangle3d(new V3d(v0x,v0y,v0z), new V3d(v1x,v1y,v1z), new V3d(v2x,v2y,v2z));
+            facets.add(new Facet(t, n, new eu.printingin3d.javascad.utils.Color(128,128,128)));
+        }
+        return facets;
+    }
 
     /**
      * Count ALL non-manifold edges: open edges (1 neighbor) + internal non-manifold (3+ neighbors).
@@ -108,20 +129,33 @@ public class StlValidator {
         int sharedOpen = countOpenEdgesOrcaStyle(shared);
         System.out.println("Shared vertex rebuild: " + initialOpen + " -> " + sharedOpen + " open edges, facets=" + shared.size());
 
-        // Step 3: Weld remaining open edges with very small tolerance only
-        // After fixPolygons, most gaps are floating-point errors (< 0.001mm)
+        // Step 3: Iterative repair: weld → fill → weld → fill until convergence
         List<Facet> repaired = shared;
-        int beforeWeld = countOpenEdgesOrcaStyle(repaired);
-        repaired = snapOpenEdgesAndRebuild(repaired, 0.001f);
-        int afterWeld = countOpenEdgesOrcaStyle(repaired);
-        System.out.println("Weld tol=0.001mm: " + beforeWeld + " -> " + afterWeld + " open edges, facets=" + repaired.size());
+        int prevOpen = countOpenEdgesOrcaStyle(repaired);
+        float weldTol = 0.001f;
+        int pass = 0;
+        while (prevOpen > 0 && pass < 4) {
+            pass++;
+            // Weld
+            int beforeWeld = prevOpen;
+            repaired = snapOpenEdgesAndRebuild(repaired, weldTol);
+            prevOpen = countOpenEdgesOrcaStyle(repaired);
+            System.out.println("Weld p" + pass + " tol=" + weldTol + "mm: " + beforeWeld + " -> " + prevOpen + " open edges, facets=" + repaired.size());
 
-        // Step 3b: Fill remaining small holes with triangulation
-        if (afterWeld > 0) {
-            List<Facet> filled = fillSmallHoles(repaired);
-            int afterFill = countOpenEdgesOrcaStyle(filled);
-            System.out.println("FillHoles: " + afterWeld + " -> " + afterFill + " open edges, facets=" + filled.size());
-            repaired = filled;
+            // Fill holes
+            if (prevOpen > 0) {
+                List<Facet> filled = fillSmallHoles(repaired);
+                int afterFill = countOpenEdgesOrcaStyle(filled);
+                System.out.println("FillHoles p" + pass + ": " + prevOpen + " -> " + afterFill + " open edges, facets=" + filled.size());
+                repaired = filled;
+                prevOpen = afterFill;
+            }
+
+            // Early exit: if weld didn't reduce open edges, stop (fill can't close disconnected boundaries)
+            if (prevOpen >= beforeWeld) break;
+
+            // Increase tolerance for next pass
+            weldTol = Math.min(weldTol * 2.5f, 0.01f);
         }
 
         // Step 4: Fix normals
@@ -311,7 +345,7 @@ public class StlValidator {
                 prev = current; current = next; steps++;
             }
 
-            if (cycle.size() >= 3 && cycle.size() <= 200) {
+            if (cycle.size() >= 3 && cycle.size() <= 2000) {
                 float[] baseV = coordMap.get(cycle.get(0));
                 if (baseV == null) continue;
                 for (int k = 1; k < cycle.size() - 1; k++) {
@@ -361,10 +395,10 @@ public class StlValidator {
             }
         }
 
-        // Nearby matching (2 iterations)
+        // Nearby matching (5 iterations with adaptive tolerance)
         float tolerance = shortestEdge;
-        float increment = (float)(bd / 10000.0);
-        for (int iter = 0; iter < 2; iter++) {
+        float increment = (float)(bd / 5000.0);
+        for (int iter = 0; iter < 5; iter++) {
             int[] stats = computeConnectedStats(neighbor);
             if (stats[2] == N) break;
             Map<OrcaCellKey, OrcaEdgeRef> nearbyMap = new HashMap<>();
