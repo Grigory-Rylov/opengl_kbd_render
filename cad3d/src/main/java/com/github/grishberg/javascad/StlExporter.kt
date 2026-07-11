@@ -13,6 +13,9 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.WritableByteChannel
 
+/** Key for shared vertex map — exact float32 matching (OpenSCAD Reindexer approach). */
+data class FloatTriple(val x: Float, val y: Float, val z: Float)
+
 object StlExporter {
 
     private const val X = 0
@@ -43,17 +46,34 @@ object StlExporter {
         )
 
         val triangulationStartTime = System.currentTimeMillis()
+
+        // OpenSCAD approach: collect ALL vertices into a shared vertex array first,
+        // so that adjacent polygons share the exact same vertex instances.
+        // This eliminates floating-point gaps between neighboring facets.
+        val sharedVertices: MutableMap<FloatTriple, V3d> = mutableMapOf()
+
+        fun getSharedVertex(v: V3d): V3d {
+            // Round to float32 precision first, then share.
+            val key = FloatTriple(v.x.toFloat(), v.y.toFloat(), v.z.toFloat())
+            return sharedVertices.getOrPut(key) { V3d(key.x.toDouble(), key.y.toDouble(), key.z.toDouble()) }
+        }
+
         val facetsFromPolygons: MutableList<Facet> = ArrayList<Facet>()
         for (p in fixPolygons) {
-            val triangles = Triangulator.triangulate(p.getVertices(), p.getNormal())
+            // Round polygon vertices to float32 precision BEFORE triangulation.
+            // This ensures adjacent polygons share exactly the same vertices.
+            val roundedVerts = p.getVertices().map { getSharedVertex(it) }
+            val triangles = Triangulator.triangulate(roundedVerts, p.getNormal())
             for (t in triangles) {
-                val rounded = ArrayList<V3d>()
-                for (trianglePoint in t.getPoints()) {
-                    rounded.add(trianglePoint.roundedToEpsilon())
-                }
-                //facetsFromPolygons.add(Facet(t, p.getNormal(), p.getColor()))
-                val newT = Triangle3d(rounded.get(0), rounded.get(1), rounded.get(2))
-                facetsFromPolygons.add(Facet(newT, p.getNormal(), p.getColor()));
+                val shared = arrayOf(
+                    getSharedVertex(t.getPoints()[0]),
+                    getSharedVertex(t.getPoints()[1]),
+                    getSharedVertex(t.getPoints()[2])
+                )
+                // Skip degenerate triangles (collapsed after sharing)
+                if (shared[0] == shared[1] || shared[1] == shared[2] || shared[0] == shared[2]) continue
+                val newT = Triangle3d(shared[0], shared[1], shared[2])
+                facetsFromPolygons.add(Facet(newT, p.getNormal(), p.getColor()))
             }
         }
 
