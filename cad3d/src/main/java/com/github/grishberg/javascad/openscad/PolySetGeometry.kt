@@ -1,8 +1,8 @@
 package com.github.grishberg.javascad.openscad
 
+import com.github.grishberg.javascad.Triangulator
 import eu.printingin3d.javascad.coords.Triangle3d
 import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.vrl.Const
 import eu.printingin3d.javascad.vrl.Facet
 import eu.printingin3d.javascad.vrl.Polygon
 import eu.printingin3d.javascad.utils.Color
@@ -104,11 +104,15 @@ class PolySetGeometry(
             for (poly in polygons) {
                 val vlist = poly.getVertices()
                 val normal = poly.getNormal()
-                val triVerts = Triangulator3d.triangulatePolygon(vlist, normal)
-                for ((v0, v1, v2) in triVerts) {
-                    val idx0 = getOrCreateVertex(vertMap, verts, v0.roundedToEpsilon())
-                    val idx1 = getOrCreateVertex(vertMap, verts, v1.roundedToEpsilon())
-                    val idx2 = getOrCreateVertex(vertMap, verts, v2.roundedToEpsilon())
+                val triangles = Triangulator.triangulate(vlist, normal)
+                for (t in triangles) {
+                    val pts = t.getPoints()
+                    val r0 = pts[0].roundedToEpsilon()
+                    val r1 = pts[1].roundedToEpsilon()
+                    val r2 = pts[2].roundedToEpsilon()
+                    val idx0 = getOrCreateVertex(vertMap, verts, r0)
+                    val idx1 = getOrCreateVertex(vertMap, verts, r1)
+                    val idx2 = getOrCreateVertex(vertMap, verts, r2)
                     tris.add(IndexedTriangle(idx0, idx1, idx2))
                 }
             }
@@ -145,76 +149,5 @@ class PolySetGeometry(
             map[v] = idx
             return idx
         }
-    }
-}
-
-internal object Triangulator3d {
-    fun triangulatePolygon(vertices: List<V3d>, normal: V3d): List<Triple<V3d, V3d, V3d>> {
-        if (vertices.size < 3) return emptyList()
-        if (vertices.size == 3) {
-            return listOf(Triple(vertices[0], vertices[1], vertices[2]))
-        }
-        return earClipTriangulate(vertices, normal)
-    }
-
-    private fun earClipTriangulate(vertices: List<V3d>, normal: V3d): List<Triple<V3d, V3d, V3d>> {
-        val result = mutableListOf<Triple<V3d, V3d, V3d>>()
-        val work = vertices.toMutableList()
-        var attempts = 0
-        val maxAttempts = work.size * work.size
-
-        while (work.size >= 3 && attempts < maxAttempts) {
-            val size = work.size
-            var earFound = false
-            for (i in 0 until size) {
-                val prev = work[(i - 1 + size) % size]
-                val curr = work[i]
-                val next = work[(i + 1) % size]
-                if (isEar(prev, curr, next, work, normal)) {
-                    result.add(Triple(prev, curr, next))
-                    work.removeAt(i)
-                    earFound = true
-                    break
-                }
-            }
-            if (!earFound) {
-                if (work.size >= 3) {
-                    result.add(Triple(work[0], work[1], work[2]))
-                }
-                break
-            }
-            attempts++
-        }
-        return result
-    }
-
-    private fun isEar(prev: V3d, curr: V3d, next: V3d, all: List<V3d>, normal: V3d): Boolean {
-        val a = curr.subtract(prev)
-        val b = next.subtract(curr)
-        val cross = a.cross(b)
-        if (cross.magnitude() < Const.EPSILON) return false
-
-        if (cross.dot(normal) <= 0) return false
-
-        for (p in all) {
-            if (p == prev || p == curr || p == next) continue
-            if (isPointInTriangle(p, prev, curr, next)) return false
-        }
-        return true
-    }
-
-    private fun isPointInTriangle(p: V3d, a: V3d, b: V3d, c: V3d): Boolean {
-        val v0 = c.subtract(a)
-        val v1 = b.subtract(a)
-        val v2 = p.subtract(a)
-        val dot00 = v0.dot(v0)
-        val dot01 = v0.dot(v1)
-        val dot02 = v0.dot(v2)
-        val dot11 = v1.dot(v1)
-        val dot12 = v1.dot(v2)
-        val invDenom = 1.0 / (dot00 * dot11 - dot01 * dot01)
-        val u = (dot11 * dot02 - dot01 * dot12) * invDenom
-        val v = (dot00 * dot12 - dot01 * dot02) * invDenom
-        return u >= 0 && v >= 0 && (u + v) <= 1
     }
 }

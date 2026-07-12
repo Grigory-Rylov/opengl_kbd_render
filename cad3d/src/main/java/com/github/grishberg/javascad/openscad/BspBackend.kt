@@ -1,9 +1,5 @@
 package com.github.grishberg.javascad.openscad
 
-import com.github.grishberg.javascad.StlRepairer
-import com.github.grishberg.javascad.StlValidator
-import eu.printingin3d.javascad.vrl.CSG
-import eu.printingin3d.javascad.vrl.Node
 import eu.printingin3d.javascad.vrl.Polygon
 
 object BspBackend {
@@ -18,52 +14,35 @@ object BspBackend {
 
         val polygonLists = geometries.map { it.toPolygons() }
 
-        val resultCsg: CSG = when (op) {
+        val resultPolygons: List<Polygon> = when (op) {
             OpenSCADOperator.UNION -> {
-                var csg = CSG(polygonLists[0])
+                var current = polygonLists[0]
                 for (i in 1 until polygonLists.size) {
-                    val a = csg
-                    val b = CSG(polygonLists[i])
-                    csg = a.union(b)
+                    current = RobustCsg.union(current, polygonLists[i], autoRepair)
                 }
-                csg
+                current
             }
 
             OpenSCADOperator.DIFFERENCE -> {
-                var csg = CSG(polygonLists[0])
+                var current = polygonLists[0]
                 for (i in 1 until polygonLists.size) {
-                    val a = csg
-                    val b = CSG(polygonLists[i])
-                    csg = a.difference(b)
+                    current = RobustCsg.difference(current, polygonLists[i], autoRepair)
                 }
-                csg
+                current
             }
 
             OpenSCADOperator.INTERSECTION -> {
-                var csg = CSG(polygonLists[0])
+                var current = polygonLists[0]
                 for (i in 1 until polygonLists.size) {
-                    val a = csg
-                    val b = CSG(polygonLists[i])
-                    csg = a.intersect(b)
+                    current = RobustCsg.intersect(current, polygonLists[i], autoRepair)
                 }
-                csg
+                current
             }
         }
 
-        val resultPolygons = resultCsg.getPolygons()
+        val vr = com.github.grishberg.javascad.StlValidator().validate(resultPolygons)
         val result = PolySetGeometry.fromPolygons(resultPolygons)
-
-        val validator = StlValidator()
-        val validationResult = validator.validate(resultPolygons)
-        result.isManifold = validationResult.isManifold
-
-        if (!result.isManifold && autoRepair) {
-            val (repaired, _) = StlRepairer().repair(resultPolygons)
-            val repairedResult = PolySetGeometry.fromPolygons(repaired)
-            val repairedValidation = validator.validate(repaired)
-            repairedResult.isManifold = repairedValidation.isManifold
-            return repairedResult
-        }
+        result.isManifold = vr.isManifold
 
         return result
     }
