@@ -595,12 +595,16 @@ class KeyboardBuilder(
         stlExportListener?.get()?.onExportStart(name)
         Thread {
             try {
+                stlExportListener?.get()?.onExportProgress(name, "Рендеринг CSG...")
                 val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
                 context.setFn(cfg.stlFn)
+                val polygons = model.toCSG(context).polygons
                 println("Start stl exporting $name")
                 StlExporter.saveStl(
-                    model.toCSG(context).polygons, targetPath
-                )
+                    polygons, targetPath
+                ) { stage ->
+                    stlExportListener?.get()?.onExportProgress(name, stage)
+                }
                 println("End stl exporting $name")
                 stlExportListener?.get()?.onExportFinish(name, true, null)
             } catch (e: IOException) {
