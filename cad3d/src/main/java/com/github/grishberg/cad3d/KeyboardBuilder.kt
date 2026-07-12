@@ -598,7 +598,7 @@ class KeyboardBuilder(
                 val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
                 context.setFn(cfg.stlFn)
                 println("Start stl exporting $name")
-                StlExporter.saveStl(
+                StlExporter.saveStlCsg(
                     model.toCSG(context).polygons, targetPath,
                     progressListener = stlExportListener?.get()
                 )

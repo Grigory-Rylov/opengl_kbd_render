@@ -1,6 +1,10 @@
 package com.github.grishberg.javascad
 
 import com.github.grishberg.cad3d.plugin.StlExportListener
+import com.github.grishberg.javascad.openscad.CsgNode
+import com.github.grishberg.javascad.openscad.GeometryEvaluator
+import com.github.grishberg.javascad.openscad.PolySetGeometry
+import com.github.grishberg.javascad.openscad.StlWriter
 import com.github.grishberg.javascad.optimizator.PolygonValidatorMultithreading
 import com.github.grishberg.javascad.optimizator.ProgressObserver
 import eu.printingin3d.javascad.coords.Triangle3d
@@ -19,6 +23,57 @@ object StlExporter {
     private const val X = 0
     private const val Y = 0
     private const val Z = 0
+
+    fun saveStlCsg(
+        polygons: List<Polygon>,
+        fileName: String,
+        autoRepair: Boolean = false,
+        progressListener: StlExportListener? = null
+    ) {
+        println("saveStlCsg: Start OpenSCAD-style pipeline, ${polygons.size} polygons")
+
+        val startTime = System.currentTimeMillis()
+
+        progressListener?.onExportProgress(fileName, 0)
+
+        val rootNode = CsgNode.fromPolygons(polygons)
+        val evaluator = GeometryEvaluator(autoRepair)
+        val geometry = evaluator.evaluate(rootNode)
+
+        println("saveStlCsg: evaluation completed, takes ${System.currentTimeMillis() - startTime} ms")
+
+        progressListener?.onExportProgress(fileName, 50)
+
+        if (geometry is PolySetGeometry) {
+            val polySet = geometry
+            println("saveStlCsg: ${polySet.triangleCount()} triangles, ${polySet.vertexCount()} vertices, manifold=${polySet.isManifold}")
+
+            if (autoRepair && !polySet.isManifold) {
+                println("saveStlCsg: mesh is not manifold, repairing via StlRepairer")
+                val (repaired, _) = StlRepairer().repair(polygons)
+                val repairedPolySet = PolySetGeometry.fromPolygons(repaired)
+                repairedPolySet.isManifold = StlValidator().validate(repaired).isManifold
+                progressListener?.onExportProgress(fileName, 80)
+                writeBinaryStlFromPolySet(repairedPolySet, fileName)
+                println("saveStlCsg: done with repair, ${repairedPolySet.triangleCount()} triangles")
+            } else {
+                writeBinaryStlFromPolySet(polySet, fileName)
+                println("saveStlCsg: done, ${polySet.triangleCount()} triangles")
+            }
+        } else {
+            println("saveStlCsg: unexpected geometry type, falling back to legacy pipeline")
+            saveStl(polygons, fileName, autoRepair, progressListener)
+        }
+
+        progressListener?.onExportProgress(fileName, 100)
+    }
+
+    @Throws(IOException::class)
+    fun writeBinaryStlFromPolySet(polySet: PolySetGeometry, fileName: String) {
+        FileOutputStream(fileName).channel.use { channel ->
+            StlWriter.writeBinary(polySet, channel)
+        }
+    }
 
     fun saveStl(
         polygons: List<Polygon>,

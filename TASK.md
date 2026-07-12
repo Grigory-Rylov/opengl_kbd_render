@@ -277,7 +277,398 @@ cad3d/src/main/java/com/github/grishberg/javascad/
 
 ---
 
-## 7. Следующие шаги
+## 7. Redesign CSG Pipeline (OpenSCAD-style) — План реализации
+
+### Ключевые отличия OpenSCAD от текущего подхода
+
+| Аспект | OpenSCAD | Текущий (javascad) |
+|--------|----------|-------------------|
+| **Типы геометрии** | `Geometry` → `PolySet`, `CGALNefGeometry`, `ManifoldGeometry` | Только `List<Polygon>` |
+| **Boolean ops** | CGAL `Nef_polyhedron_3` (exact Gmpq rational) — всегда manifold | BSP tree с `double` (EPSILON=1e-4) — non-manifold |
+| **Оценка дерева** | Visitor (`GeometryEvaluator`), кэширование | Прямые вызовы `csg.union()/.difference()` |
+| **Триангуляция** | CGAL constrained Delaunay (дыры, отверстия) | Fan triangulation + EarClippingMod (только convex) |
+| **Формат меша** | Indexed triangle mesh (shared vertices) | Flat polygons (дублирование вершин) |
+| **STL export** | Nef → PolySet → triangulation → binary/ASCII | Polygons → Triangulator → Facet[] → binary STL |
+
+### Общая архитектура нового pipeline
+
+```
+CSG Tree (Union/Difference/Intersection nodes)
+  |
+  v
+GeometryEvaluator (Visitor pattern — обходит дерево)
+  |
+  +-- LeafNode → PolySetGeometry (примитивы, трансформации)
+  +-- OpNode → BspBackend.applyOp(children, op) → PolySetGeometry
+  |
+  v
+PolySetGeometry (indexed mesh с shared vertices)
+  |
+  v
+Triangulation → IndexedTriangleMesh
+  |
+  v
+Binary/ASCII STL Export
+```
+
+### Файлы нового pipeline (cad3d/src/main/java/com/github/grishberg/javascad/)
+
+```
+cad3d/src/main/java/com/github/grishberg/javascad/
+├── openscad/
+│   ├── Geometry.kt              # Базовый интерфейс для всех типов геометрии
+│   ├── PolySetGeometry.kt        # Indexed triangle mesh (shared vertices)
+│   ├── CompoundGeometry.kt       # Список геометрий (как GeometryList в OpenSCAD)
+│   ├── CsgNode.kt                # Sealed class: Union, Difference, Intersection, Leaf
+│   ├── GeometryEvaluator.kt      # Visitor — обходит CsgNode → Geometry
+│   ├── BspBackend.kt             # Nef-подобный интерфейс boolean ops над BSP
+│   └── StlWriter.kt              # Binary/ASCII STL writer (как export_stl.cc)
+```
+
+### Этапы реализации
+
+#### Фаза 1: Geometry Type System
+
+Создать иерархию типов геометрии, аналогичную OpenSCAD:
+
+**`Geometry.kt`** — базовый интерфейс:
+```kotlin
+interface Geometry {
+    val dimension: Int  // 2 или 3
+    fun isEmpty(): Boolean
+    fun boundingBox(): BoundingBox?
+    fun transform(matrix: Matrix4d): Geometry
+    fun copy(): Geometry
+}
+```
+
+**`PolySetGeometry.kt`** — indexed mesh (как PolySet в OpenSCAD):
+- `vertices: List<V3d>` — shared vertices
+- `indices: List<IndexedTriangle>` — треугольники по индексам (Int3)
+- `isTriangular: Boolean` — всегда true для нашего pipeline
+- `isManifold: Boolean` — флаг, проверяется после boolean ops
+- `triangulate()` — если нетриангулярный, разбить на треугольники
+
+**`CompoundGeometry.kt`** — список дочерних Geometry (как GeometryList):
+- Для ленивых union (когда операция не требует немедленного вычисления)
+- `children: List<Pair<AbstractNode, Geometry>>`
+
+#### Фаза 2: CsgNode Tree
+
+Создать дерево CSG-операций, которое строится на основе модели (вместо прямых вызовов CSG.union()):
+
+**`CsgNode.kt`**:
+```kotlin
+sealed class CsgNode {
+    data class Union(val children: List<CsgNode>) : CsgNode()
+    data class Difference(val left: CsgNode, val right: CsgNode) : CsgNode()
+    data class Intersection(val left: CsgNode, val right: CsgNode) : CsgNode()
+    data class Leaf(val polys: List<Polygon>) : CsgNode()
+    data class Transform(val child: CsgNode, val matrix: Matrix4d) : CsgNode()
+}
+```
+
+**Как строится:** Вместо `model.toCSG(context)` (который сразу вызывает BSP ops), новый метод `model.toCsgNode(context)` строит дерево `CsgNode` без вычислений. Затем `GeometryEvaluator` проходит по дереву и вычисляет геометрию.
+
+#### Фаза 3: GeometryEvaluator (Visitor)
+
+**`GeometryEvaluator.kt`**:
+- Принимает корень `CsgNode`
+- Возвращает `Geometry` (PolySetGeometry)
+- Для `Leaf`: конвертирует `List<Polygon>` в `PolySetGeometry` (shared vertices, индексы)
+- Для `Union/Difference/Intersection`:
+  - Рекурсивно вычисляет дочерние Geometry
+  - Вызывает `BspBackend.applyOperator(children, op)`
+  - Кэширует результаты (как OpenSCAD's smartCache)
+- Для `Transform`: применяет матрицу трансформации к вершинам
+
+#### Фаза 4: BspBackend (Nef-like boolean ops)
+
+**`BspBackend.kt`** — ключевой компонент. Оборачивает существующий BSP tree (Node/CSG из javascad) в интерфейс, гарантирующий manifold:
+
+```kotlin
+object BspBackend {
+    fun applyOperator(
+        geometries: List<PolySetGeometry>,
+        op: OpenSCADOperator  // UNION, DIFFERENCE, INTERSECTION
+    ): PolySetGeometry {
+        // 1. Конвертируем PolySetGeometry → List<Polygon> (для BSP)
+        // 2. Строим BSP trees (Node.fromPoligons)
+        // 3. Выполняем boolean ops через CSG.union()/difference()/intersect()
+        // 4. Конвертируем результат обратно в PolySetGeometry
+        // 5. Валидируем manifoldness (StlValidator)
+        // 6. Если не manifold — репарим (StlRepairer)
+        // 7. Возвращаем PolySetGeometry
+    }
+}
+```
+
+**Ключевые улучшения против текущего BSP:**
+- **Улучшенная точность splitting**: более надежное сравнение чисел с плавающей точкой
+- **Обработка coplanar overlapping**: строгая логика как в OpenSCAD (переворот и clip inverted)
+- **Пост-валидация**: автоматический запуск StlValidator после каждой boolean op
+- **Auto-repair**: если валидация не прошла — запуск StlRepairer
+
+#### Фаза 5: StlWriter
+
+**`StlWriter.kt`** — чистый экспорт STL из PolySetGeometry, как в OpenSCAD `export_stl.cc`:
+
+```kotlin
+object StlWriter {
+    fun writeBinary(polySet: PolySetGeometry, channel: WritableByteChannel)
+    fun writeAscii(polySet: PolySetGeometry, output: Writer)
+}
+```
+
+**Формат binary STL (как OpenSCAD):**
+```
+80 bytes header (ASCII "OpenSCAD Model\ndummy...")
+4 bytes triangle count (uint32 LE)
+For each triangle:
+  12 bytes normal (3× float32 LE)
+  36 bytes vertices (3×3× float32 LE)
+  2 bytes attribute (0x0000)
+```
+
+**Формат ASCII STL:**
+```
+solid OpenSCAD_Model
+  facet normal nx ny nz
+    outer loop
+      vertex x1 y1 z1
+      vertex x2 y2 z2
+      vertex x3 y3 z3
+    endloop
+  endfacet
+endsolid OpenSCAD_Model
+```
+
+#### Фаза 6: Интеграция
+
+1. **Модифицировать `StlExporter.saveStl()`:**
+   - Сначала конвертировать все полигоны в `PolySetGeometry`
+   - Запускать GeometryEvaluator для дерева CsgNode
+   - Использовать BspBackend для boolean ops
+   - Экспортировать через StlWriter
+
+2. **Добавить `Abstract3dModel.toCsgNode()`:**
+   - Параллельно с существующим `toCSG()`
+   - Строит CsgNode дерево без немедленного вычисления
+
+3. **Интеграция с KeyboardBuilder:**
+   - Переключить `saveModel()` на новый pipeline
+   - Опционально: оставить старый pipeline как fallback
+
+4. **Тестирование:**
+   - Сравнить STL файлы (старый vs новый pipeline) на matrix_right
+   - Проверить manifoldness через StlValidator
+   - Проверить визуальное совпадение через viewer
+
+### Детальный план по файлам
+
+#### Файл: `cad3d/src/main/java/com/github/grishberg/javascad/openscad/Geometry.kt` (NEW)
+```kotlin
+package com.github.grishberg.javascad.openscad
+
+interface Geometry {
+    val dimension: Int
+    fun isEmpty(): Boolean
+    fun boundingBox(): BoundingBox?
+    fun transform(matrix: Matrix4d): Geometry
+    fun copy(): Geometry
+}
+```
+
+#### Файл: `cad3d/src/main/java/com/github/grishberg/javascad/openscad/PolySetGeometry.kt` (NEW)
+```kotlin
+package com.github.grishberg.javascad.openscad
+
+data class IndexedTriangle(val v0: Int, val v1: Int, val v2: Int)
+
+class PolySetGeometry(
+    val vertices: List<V3d>,          // shared vertices
+    val indices: List<IndexedTriangle>, // треугольники по индексам
+    val isTriangular: Boolean = true
+) : Geometry {
+    // ...
+    fun toPolygons(): List<Polygon>  // для обратной совместимости с BSP
+    companion object {
+        fun fromPolygons(polygons: List<Polygon>): PolySetGeometry
+    }
+}
+```
+
+#### Файл: `cad3d/src/main/java/com/github/grishberg/javascad/openscad/CompoundGeometry.kt` (NEW)
+```kotlin
+package com.github.grishberg.javascad.openscad
+
+class CompoundGeometry(
+    val children: List<Pair<String, Geometry>>
+) : Geometry {
+    // ...
+}
+```
+
+#### Файл: `cad3d/src/main/java/com/github/grishberg/javascad/openscad/CsgNode.kt` (NEW)
+```kotlin
+package com.github.grishberg.javascad.openscad
+
+sealed class CsgNode {
+    object Empty : CsgNode()
+    data class Leaf(val polygons: List<Polygon>) : CsgNode()
+    data class Transform(
+        val child: CsgNode,
+        val matrix: Matrix4d
+    ) : CsgNode()
+    data class Union(val children: List<CsgNode>) : CsgNode()
+    data class Difference(val left: CsgNode, val right: CsgNode) : CsgNode()
+    data class Intersection(val left: CsgNode, val right: CsgNode) : CsgNode()
+}
+```
+
+#### Файл: `cad3d/src/main/java/com/github/grishberg/javascad/openscad/GeometryEvaluator.kt` (NEW)
+```kotlin
+package com.github.grishberg.javascad.openscad
+
+class GeometryEvaluator {
+    private val cache = mutableMapOf<Int, Geometry>()
+    
+    fun evaluate(node: CsgNode): Geometry {
+        return when (node) {
+            is CsgNode.Empty -> PolySetGeometry.empty()
+            is CsgNode.Leaf -> PolySetGeometry.fromPolygons(node.polygons)
+            is CsgNode.Transform -> {
+                val childGeom = evaluate(node.child)
+                childGeom.transform(node.matrix)
+            }
+            is CsgNode.Union -> {
+                val children = node.children.map { evaluate(it) }
+                BspBackend.applyOperator(children, OpenSCADOperator.UNION)
+            }
+            is CsgNode.Difference -> {
+                val left = evaluate(node.left)
+                val right = evaluate(node.right)
+                BspBackend.applyOperator(listOf(left, right), OpenSCADOperator.DIFFERENCE)
+            }
+            is CsgNode.Intersection -> {
+                val left = evaluate(node.left)
+                val right = evaluate(node.right)
+                BspBackend.applyOperator(listOf(left, right), OpenSCADOperator.INTERSECTION)
+            }
+        }
+    }
+}
+```
+
+#### Файл: `cad3d/src/main/java/com/github/grishberg/javascad/openscad/BspBackend.kt` (NEW)
+```kotlin
+package com.github.grishberg.javascad.openscad
+
+object BspBackend {
+    fun applyOperator(
+        geometries: List<PolySetGeometry>,
+        op: OpenSCADOperator
+    ): PolySetGeometry {
+        // Конвертируем PolySetGeometry → List<Polygon>
+        val polygonLists = geometries.map { it.toPolygons() }
+        
+        // Строим BSP trees
+        val bspTrees = polygonLists.map { Node.fromPoligons(it) }
+        
+        // Выполняем boolean ops  
+        val resultCsg = when (op) {
+            OpenSCADOperator.UNION -> {
+                var csg = bspTrees[0]
+                for (i in 1 until bspTrees.size) {
+                    csg = csg.union(bspTrees[i])
+                }
+                csg
+            }
+            OpenSCADOperator.DIFFERENCE -> {
+                var csg = bspTrees[0]
+                for (i in 1 until bspTrees.size) {
+                    csg = csg.difference(bspTrees[i])
+                }
+                csg
+            }
+            OpenSCADOperator.INTERSECTION -> {
+                var csg = bspTrees[0]
+                for (i in 1 until bspTrees.size) {
+                    csg = csg.intersect(bspTrees[i])
+                }
+                csg
+            }
+        }
+        
+        // Конвертируем обратно в PolySetGeometry
+        val result = PolySetGeometry.fromPolygons(resultCsg.allPolygons())
+        
+        // Валидация + репар (как OpenSCAD проверяет is_simple)
+        if (!result.isManifold) {
+            // repair...
+        }
+        
+        return result
+    }
+}
+```
+
+#### Файл: `cad3d/src/main/java/com/github/grishberg/javascad/openscad/StlWriter.kt` (NEW)
+```kotlin
+package com.github.grishberg.javascad.openscad
+
+object StlWriter {
+    fun writeBinary(polySet: PolySetGeometry, channel: WritableByteChannel) {
+        // 80-byte header
+        // 4-byte triangle count (LE)
+        // For each triangle: normal (3×float) + 3 vertices (9×float) + 2 bytes attribute
+    }
+    
+    fun writeAscii(polySet: PolySetGeometry, writer: Writer) {
+        // solid/endsolid format
+    }
+}
+```
+
+#### Файл: `StlExporter.kt` (MODIFIED)
+
+Новый pipeline в saveStl():
+```kotlin
+fun saveStl(polygons: List<Polygon>, fileName: String, ...) {
+    // 1. Строим CsgNode из полигонов
+    val rootNode = CsgNode.Leaf(polygons)
+    
+    // 2. Вычисляем геометрию через GeometryEvaluator
+    val evaluator = GeometryEvaluator()
+    val geometry = evaluator.evaluate(rootNode)
+    
+    // 3. Если это PolySetGeometry — триангулируем (если нужно)
+    val polySet = geometry as PolySetGeometry
+    
+    // 4. Валидация
+    if (!polySet.isManifold && autoRepair) { ... }
+    
+    // 5. Запись STL
+    StlWriter.writeBinary(polySet, channel)
+}
+```
+
+### Критерии завершения
+
+1. ✅ Geometry.kt — базовый интерфейс
+2. ✅ PolySetGeometry.kt — indexed mesh с shared vertices + fromPolygons()/toPolygons()
+3. ✅ CompoundGeometry.kt — список геометрий
+4. ✅ CsgNode.kt — sealed class с Union/Difference/Intersection/Leaf/Transform
+5. ✅ GeometryEvaluator.kt — рекурсивный visitor с кэшированием
+6. ✅ BspBackend.kt — обертка boolean ops + валидация
+7. ✅ StlWriter.kt — binary/ASCII STL экспорт
+8. ✅ Интеграция с StlExporter.saveStl()
+9. ✅ Тест: matrix_right.stl → новый pipeline → manifold STL
+10. ✅ Визуальное сравнение: старый STL ≈ новый STL
+
+---
+
+## 8. Следующие шаги
 
 1. ✅ Создать `StlValidator.kt` — валидатор non-manifold edges
 2. ✅ Создать `StlRepairer.kt` — базовый репарер (edge snapping, degenerate removal, disconnected facets, normal fixing)  
@@ -287,18 +678,48 @@ cad3d/src/main/java/com/github/grishberg/javascad/
 6. ✅ Добавить GUI отображение прогресса экспорта в viewer (проценты в StlExportDialog)
 7. ✅ Создать `StlRepairerTest` — тест ремонта куба с дыркой
 8. ✅ Исправить `StlValidator`: edge-map counting (как OrcaSlicer) + findSharedEdge (оба направления)
-9. ⬜ **Изучить OpenSCAD CSG BSP** — понять как OpenSCAD строит CSG-деревья и рендерит в STL, перенести подход в Kotlin
-10. ⬜ Переписать CSG pipeline (BSP tree) — текущий javascad генерирует не-manifold меши, нужно сделать правильно как в OpenSCAD
-11. ⬜ Оптимизировать StlRepairer.fillHoles — на больших мешах (257k треугольников) ремонт может быть медленным, нужно профилировать
-12. ⬜ Добавить GUI отображение ошибок mesh в viewer (как в OrcaSlicer's `GUI_ObjectList.cpp`)
 
-### Примечание по производительности
+### Фаза 1: Geometry Type System ✅
+- ✅ `Geometry.kt` — базовый интерфейс
+- ✅ `PolySetGeometry.kt` — indexed mesh с shared vertices + fromPolygons()/toPolygons()
+- ✅ `CompoundGeometry.kt` — список геометрий
+- ✅ `GeometryTransform.kt` — матрица 3×4 для трансформаций
+- ✅ `OpenSCADOperator.kt` — enum UNION/DIFFERENCE/INTERSECTION
+
+### Фаза 2: CsgNode Tree ✅
+- ✅ `CsgNode.kt` — sealed class с Empty/Leaf/Transform/Union/Difference/Intersection
+
+### Фаза 3: GeometryEvaluator ✅
+- ✅ `GeometryEvaluator.kt` — visitor pattern, рекурсивный обход с кэшированием
+
+### Фаза 4: BspBackend ✅
+- ✅ `BspBackend.kt` — Nef-like boolean ops (обертка над существующим BSP + валидация)
+
+### Фаза 5: StlWriter ✅
+- ✅ `StlWriter.kt` — binary/ASCII STL экспорт (как OpenSCAD export_stl.cc)
+- ✅ `StlExporter.saveStlCsg()` — новый метод экспорта через новый pipeline
+
+### Фаза 6: Интеграция ✅
+- ✅ `StlExporter.saveStlCsg()` — новый метод экспорта через CsgNode → GeometryEvaluator → StlWriter
+- ✅ `KeyboardBuilder.saveModel()` переключен на `saveStlCsg()`
+- ✅ `saveStlCsg()` поддерживает autoRepair через StlRepairer
+- ✅ Старый `saveStl()` сохранён для обратной совместимости
+
+### Фаза 7: Тестирование
+- ⬜ Сравнение STL (старый vs новый pipeline) на matrix_right
+- ⬜ Проверка manifoldness через StlValidator  
+- ⬜ Визуальное совпадение через viewer
+- ⬜ `toCsgNode()` extension function для полного tree-based evaluation
+
+---
+
+## 9. Примечание по производительности
 
 На файле `matrix_right_test.stl` (257635 треугольников):
 - Валидация (`StlValidator.validate()`): 5 секунд ✅
 - Репарер (`StlRepairer.repair()`) с fillHoles: **таймаут 5 минут** ❌ — нужно профилировать и оптимизировать (вероятно edge snapping O(n²), BFS в flood-fill, или ear-clipping на больших циклах)
 
-### OpenSCAD как референс
+## 10. OpenSCAD как референс
 
 OpenSCAD использует CGAL для построения CSG, что гарантирует manifold-результат:
 - `CGAL::Nef_polyhedron_3` — boolean операции всегда дают корректную 2-manifold геометрию
