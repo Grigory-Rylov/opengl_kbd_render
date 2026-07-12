@@ -4,11 +4,8 @@ import com.github.grishberg.csg.adapter.JscadAdapter
 import com.github.grishberg.csg.export.StlExporter as NewStlExporter
 import com.github.grishberg.csg.geom.PolySet3
 import com.github.grishberg.csg.geom.Vec3
-import com.github.grishberg.javascad.optimizator.ProgressObserver
 import com.github.grishberg.javascad.optimizator.PolygonValidatorMultithreading
-import eu.printingin3d.javascad.coords.Triangle3d
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.javascad.optimizator.ProgressObserver
 import eu.printingin3d.javascad.vrl.CSG as JscadCSG
 import eu.printingin3d.javascad.vrl.Facet
 import eu.printingin3d.javascad.vrl.Polygon as JscadPolygon
@@ -20,21 +17,21 @@ import java.nio.channels.WritableByteChannel
 
 object StlExporter {
 
-    // ---- Публичный API: новый движок (основной пайплайн) ----
+    // ---- Публичный API: новый движок ----
 
-    /** Экспорт JSCAD CSG через новый BSP движок. */
     fun saveStlNew(csg: JscadCSG, fileName: String, onProgress: ((String) -> Unit)? = null) {
         saveStlNew(csg.getPolygons(), fileName, onProgress)
     }
 
     /**
-     * Экспорт JSCAD полигонов через новый движок.
-     * Пайплайн: fixPolygons -> JscadAdapter(polySet3 with shared verts) -> writeBinaryStl
+     * Пайплайн: fixPolygons → JscadAdapter → writeBinaryStl → load + StlValidator.validateAndRepair
+     *
+     * StlValidator работает на float32 — там где STL реально живёт.
      */
     fun saveStlNew(polygons: List<JscadPolygon>, fileName: String, onProgress: ((String) -> Unit)? = null) {
         val startTime = System.currentTimeMillis()
 
-        // Step 1: fixPolygons (исправляет общие рёбра между полигонами)
+        // Step 1: fixPolygons — исправляет общие рёбра (11607 → 52 open edges)
         onProgress?.invoke("Fix polygons...")
         val fixed = PolygonValidatorMultithreading().fixPolygons(
             polygons, object : ProgressObserver {
@@ -44,24 +41,42 @@ object StlExporter {
             })
         onProgress?.invoke("Fix polygons done: ${fixed.size} polygons")
 
-        // Step 2: JscadAdapter -> PolySet3 (shared vertices, триангуляция)
+        // Step 2: JscadAdapter → PolySet3 (shared vertices, exact double matching)
         onProgress?.invoke("Конвертация в PolySet3...")
         val polyset = JscadAdapter.polygonsToPolySet3(fixed)
         println("saveStl: PolySet3 -> ${polyset.indices.size} tris, ${polyset.vertices.size} verts")
 
-        // Step 3: Write binary STL directly (double precision from new engine)
-        onProgress?.invoke("Запись STL...")
-        try {
-            FileOutputStream(fileName).channel.use { channel ->
-                NewStlExporter.writeBinaryStl(polyset, channel)
-                println("Export to $fileName is done. (${System.currentTimeMillis() - startTime} ms total)")
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
+        // Step 3: Write initial STL to temp file
+        val tempFile = java.io.File(fileName).let { f ->
+            java.io.File(f.parentFile, "${f.nameWithoutExtension}_raw${f.extension}")
         }
+        onProgress?.invoke("Запись raw STL...")
+        FileOutputStream(tempFile).channel.use { channel ->
+            NewStlExporter.writeBinaryStl(polyset, channel)
+        }
+
+        // Step 4: Load as float32 Facets + StlValidator.validateAndRepair
+        onProgress?.invoke("Репарация (float32)...")
+        val rawFacets = StlValidator.loadStl(tempFile.absolutePath)
+        val initialOpen = StlValidator.countOpenEdgesOrcaStyle(rawFacets)
+        println("saveStl: raw float32 -> ${rawFacets.size} facets, open=$initialOpen")
+
+        val repaired = StlValidator.validateAndRepair(rawFacets) as MutableList<Facet>
+        val finalOpen = StlValidator.countOpenEdgesOrcaStyle(repaired)
+        println("saveStl: repaired -> ${repaired.size} facets, open=$finalOpen")
+
+        // Step 5: Write final STL
+        onProgress?.invoke("Запись финального STL...")
+        FileOutputStream(fileName).channel.use { channel ->
+            writeBinaryStl(repaired, channel)
+        }
+
+        // Cleanup
+        tempFile.delete()
+        println("Export to $fileName done. (${System.currentTimeMillis() - startTime} ms total)")
     }
 
-    // ---- Публичный API: перенаправляет на новый движок ----
+    // ---- Перенаправление старого API на новый ----
 
     fun saveStl(polygons: List<JscadPolygon>, fileName: String) {
         saveStl(polygons, fileName, null)
@@ -71,7 +86,7 @@ object StlExporter {
         saveStlNew(polygons, fileName, onProgress)
     }
 
-    // ---- Legacy: прямая запись Facet -> STL (без репарации, для тестов) ----
+    // ---- Legacy: запись JSCAD Facets (для тестов) ----
 
     fun writeBinaryStl(facets: MutableList<Facet>, fileName: String) {
         try {
@@ -84,7 +99,6 @@ object StlExporter {
         }
     }
 
-    /** Write binary STL from Facet list — converts double -> float32. */
     @Throws(IOException::class)
     fun writeBinaryStl(facets: MutableList<Facet>, channel: WritableByteChannel) {
         val header = ByteArray(80)

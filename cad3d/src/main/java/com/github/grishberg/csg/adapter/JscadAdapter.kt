@@ -9,47 +9,57 @@ import eu.printingin3d.javascad.vrl.Polygon as JscadPolygon
 import eu.printingin3d.javascad.vrl.CSG as JscadCSG
 
 /**
- * Адаптер: конвертирует результат JSCAD BSP в наш PolySet3.
- * JSCAD BSP создаёт N-gons с дублированными вершинами.
- * Наш движок делает из этого чистый треугольный меш с общими вершинами.
+ * Адаптер: конвертирует JSCAD полигоны в наш PolySet3.
+ * Ключевой момент: вершины шарятся ДО триангуляции, чтобы соседние
+ * полигоны делили одни и те же вершины на общих рёбрах.
  */
 object JscadAdapter {
 
-    /**
-     * Конвертирует JSCAD CSG полигоны в PolySet3 с общими вершинами.
-     * N-gons триангулируются ear-clipping (через fan от первой вершины).
-     */
     fun csgToPolySet3(jscadCsg: JscadCSG): PolySet3 {
         return polygonsToPolySet3(jscadCsg.getPolygons())
     }
 
     /**
-     * Конвертирует JSCAD полигоны в PolySet3 с общими вершинами.
+     * Конвертирует JSCAD полигоны в PolySet3.
+     * 1. Все вершины шарятся по точным координатам (double)
+     * 2. N-gons триангулируются fan-методом
+     * 3. meshFromPolygons ещё раз шарит для гарантии
      */
     fun polygonsToPolySet3(polygons: List<JscadPolygon>): PolySet3 {
-        val bspPolys = mutableListOf<BspPolygon>()
+        // Step 1: Share ALL vertices across ALL polygons at exact double precision
+        data class VKey(val x: Double, val y: Double, val z: Double)
 
+        val vertexMap = mutableMapOf<VKey, Vec3>()
+        fun getOrAdd(v: V3d): Vec3 {
+            val key = VKey(v.x, v.y, v.z)
+            if (key !in vertexMap) {
+                vertexMap[key] = Vec3(v.x, v.y, v.z)
+            }
+            return vertexMap[key]!!
+        }
+
+        // Step 2: Build BspPolygons from shared vertices
+        val bspPolys = mutableListOf<BspPolygon>()
         for (poly in polygons) {
-            val verts = poly.getVertices()
+            val verts = poly.getVertices().map { getOrAdd(it) }
             if (verts.size < 3) continue
 
-            // Fan-триангуляция N-gon -> треугольники
-            val v0 = toVec3(verts[0])
+            // Fan-triangulation
+            val v0 = verts[0]
             for (i in 1 until verts.size - 1) {
-                val v1 = toVec3(verts[i])
-                val v2 = toVec3(verts[i + 1])
+                val v1 = verts[i]
+                val v2 = verts[i + 1]
                 if (!degenerate(v0, v1, v2)) {
                     bspPolys.add(BspPolygon(v0, v1, v2))
                 }
             }
         }
 
+        // Step 3: meshFromPolygons will deduplicate again (redundant but safe)
         return meshFromPolygons(bspPolys)
     }
 
-    /**
-     * Прямая конвертация JSCAD Facet -> PolySet3 (для уже триангулированных данных).
-     */
+    /** Прямая конвертация уже триангулированных данных. */
     fun facetsToPolySet3(facets: List<eu.printingin3d.javascad.vrl.Facet>): PolySet3 {
         data class VKey(val x: Double, val y: Double, val z: Double)
 
@@ -61,7 +71,7 @@ object JscadAdapter {
             val key = VKey(v.x, v.y, v.z)
             if (key !in vertexMap) {
                 vertexMap[key] = vertices.size
-                vertices.add(toVec3(v))
+                vertices.add(Vec3(v.x, v.y, v.z))
             }
             return vertexMap[key]!!
         }
@@ -79,8 +89,6 @@ object JscadAdapter {
 
         return PolySet3(vertices, tris)
     }
-
-    private fun toVec3(v: V3d): Vec3 = Vec3(v.x, v.y, v.z)
 
     private fun degenerate(a: Vec3, b: Vec3, c: Vec3): Boolean {
         return (b - a).cross(c - a).squaredLength() < 1e-20
