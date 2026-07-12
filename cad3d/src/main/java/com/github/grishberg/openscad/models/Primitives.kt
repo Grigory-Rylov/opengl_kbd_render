@@ -32,9 +32,8 @@ class Sphere(
     override fun cloneModel(): Sphere = Sphere(_radius, _segments)
 }
 
-class Hull(vararg models: IModel?) : Abstract3dModel(CsgModel(PolySet3.EMPTY)) {
+class Hull @JvmOverloads constructor(vararg models: IModel?) : Abstract3dModel(CsgModel(PolySet3.EMPTY)) {
     constructor(list: List<Abstract3dModel>) : this(*list.toTypedArray())
-    init { require(models.filterNotNull().isNotEmpty()) }
     override fun cloneModel(): Hull = Hull()
 }
 
