@@ -2,9 +2,9 @@ package com.github.grishberg.cad3d.keyboard
 
 import com.github.grishberg.cad3d.kbd.core.cfg.KeyPlaceConfig
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import eu.printingin3d.javascad.coords.Angles3d
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.openscad.coords.Angles3d
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.models.Abstract3dModel
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -23,11 +23,11 @@ class KeyPlace(private val cfg: KeyPlaceConfig) {
     fun place(column: Int, row: Int, obj: Abstract3dModel, offset: V3d = V3d(0.0, 0.0, 0.0)): Abstract3dModel {
         val keyOffset = cfg.columnOffsetProvider.getOffset(column)
 
-        return obj.move(offset).move(0, 0, -rowRadius).rotate(Angles3d.xOnly(calculateXAngle(row)))
-            .move(0, 0, rowRadius).move(0, 0, -columnRadius).rotate(Angles3d.yOnly(calculateYAngle(column)))
-            .move(0, 0, columnRadius).move(keyOffset.x, keyOffset.y, keyOffset.z)
+        return obj.move(offset).move(0.0, 0.0, -rowRadius).rotate(Angles3d.xOnly(calculateXAngle(row)))
+            .move(0.0, 0.0, rowRadius).move(0.0, 0.0, -columnRadius).rotate(Angles3d.yOnly(calculateYAngle(column)))
+            .move(0.0, 0.0, columnRadius).move(keyOffset.x, keyOffset.y, keyOffset.z)
             .rotate(Angles3d.zOnly(cfg.zAngleProvider.getZAngle(column))).rotate(Angles3d.yOnly(cfg.tentingAngle))
-            .move(0, 0, cfg.plateZOffset)
+            .move(0.0, 0.0, cfg.plateZOffset)
     }
 
     @JvmOverloads

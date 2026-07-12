@@ -8,8 +8,8 @@ import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerPlace
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
 import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.utils.Color
 
 class TrackballCase(
     private val cfg: KeyboardConfig,
@@ -30,9 +30,9 @@ class TrackballCase(
         val usbPortHoleCase =
             controllerPlace.place(controller.placeUsbPort(controllerFactory.createUsbPortCase())).moveY(-1.0)
 
-        val holes = createHoles().move(Utils.v3d(offsetX, 7, 14))
-        val case = createShape().subtractModel(createShape(2)).move(-52, -15, 0).subtractModel(usbPortHole)
-            .subtractModel(usbPortHoleCase).subtractModel(Utils.cylinder(4.0, 10).move(-28, 35, 14))
+        val holes = createHoles().move(Utils.v3d(offsetX, 7.0, 14.0))
+        val case = createShape().subtractModel(createShape(2.0)).move(-52.0, -15.0, 0.0).subtractModel(usbPortHole)
+            .subtractModel(usbPortHoleCase).subtractModel(Utils.cylinder(4.0, 10.0).move(-28.0, 35.0, 14.0))
             .subtractModel(holes)
 
         val screwBase = ScrewBase(cfg)
@@ -48,24 +48,24 @@ class TrackballCase(
         val holes = screwWallPlaces.placeControllerScrews(
             screwBase.plateScrewHolder(), ScrewWallPlaces.HeightMode.Plate, ScrewWallPlaces.ControllerMode.Trackball
         )
-        val plate = createShape(withTop = false).move(-52, -15, 0).subtractModel(holes)
-        return ModelHolder(cfg, plate.withColor(Color.LIGHT_SKY_BLUE).moveZ(-2))
+        val plate = createShape(withTop = false).move(-52.0, -15.0, 0.0).subtractModel(holes)
+        return ModelHolder(cfg, plate.withColor(Color.LIGHT_SKY_BLUE).moveZ(-2.0))
     }
 
     fun createHolder(): Abstract3dModel {
-        val trackBallHolder = Trackball(cfg).trackBallCaseHolder().addModel(Utils.cube(28, 10, 1.5).move(0, 0, -5))
+        val trackBallHolder = Trackball(cfg).trackBallCaseHolder().addModel(Utils.cube(28.0, 10.0, 1.5).move(0.0, 0.0, -5.0))
             .withColor(Color.ORANGE)
-        val trackHolderOffset = Utils.v3d(offsetX, 7, height + 10.9)
-        return trackBallHolder.subtractModel(createHoles(rad = 3.5 / 2).move(0, 0, -5)).move(trackHolderOffset)
+        val trackHolderOffset = Utils.v3d(offsetX, 7.0, height + 10.9)
+        return trackBallHolder.subtractModel(createHoles(rad = 3.5 / 2.0).move(0.0, 0.0, -5.0)).move(trackHolderOffset)
     }
 
     private fun createHoles(rad: Double = 0.7): Abstract3dModel {
-        val holeCylinder = Utils.cylinder(rad, 10)
-        val delta = 10
+        val holeCylinder = Utils.cylinder(rad, 10.0)
+        val delta = 10.0
         return Utils.union(holeCylinder.moveX(-delta), holeCylinder.moveX(delta))
     }
 
-    private fun createShape(offset: Int = 0, withTop: Boolean = true): Abstract3dModel {
+    private fun createShape(offset: Double = 0.0, withTop: Boolean = true): Abstract3dModel {
         val bottomZ = 0.0
         val topZ = height - offset
         val leftBottom = Utils.v3d(offset, offset, bottomZ)

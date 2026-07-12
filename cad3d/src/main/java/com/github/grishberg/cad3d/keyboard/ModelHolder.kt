@@ -3,7 +3,7 @@ package com.github.grishberg.cad3d.keyboard
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.util.fromModel
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Abstract3dModel
 
 data class ModelHolder(
     /**

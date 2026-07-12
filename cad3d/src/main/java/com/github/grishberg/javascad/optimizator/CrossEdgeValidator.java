@@ -1,8 +1,8 @@
 package com.github.grishberg.javascad.optimizator;
 
-import static eu.printingin3d.javascad.vrl.Const.EPSILON;
+import static com.github.grishberg.openscad.utils.Const.EPSILON;
 
-import eu.printingin3d.javascad.coords.V3d;
+import com.github.grishberg.openscad.coords.V3d;
 
 public class CrossEdgeValidator {
 

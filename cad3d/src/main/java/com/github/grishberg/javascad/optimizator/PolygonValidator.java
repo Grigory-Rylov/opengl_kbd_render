@@ -1,13 +1,13 @@
 package com.github.grishberg.javascad.optimizator;
 
-import static eu.printingin3d.javascad.vrl.Const.EPSILON;
+import static com.github.grishberg.openscad.utils.Const.EPSILON;
 
-import eu.printingin3d.javascad.coords.Triangle3d;
+import com.github.grishberg.openscad.vrl.Triangle3d;
 import com.github.grishberg.javascad.Triangulator;
-import eu.printingin3d.javascad.coords.V3d;
+import com.github.grishberg.openscad.coords.V3d;
 import com.github.grishberg.javascad.StlValidator;
-import eu.printingin3d.javascad.vrl.Facet;
-import eu.printingin3d.javascad.vrl.Polygon;
+import com.github.grishberg.openscad.vrl.Facet;
+import com.github.grishberg.openscad.vrl.Polygon;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

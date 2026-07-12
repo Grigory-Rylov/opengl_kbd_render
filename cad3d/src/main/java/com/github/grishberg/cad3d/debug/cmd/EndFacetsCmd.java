@@ -5,9 +5,9 @@ import com.github.grishberg.cad3d.ui.DebugVisualizer;
 
 import java.util.List;
 
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.utils.Color;
-import eu.printingin3d.javascad.vrl.Facet;
+import com.github.grishberg.openscad.coords.V3d;
+import com.github.grishberg.openscad.utils.Color;
+import com.github.grishberg.openscad.vrl.Facet;
 
 public class EndFacetsCmd implements DebugCmd {
 

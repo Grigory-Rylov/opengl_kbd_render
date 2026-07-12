@@ -4,9 +4,9 @@ import com.github.grishberg.csg.bsp.meshFromPolygons
 import com.github.grishberg.csg.bsp.Polygon as BspPolygon
 import com.github.grishberg.csg.geom.PolySet3
 import com.github.grishberg.csg.geom.Vec3
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.vrl.Polygon as JscadPolygon
-import eu.printingin3d.javascad.vrl.CSG as JscadCSG
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.vrl.Polygon as JscadPolygon
+import com.github.grishberg.openscad.vrl.CSG as JscadCSG
 
 /**
  * Адаптер: конвертирует JSCAD полигоны в наш PolySet3.
@@ -16,7 +16,7 @@ import eu.printingin3d.javascad.vrl.CSG as JscadCSG
 object JscadAdapter {
 
     fun csgToPolySet3(jscadCsg: JscadCSG): PolySet3 {
-        return polygonsToPolySet3(jscadCsg.getPolygons())
+        return polygonsToPolySet3(jscadCsg.polygons)
     }
 
     /**
@@ -41,7 +41,7 @@ object JscadAdapter {
         // Step 2: Build BspPolygons from shared vertices
         val bspPolys = mutableListOf<BspPolygon>()
         for (poly in polygons) {
-            val verts = poly.getVertices().map { getOrAdd(it) }
+            val verts = poly.vertices.map { getOrAdd(it) }
             if (verts.size < 3) continue
 
             // Fan-triangulation
@@ -79,9 +79,9 @@ object JscadAdapter {
         for (facet in facets) {
             val tri = facet.getTriangle()
             val pts = tri.getPoints()
-            val i0 = getIdx(pts[0])
-            val i1 = getIdx(pts[1])
-            val i2 = getIdx(pts[2])
+            val i0 = getIdx(V3d(pts[0].x, pts[0].y, pts[0].z))
+            val i1 = getIdx(V3d(pts[1].x, pts[1].y, pts[1].z))
+            val i2 = getIdx(V3d(pts[2].x, pts[2].y, pts[2].z))
             if (i0 != i1 && i1 != i2 && i0 != i2) {
                 tris.add(PolySet3.Triplet(i0, i1, i2))
             }

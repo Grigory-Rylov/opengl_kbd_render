@@ -49,15 +49,15 @@ import com.github.grishberg.cad3d.trackball.TrackballCase
 import com.github.grishberg.cad3d.util.fromModel
 import com.github.grishberg.javascad.StlExporter
 import com.github.grishberg.javascad.StlImporter
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cube
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.models.IModel
-import eu.printingin3d.javascad.models.StlModel
-import eu.printingin3d.javascad.tranzitions.Union
-import eu.printingin3d.javascad.utils.Color
-import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
-import eu.printingin3d.javascad.vrl.FacetGenerationContext
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Cube
+import com.github.grishberg.openscad.models.Cylinder
+import com.github.grishberg.openscad.models.IModel
+import com.github.grishberg.openscad.models.StlModel
+import com.github.grishberg.openscad.tranzitions.Union
+import com.github.grishberg.openscad.utils.Color
+import com.github.grishberg.openscad.vrl.ColorFacetGenerationContext
+import com.github.grishberg.openscad.vrl.FacetGenerationContext
 import java.io.File
 import java.io.IOException
 import java.lang.ref.WeakReference
@@ -887,7 +887,7 @@ class KeyboardBuilder(
         val switcherHole = switcherPlace.place(switcherFactory.createSwitcher().createSwitcherHole())
         val usbPortHoleCase =
             controllerPlace.place(controller.placeUsbPort(controllerFactory.createUsbPortCase())).moveY(-1.0)
-                .subtractModel(Cube(40.0, 40.0, 5.0).move(-20, 30, -2.5))
+                .subtractModel(Cube(40.0, 40.0, 5.0).move(-20.0, 30.0, -2.5))
 
         val screwBase = ScrewBase(cfg)
         val matrixWallScrewHolder = ScrewsMatrixHolder(cfg, screwBase).create()

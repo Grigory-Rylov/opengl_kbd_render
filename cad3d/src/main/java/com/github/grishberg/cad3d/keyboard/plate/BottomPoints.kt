@@ -9,7 +9,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
-import eu.printingin3d.javascad.coords.V3d
+import com.github.grishberg.openscad.coords.V3d
 
 class BottomPoints(
     private val cfg: KeyboardConfig,
@@ -170,13 +170,13 @@ class BottomPoints(
                 0,
                 i,
                 KeyPlaceholder.placeHolderBackLeft()
-                    .move(-wallsSettings.outerHorizontalOffset, 0, wallsSettings.outerBorderZOffset)
+                    .move(-wallsSettings.outerHorizontalOffset, 0.0, wallsSettings.outerBorderZOffset)
             )
             val leftFront = keyPlace.place(
                 0,
                 i,
                 KeyPlaceholder.placeHolderFrontLeft()
-                    .move(-wallsSettings.outerHorizontalOffset, 0, wallsSettings.outerBorderZOffset)
+                    .move(-wallsSettings.outerHorizontalOffset, 0.0, wallsSettings.outerBorderZOffset)
             )
 
             points.add(
@@ -210,13 +210,13 @@ class BottomPoints(
                 cfg.lastCol,
                 i,
                 KeyPlaceholder.placeHolderBackRight()
-                    .move(wallsSettings.outerHorizontalOffset, 0, wallsSettings.outerBorderZOffset)
+                    .move(wallsSettings.outerHorizontalOffset, 0.0, wallsSettings.outerBorderZOffset)
             )
             val rightFront = keyPlace.place(
                 cfg.lastCol,
                 i,
                 KeyPlaceholder.placeHolderFrontRight()
-                    .move(wallsSettings.outerHorizontalOffset, 0, wallsSettings.outerBorderZOffset)
+                    .move(wallsSettings.outerHorizontalOffset, 0.0, wallsSettings.outerBorderZOffset)
             )
 
             points.add(

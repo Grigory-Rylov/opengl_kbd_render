@@ -8,15 +8,15 @@ import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.util.fromModel
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.coords.Angles3d
-import eu.printingin3d.javascad.enums.Side
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cube
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.models.Hull
-import eu.printingin3d.javascad.tranzitions.Union
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.openscad.basic.Radius
+import com.github.grishberg.openscad.coords.Angles3d
+import com.github.grishberg.openscad.enums.Side
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Cube
+import com.github.grishberg.openscad.models.Cylinder
+import com.github.grishberg.openscad.models.Hull
+import com.github.grishberg.openscad.tranzitions.Union
+import com.github.grishberg.openscad.utils.Color
 
 /**
  * Creates controller holder.
@@ -81,7 +81,7 @@ class ControllerHolderBuilder(
 
         return listOf(
             base,
-            createControllerHolderCylinders().align(Side.CENTER, controllerBody).move(0, -0.2, 1.3)
+            createControllerHolderCylinders().align(Side.CENTER, controllerBody).move(0.0, -0.2, 1.3)
                 .withColor(Color.RED),
             holder.align(Side.CENTER, controllerBody).align(Side.BOTTOM_IN, base).align(Side.FRONT_OUT, verticalWall)
                 .subtractModel(usbHole()),
@@ -93,7 +93,7 @@ class ControllerHolderBuilder(
     private fun createControllerHolderCylinders(): Abstract3dModel {
         val diam = 1.5
         val length = 2.0
-        val cylinder = Cylinder(length, Radius.fromDiameter(diam)).rotate(Angles3d.yOnly(90.0))
+        val cylinder = Cylinder(length, Radius.fromDiameter(diam).value).rotate(Angles3d.yOnly(90.0))
         val offset = 7.0
         val depth = controller.depth / 2.0 + 0.3
         return cylinder.move(-offset, depth, 0.0).addModel(cylinder.move(offset, depth, 0.0))
@@ -104,7 +104,7 @@ class ControllerHolderBuilder(
         val diameter = 3.5
         val width = 10.0
 
-        val cylinder = Cylinder(5.0, Radius.fromDiameter(diameter)).rotate(Angles3d.xOnly(90.0))
+        val cylinder = Cylinder(5.0, Radius.fromDiameter(diameter).value).rotate(Angles3d.xOnly(90.0))
         val usb = Hull(
             cylinder.moveX(-width / 2 + diameter / 2), cylinder.moveX(width / 2 - diameter / 2)
         ).moveZ(diameter / 2 + 1.4)
@@ -131,7 +131,7 @@ class ControllerHolderBuilder(
 
     private fun createBase(): Abstract3dModel {
         val cylinder = Cube(7.0, 6.0, cfg.controllerPlateHeight)
-        val hole = Cylinder(cfg.controllerPlateHeight + 5, Radius.fromDiameter(cfg.screwBoltDiameter + 0.5))
+        val hole = Cylinder(cfg.controllerPlateHeight + 5, Radius.fromDiameter(cfg.screwBoltDiameter + 0.5).value)
         val horizontal = Hull(
             screwWallPlaces.placeControllerScrews(
                 cylinder, ScrewWallPlaces.HeightMode.ControllerHolder, ScrewWallPlaces.ControllerMode.Back

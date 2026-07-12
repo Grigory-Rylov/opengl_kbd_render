@@ -6,13 +6,13 @@ import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.casebody.DefaultBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Hull
-import eu.printingin3d.javascad.models.Sphere
-import eu.printingin3d.javascad.tranzitions.Union
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.openscad.basic.Radius
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Hull
+import com.github.grishberg.openscad.models.Sphere
+import com.github.grishberg.openscad.tranzitions.Union
+import com.github.grishberg.openscad.utils.Color
 
 class ControllerWallBuilder(
     private val controllerHolderWall: ControllerHolderWall,
@@ -94,7 +94,7 @@ class ControllerWallBuilder(
         backControllerMidLeft: V3d
     ) {
         //top edge
-        val sphere = Sphere(Radius.fromRadius(cfg.borderThickness))
+        val sphere = Sphere(Radius.fromRadius(cfg.borderThickness).value)
         models.add(
             Hull(
                 sphere.move(backControllerLeft), sphere.move(backControllerRight)
@@ -296,7 +296,7 @@ class ControllerWallBuilder(
         if (isSkeletonMode) {
             val objects = mutableListOf<Abstract3dModel>()
 
-            val sphere = Sphere(Radius.fromRadius(cfg.borderThickness))
+            val sphere = Sphere(Radius.fromRadius(cfg.borderThickness).value)
             objects.add(Utils.hull(left, sphere.move(backControllerLeft)))
             objects.add(Utils.hull(right, sphere.move(backControllerRight)))
             objects.add(
@@ -382,7 +382,7 @@ class ControllerWallBuilder(
             val objects = mutableListOf<Abstract3dModel>()
             objects.add(border)
 
-            val sphere = Sphere(Radius.fromRadius(cfg.borderThickness))/*
+            val sphere = Sphere(Radius.fromRadius(cfg.borderThickness).value)/*
             objects.add(Utils.hull(left, sphere.move(backControllerLeft)))
             objects.add(Utils.hull(back, sphere.move(backControllerBack)))
             objects.add(

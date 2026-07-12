@@ -1,6 +1,6 @@
 package com.github.grishberg.javascad.optimizator
 
-import eu.printingin3d.javascad.vrl.Polygon
+import com.github.grishberg.openscad.vrl.Polygon
 
 class CommonPolygonFinder(private val progressObserver: ProgressObserver) : EdgesFinder {
 
@@ -12,7 +12,7 @@ class CommonPolygonFinder(private val progressObserver: ProgressObserver) : Edge
 
         var iter = 0
         for (polygon in polygons) {
-            val vertices = polygon.getVertices()
+            val vertices = polygon.vertices
             for (i in vertices.indices) {
                 val a = vertices.get(i)
                 val b = vertices.get((i + 1) % vertices.size)

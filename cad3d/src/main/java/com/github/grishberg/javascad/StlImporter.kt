@@ -1,8 +1,8 @@
 package com.github.grishberg.javascad
 
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.utils.Color
-import eu.printingin3d.javascad.vrl.Polygon
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.utils.Color
+import com.github.grishberg.openscad.vrl.Polygon
 import java.io.DataInputStream
 import java.io.FileInputStream
 import java.nio.ByteBuffer

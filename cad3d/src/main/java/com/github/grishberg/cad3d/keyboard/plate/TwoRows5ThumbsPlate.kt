@@ -5,14 +5,14 @@ import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
 import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
 import com.github.grishberg.cad3d.util.fromModel
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cube
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.models.Hull
-import eu.printingin3d.javascad.tranzitions.Union
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.openscad.basic.Radius
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Cube
+import com.github.grishberg.openscad.models.Cylinder
+import com.github.grishberg.openscad.models.Hull
+import com.github.grishberg.openscad.tranzitions.Union
+import com.github.grishberg.openscad.utils.Color
 
 class TwoRows5ThumbsPlate(
     private val cfg: KeyboardConfig,
@@ -165,6 +165,6 @@ class TwoRows5ThumbsPlate(
     }
 
     private fun platePoint(point: V3d): Abstract3dModel {
-        return Cylinder(cfg.keyPlaceConfig.plateThickness, Radius.fromDiameter(3.0)).move(point)
+        return Cylinder(cfg.keyPlaceConfig.plateThickness, Radius.fromDiameter(3.0).value).move(point)
     }
 }

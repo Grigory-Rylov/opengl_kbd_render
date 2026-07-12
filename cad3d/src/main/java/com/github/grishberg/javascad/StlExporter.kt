@@ -6,9 +6,9 @@ import com.github.grishberg.csg.geom.PolySet3
 import com.github.grishberg.csg.geom.Vec3
 import com.github.grishberg.javascad.optimizator.PolygonValidatorMultithreading
 import com.github.grishberg.javascad.optimizator.ProgressObserver
-import eu.printingin3d.javascad.vrl.CSG as JscadCSG
-import eu.printingin3d.javascad.vrl.Facet
-import eu.printingin3d.javascad.vrl.Polygon as JscadPolygon
+import com.github.grishberg.openscad.vrl.CSG as JscadCSG
+import com.github.grishberg.openscad.vrl.Facet
+import com.github.grishberg.openscad.vrl.Polygon as JscadPolygon
 import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -20,7 +20,7 @@ object StlExporter {
     // ---- Публичный API: новый движок ----
 
     fun saveStlNew(csg: JscadCSG, fileName: String, onProgress: ((String) -> Unit)? = null) {
-        saveStlNew(csg.getPolygons(), fileName, onProgress)
+        saveStlNew(csg.polygons, fileName, onProgress)
     }
 
     /**
@@ -106,7 +106,7 @@ object StlExporter {
         buffer.putInt(facets.size)
 
         for (facet in facets) {
-            val normal = facet.getNormal()
+            val normal = facet.normal
             val points = facet.getTriangle().getPoints()
 
             buffer.putFloat(normal.getX().toFloat())

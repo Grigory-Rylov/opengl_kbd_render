@@ -2,13 +2,13 @@ package com.github.grishberg.cad3d.util
 
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.javascad.Triangulator
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.IModel
-import eu.printingin3d.javascad.utils.Color
-import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
-import eu.printingin3d.javascad.vrl.Facet
-import eu.printingin3d.javascad.vrl.FacetGenerationContext
-import eu.printingin3d.javascad.vrl.Polygon
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.IModel
+import com.github.grishberg.openscad.utils.Color
+import com.github.grishberg.openscad.vrl.ColorFacetGenerationContext
+import com.github.grishberg.openscad.vrl.Facet
+import com.github.grishberg.openscad.vrl.FacetGenerationContext
+import com.github.grishberg.openscad.vrl.Polygon
 
 fun fromModel(model: IModel, color: Color, fn: Int): VertexHolder {
     val context: FacetGenerationContext = ColorFacetGenerationContext(color)
@@ -27,9 +27,9 @@ fun fromModel(model: Abstract3dModel, fn: Int): VertexHolder {
 fun fromPolygons(polygons: List<Polygon>, color: Color): VertexHolder {
     val facets: MutableList<Facet> = ArrayList<Facet>()
     for (p in polygons) {
-        val triangle3ds = Triangulator.triangulate(p.getVertices(), p.getNormal())
+        val triangle3ds = Triangulator.triangulate(p.vertices, p.normal)
         for (t in triangle3ds) {
-            facets.add(Facet(t, p.getNormal(), color))
+            facets.add(Facet(t, p.normal, color))
         }
     }
 
@@ -46,8 +46,8 @@ private fun getVerticesAndColorsAsFloatArray(facets: List<Facet>): VertexHolder 
     var normalArrayIndex = 0
     var vertexArrayIndex = 0
     for (facet in facets) {
-        val facetColor = facet.getColor()
-        val normal = facet.getNormal()
+        val facetColor = facet.color
+        val normal = facet.normal
         val triangle3d = facet.getTriangle()
         for (vertex in triangle3d.getPoints()) {
             // X, Y, Z,

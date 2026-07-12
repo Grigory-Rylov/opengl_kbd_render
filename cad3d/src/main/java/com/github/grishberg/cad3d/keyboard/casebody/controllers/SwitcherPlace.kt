@@ -1,6 +1,6 @@
 package com.github.grishberg.cad3d.keyboard.casebody.controllers
 
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Abstract3dModel
 
 class SwitcherPlace(
     private val controller: Controller,

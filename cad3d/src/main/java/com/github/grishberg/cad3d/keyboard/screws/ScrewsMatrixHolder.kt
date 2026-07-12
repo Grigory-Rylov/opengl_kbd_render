@@ -1,11 +1,11 @@
 package com.github.grishberg.cad3d.keyboard.screws
 
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cube
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.models.Hull
+import com.github.grishberg.openscad.basic.Radius
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Cube
+import com.github.grishberg.openscad.models.Cylinder
+import com.github.grishberg.openscad.models.Hull
 
 class ScrewsMatrixHolder(
     private val cfg: KeyboardConfig,
@@ -15,7 +15,7 @@ class ScrewsMatrixHolder(
         val verticalOffset = -5.8
         val height = 5.0
         val outerDiameter = cfg.screwNutHoleDiameter + cfg.screwHolderWallhickness * 2.0
-        val cylinder = Cylinder(height, Radius.fromDiameter(outerDiameter))
+        val cylinder = Cylinder(height, Radius.fromDiameter(outerDiameter).value)
         val border = Cube(4.0, 10.0, height).moveX(-5.0)
         return Hull(border, cylinder)
             //.subtractModel(screwBase.screwNutHole().moveZ(-2.0))

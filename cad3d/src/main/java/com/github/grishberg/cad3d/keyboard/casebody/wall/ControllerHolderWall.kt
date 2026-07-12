@@ -3,7 +3,7 @@ package com.github.grishberg.cad3d.keyboard.casebody.wall
 import com.github.grishberg.cad3d.keyboard.KeyPlace
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
-import eu.printingin3d.javascad.coords.V3d
+import com.github.grishberg.openscad.coords.V3d
 import kotlin.math.max
 
 class ControllerHolderWall(

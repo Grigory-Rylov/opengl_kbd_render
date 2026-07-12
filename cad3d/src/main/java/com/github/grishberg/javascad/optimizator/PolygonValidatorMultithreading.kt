@@ -1,7 +1,7 @@
 package com.github.grishberg.javascad.optimizator
 
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.vrl.Polygon
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.vrl.Polygon
 import java.util.Collections
 import java.util.TreeMap
 import java.util.function.ToDoubleFunction
@@ -47,7 +47,7 @@ class PolygonValidatorMultithreading {
         val polygons = ArrayList<Polygon>()
         for (entry in newVerticesInfo.entries) {
             val currentPolygon: Polygon = entry.key
-            val currentPolygonVertices = ArrayList<V3d>(currentPolygon.getVertices())
+            val currentPolygonVertices = ArrayList<V3d>(currentPolygon.vertices)
 
             val groupedPoints = TreeMap<Int, MutableSet<V3d>>(Collections.reverseOrder<Int>())
 
@@ -74,12 +74,12 @@ class PolygonValidatorMultithreading {
                 }
             }
             if (Polygon.isValid(
-                    currentPolygonVertices, currentPolygon.getNormal(), currentPolygon.getDist()
+                    currentPolygonVertices, currentPolygon.normal, currentPolygon.getDist()
                 )
             ) {
                 polygons.add(
                     Polygon.fromPolygons(
-                        currentPolygonVertices, currentPolygon.getNormal(), currentPolygon.getColor()
+                        currentPolygonVertices, currentPolygon.normal, currentPolygon.color
                     )
                 )
             } else {

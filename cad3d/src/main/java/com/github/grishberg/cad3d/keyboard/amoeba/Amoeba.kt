@@ -1,11 +1,11 @@
 package com.github.grishberg.cad3d.keyboard.amoeba
 
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cube
-import eu.printingin3d.javascad.models.Cylinder
+import com.github.grishberg.openscad.basic.Radius
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Cube
+import com.github.grishberg.openscad.models.Cylinder
 
 class Amoeba(private val cfg: KeyboardConfig) {
 
@@ -22,14 +22,14 @@ class Amoeba(private val cfg: KeyboardConfig) {
     }
 
     fun createHoles(height: Double = 4.0, diameter: Double = holeDiameter): Abstract3dModel {
-        val hole = Cylinder(height, Radius.fromDiameter(diameter))
+        val hole = Cylinder(height, Radius.fromDiameter(diameter).value)
         return hole.move(V3d(-holeDistance / 2, -holeDistance / 2, 0.0)).addModel(
             hole.move(V3d(-holeDistance / 2, holeDistance / 2, 0.0))
         ).addModel(
             hole.move(V3d(holeDistance / 2, holeDistance / 2, 0.0))
         ).addModel(
             hole.move(V3d(holeDistance / 2, -holeDistance / 2, 0.0))
-        ).moveZ(-2)
+        ).moveZ(-2.0)
     }
 
     fun createSimple(): Abstract3dModel {

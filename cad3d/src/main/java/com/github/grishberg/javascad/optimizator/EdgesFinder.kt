@@ -1,6 +1,6 @@
 package com.github.grishberg.javascad.optimizator
 
-import eu.printingin3d.javascad.vrl.Polygon
+import com.github.grishberg.openscad.vrl.Polygon
 
 /**
  * Find common edges between all polygons, groups polygon by edges.

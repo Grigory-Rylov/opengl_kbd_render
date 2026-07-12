@@ -6,9 +6,9 @@ import com.github.grishberg.javascad.optimizator.PolygonValidator;
 
 import java.util.List;
 
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.utils.Color;
-import eu.printingin3d.javascad.vrl.Polygon;
+import com.github.grishberg.openscad.coords.V3d;
+import com.github.grishberg.openscad.utils.Color;
+import com.github.grishberg.openscad.vrl.Polygon;
 
 public class DebugGroupedEdgeCmd implements DebugCmd {
 

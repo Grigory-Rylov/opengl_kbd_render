@@ -1,8 +1,8 @@
 package com.github.grishberg.cad3d;
 
 import com.github.grishberg.javascad.StlValidator;
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.vrl.Facet;
+import com.github.grishberg.openscad.coords.V3d;
+import com.github.grishberg.openscad.vrl.Facet;
 
 import java.util.*;
 

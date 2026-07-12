@@ -1,10 +1,10 @@
 package com.github.grishberg.cad3d.keyboard.screws
 
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.tranzitions.Union
+import com.github.grishberg.openscad.basic.Radius
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Cylinder
+import com.github.grishberg.openscad.tranzitions.Union
 
 class ScrewBase(private val cfg: KeyboardConfig) {
 
@@ -13,11 +13,11 @@ class ScrewBase(private val cfg: KeyboardConfig) {
 
     fun screwHolder(height: Double = 5.0): Abstract3dModel {
         val outerDiameter = cfg.screwNutHoleDiameter + cfg.screwHolderWallhickness * 2.0
-        return Cylinder(height, Radius.fromDiameter(outerDiameter)).moveZ(height / 2.0).subtractModel(screwNutHole())
+        return Cylinder(height, Radius.fromDiameter(outerDiameter).value).moveZ(height / 2.0).subtractModel(screwNutHole())
     }
 
     fun screwNutHole(holeHeight: Double = 4.0): Abstract3dModel {
-        return Cylinder(holeHeight, Radius.fromDiameter(cfg.screwNutHoleDiameter)).moveZ(holeHeight / 2.0)
+        return Cylinder(holeHeight, Radius.fromDiameter(cfg.screwNutHoleDiameter).value).moveZ(holeHeight / 2.0)
     }
 
     /**
@@ -25,11 +25,11 @@ class ScrewBase(private val cfg: KeyboardConfig) {
      */
     fun plateScrewHolder(): Abstract3dModel {
         return Union(
-            Cylinder(cfg.keyPlaceConfig.plateThickness + 1, Radius.fromDiameter(cfg.screwBoltDiameter)),
+            Cylinder(cfg.keyPlaceConfig.plateThickness + 1, Radius.fromDiameter(cfg.screwBoltDiameter).value),
 
             Cylinder(cfg.screwHeadHeight,
-                Radius.fromDiameter(cfg.screwHeadDiameter + 0.2),
-                Radius.fromDiameter(cfg.screwBoltDiameter),
+                Radius.fromDiameter(cfg.screwHeadDiameter + 0.2).value,
+                Radius.fromDiameter(cfg.screwBoltDiameter).value,
             ).moveZ(-holeHeight/2 + cfg.screwHeadHeight/2),
         )
     }
@@ -38,8 +38,8 @@ class ScrewBase(private val cfg: KeyboardConfig) {
         val headerHoleHeight = 2.0
         val holeHeight = 10.0
         val boltDiameter = 3.1
-        return Cylinder(holeHeight, Radius.fromDiameter(boltDiameter)).moveZ(-holeHeight/2 + headerHoleHeight / 2)
-            .addModel(Cylinder(headerHoleHeight, Radius.fromDiameter(headDiameter)).moveZ(headerHoleHeight / 2))
+        return Cylinder(holeHeight, Radius.fromDiameter(boltDiameter).value).moveZ(-holeHeight/2 + headerHoleHeight / 2)
+            .addModel(Cylinder(headerHoleHeight, Radius.fromDiameter(headDiameter).value).moveZ(headerHoleHeight / 2))
     }
 
 }

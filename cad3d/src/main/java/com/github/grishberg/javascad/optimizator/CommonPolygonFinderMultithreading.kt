@@ -1,6 +1,6 @@
 package com.github.grishberg.javascad.optimizator
 
-import eu.printingin3d.javascad.vrl.Polygon
+import com.github.grishberg.openscad.vrl.Polygon
 import kotlin.math.max
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async

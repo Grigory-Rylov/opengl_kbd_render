@@ -3,8 +3,8 @@ package com.github.grishberg.cad3d.keyboard.casebody.controllers
 import com.github.grishberg.cad3d.keyboard.KeyPlace
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.models.Abstract3dModel
 import kotlin.math.max
 
 /**

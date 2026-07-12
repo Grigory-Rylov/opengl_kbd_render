@@ -8,10 +8,10 @@ import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cube
-import eu.printingin3d.javascad.tranzitions.Union
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Cube
+import com.github.grishberg.openscad.tranzitions.Union
 
 /**
  * Установка

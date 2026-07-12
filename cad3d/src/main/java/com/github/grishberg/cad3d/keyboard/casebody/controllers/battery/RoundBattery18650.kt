@@ -1,10 +1,10 @@
 package com.github.grishberg.cad3d.keyboard.casebody.controllers.battery
 
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.coords.Angles3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cube
-import eu.printingin3d.javascad.models.Cylinder
+import com.github.grishberg.openscad.basic.Radius
+import com.github.grishberg.openscad.coords.Angles3d
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Cube
+import com.github.grishberg.openscad.models.Cylinder
 
 class RoundBattery18650 : Battery {
 
@@ -19,10 +19,10 @@ class RoundBattery18650 : Battery {
     override val height: Double = innerHeight + wallWidth
 
     override fun create(): Abstract3dModel {
-        return Cylinder(depth, Radius.fromDiameter(height)).rotate(Angles3d.xOnly(90.0)).addModel(
+        return Cylinder(depth, Radius.fromDiameter(height).value).rotate(Angles3d.xOnly(90.0)).addModel(
                 Cube(width, depth, height / 2).moveZ(-height / 4)
             ).subtractModel(
-                Cylinder(depth - wallWidth * 2, Radius.fromDiameter(innerHeight)).rotate(Angles3d.xOnly(90.0))
+                Cylinder(depth - wallWidth * 2, Radius.fromDiameter(innerHeight).value).rotate(Angles3d.xOnly(90.0))
             ).subtractModel(
                 Cube(width - 2 * wallWidth, depth - wallWidth * 2, height / 2).moveZ(-height / 4)
             ).subtractModel(Cube(width + 5, depth - 25.0, 20.0).moveZ(height / 2))
@@ -44,7 +44,7 @@ class RoundBattery18650 : Battery {
     }
 
     override fun createBatteryPreview(): Abstract3dModel {
-        return Cylinder(innerDepth, Radius.fromDiameter(innerHeight)).rotate(Angles3d.xOnly(90.0))
+        return Cylinder(innerDepth, Radius.fromDiameter(innerHeight).value).rotate(Angles3d.xOnly(90.0))
             .moveZ(innerHeight / 2)
     }
 }

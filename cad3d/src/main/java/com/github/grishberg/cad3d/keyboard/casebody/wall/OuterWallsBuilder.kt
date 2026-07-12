@@ -11,16 +11,16 @@ import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.WallsBuilder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.EdgeType
-import eu.printingin3d.javascad.models.Sphere
-import eu.printingin3d.javascad.models.surfaces.S12x3
-import eu.printingin3d.javascad.models.surfaces.SmoothSurface
-import eu.printingin3d.javascad.models.surfaces.VoronoiSurface
-import eu.printingin3d.javascad.tranzitions.Union
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.openscad.basic.Radius
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.EdgeType
+import com.github.grishberg.openscad.models.Sphere
+import com.github.grishberg.openscad.models.surfaces.S12x3
+import com.github.grishberg.openscad.models.surfaces.SmoothSurface
+import com.github.grishberg.openscad.models.surfaces.VoronoiSurface
+import com.github.grishberg.openscad.tranzitions.Union
+import com.github.grishberg.openscad.utils.Color
 import java.util.Random
 
 class OuterWallsBuilder(
@@ -502,7 +502,7 @@ class OuterWallsBuilder(
         for (contour in contours) {
             val points = mutableListOf<Abstract3dModel>()
             for (point in contour) {
-                points.add(Sphere(Radius.fromDiameter(1.0)).move(point))
+                points.add(Sphere(Radius.fromDiameter(1.0).value).move(point))
             }
             //holes.add(Hull(points))
             holes.addAll(points)

@@ -3,7 +3,7 @@ package com.github.grishberg.cad3d.keyboard.casebody.matrix
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.casebody.CornerWallBuilder
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Abstract3dModel
 
 class InnerCorners(
     private val borderThickness: Double = 1.5,

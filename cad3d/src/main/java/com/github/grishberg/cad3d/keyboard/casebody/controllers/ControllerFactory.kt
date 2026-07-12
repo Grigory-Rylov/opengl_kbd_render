@@ -2,11 +2,11 @@ package com.github.grishberg.cad3d.keyboard.casebody.controllers
 
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.plugin.cfg.ControllerType
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.coords.Angles3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.models.Hull
+import com.github.grishberg.openscad.basic.Radius
+import com.github.grishberg.openscad.coords.Angles3d
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Cylinder
+import com.github.grishberg.openscad.models.Hull
 
 class ControllerFactory(private val cfg: KeyboardConfig) {
 
@@ -38,7 +38,7 @@ class ControllerFactory(private val cfg: KeyboardConfig) {
         val diameter = usbHoleHeight
         val width = usbHoleWidth
 
-        val cylinder = Cylinder(usbHoleDepthPortHeight, Radius.fromDiameter(diameter)).rotate(Angles3d.xOnly(90.0))
+        val cylinder = Cylinder(usbHoleDepthPortHeight, Radius.fromDiameter(diameter).value).rotate(Angles3d.xOnly(90.0))
         return Hull(
             cylinder.moveX(-width / 2 + diameter / 2), cylinder.moveX(width / 2 - diameter / 2)
         ).moveY(6.5)
@@ -49,7 +49,7 @@ class ControllerFactory(private val cfg: KeyboardConfig) {
         val diameter = usbHoleHeight + 2 * usbHolderWallWidth
         val width = usbHoleWidth + 2 * usbHolderWallWidth
 
-        val cylinder = Cylinder(cfg.wallsSettings.borderThickness *2, Radius.fromDiameter(diameter)).rotate(Angles3d.xOnly(90.0))
+        val cylinder = Cylinder(cfg.wallsSettings.borderThickness *2, Radius.fromDiameter(diameter).value).rotate(Angles3d.xOnly(90.0))
         return Hull(
             cylinder.moveX(-width / 2 + diameter / 2), cylinder.moveX(width / 2 - diameter / 2)
         ).moveY(4.5).moveZ((usbPortHeight) / 2)
@@ -59,7 +59,7 @@ class ControllerFactory(private val cfg: KeyboardConfig) {
         val diameter = 3.2
         val width = 8.34
 
-        val cylinder = Cylinder(5.0, Radius.fromDiameter(diameter)).rotate(Angles3d.xOnly(90.0))
+        val cylinder = Cylinder(5.0, Radius.fromDiameter(diameter).value).rotate(Angles3d.xOnly(90.0))
         return Hull(
             cylinder.moveX(-width / 2 + diameter / 2), cylinder.moveX(width / 2 - diameter / 2)
 

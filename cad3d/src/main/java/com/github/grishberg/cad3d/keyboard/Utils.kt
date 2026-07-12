@@ -1,13 +1,13 @@
 package com.github.grishberg.cad3d.keyboard
 
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cube
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.models.Hull
-import eu.printingin3d.javascad.models.Sphere
-import eu.printingin3d.javascad.tranzitions.Union
+import com.github.grishberg.openscad.basic.Radius
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Cube
+import com.github.grishberg.openscad.models.Cylinder
+import com.github.grishberg.openscad.models.Hull
+import com.github.grishberg.openscad.models.Sphere
+import com.github.grishberg.openscad.tranzitions.Union
 
 object Utils {
 
@@ -43,12 +43,12 @@ object Utils {
 
     @JvmStatic
     fun cylinder(radius: Number, height: Number): Cylinder {
-        return Cylinder(height.toDouble(), Radius.fromRadius(radius.toDouble()))
+        return Cylinder(height.toDouble(), Radius.fromRadius(radius.toDouble()).value)
     }
 
     @JvmStatic
     fun sphere(radius: Number): Sphere {
-        return Sphere(Radius.fromRadius(radius.toDouble()))
+        return Sphere(Radius.fromRadius(radius.toDouble()).value)
     }
 
     @JvmStatic

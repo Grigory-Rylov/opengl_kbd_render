@@ -1,6 +1,6 @@
 package com.github.grishberg.cad3d.keyboard.casebody.controllers.battery
 
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Abstract3dModel
 
 object NoBattery : Battery {
 

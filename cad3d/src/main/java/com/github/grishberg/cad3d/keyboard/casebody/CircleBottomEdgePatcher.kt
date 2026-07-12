@@ -1,8 +1,8 @@
 package com.github.grishberg.cad3d.keyboard.casebody
 
 import com.github.grishberg.cad3d.keyboard.Utils
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.models.Abstract3dModel
 import kotlin.math.abs
 import kotlin.math.sign
 import kotlin.math.sqrt

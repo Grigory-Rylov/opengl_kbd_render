@@ -3,9 +3,9 @@ package com.github.grishberg.cad3d.keyboard
 import com.github.grishberg.cad3d.keyboard.Utils.cube
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cylinder
+import com.github.grishberg.openscad.basic.Radius
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Cylinder
 
 object KeyPlaceholder {
 
@@ -35,7 +35,7 @@ object KeyPlaceholder {
         val delta = (TOP_THICKNESS - KEY_PLACE_TOP_THICKNESS)/2.0
 
         val cornerCubeHeight = 0.6
-        val cornerObject = Cylinder(cornerCubeHeight, Radius.fromDiameter(4.0))
+        val cornerObject = Cylinder(cornerCubeHeight, Radius.fromDiameter(4.0).value)
         val cornerCubes =
             cornerObject.move(-KEY_HOLE_INNER_WIDTH / 2, -KEY_HOLE_INNER_WIDTH / 2, cornerCubeHeight / 2).addModel(
                 cornerObject.move(KEY_HOLE_INNER_WIDTH / 2, -KEY_HOLE_INNER_WIDTH / 2, cornerCubeHeight / 2)

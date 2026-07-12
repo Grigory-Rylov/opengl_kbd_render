@@ -17,10 +17,10 @@ import com.github.grishberg.cad3d.keyboard.screws.ScrewKeyMatrixPlace
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
 import com.github.grishberg.cad3d.util.fromModel
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.IModel
-import eu.printingin3d.javascad.tranzitions.Union
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.IModel
+import com.github.grishberg.openscad.tranzitions.Union
+import com.github.grishberg.openscad.utils.Color
 
 class KeyMatrix(
     private val cfg: KeyboardConfig, private val keyPlace: KeyPlace, private val thumbKeyPlace: ThumbKeyPlace
@@ -61,7 +61,10 @@ class KeyMatrix(
         ).createBorders(
             1.5, borderHeigth
         )
-        val borders = Union(bordersModels).subtractModel(screws).subtractModel(amoebaHoles)
+        var borders = Union(bordersModels).subtractModel(screws)
+        if (amoebaHoles != null) {
+            borders = borders.subtractModel(amoebaHoles)
+        }
 
         return ModelHolder(
             borders,

@@ -1,7 +1,7 @@
 package com.github.grishberg.cad3d.keyboard.casebody
 
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.models.Abstract3dModel
 
 interface WallBottomEdgePatcher {
     fun backPoint(o: Abstract3dModel): Abstract3dModel

@@ -5,7 +5,7 @@ import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.Utils.hull
 import com.github.grishberg.cad3d.keyboard.casebody.CornerWallBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.WallsBuilder
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Abstract3dModel
 
 class TwoRows5ButtonsMatrixThumbsBordersBuilder(
     private val thumbKeyPlace: ThumbKeyPlace,

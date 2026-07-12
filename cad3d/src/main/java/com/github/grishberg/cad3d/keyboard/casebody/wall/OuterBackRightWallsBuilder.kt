@@ -6,9 +6,9 @@ import com.github.grishberg.cad3d.keyboard.Utils.hull
 import com.github.grishberg.cad3d.keyboard.casebody.DefaultBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.tranzitions.Union
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.tranzitions.Union
 
 class OuterBackRightWallsBuilder(
     private val topEdgeOffsetZ: Double,

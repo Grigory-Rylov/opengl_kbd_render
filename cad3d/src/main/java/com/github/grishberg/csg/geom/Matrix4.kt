@@ -70,6 +70,21 @@ data class Matrix4(
             )
         }
 
+        /** Rotate around arbitrary axis (degrees). */
+        fun rotationAxis(axis: Vec3, deg: Double): Matrix4 {
+            val rad = Math.toRadians(deg)
+            val c = Math.cos(rad)
+            val s = Math.sin(rad)
+            val t = 1.0 - c
+            val ax = axis.x; val ay = axis.y; val az = axis.z
+            return Matrix4(
+                t * ax * ax + c,   t * ax * ay + s * az,  t * ax * az - s * ay, 0.0,
+                t * ax * ay - s * az, t * ay * ay + c,      t * ay * az + s * ax, 0.0,
+                t * ax * az + s * ay, t * ay * az - s * ax, t * az * az + c,      0.0,
+                0.0, 0.0, 0.0, 1.0
+            )
+        }
+
         /** Multiply two matrices: a * b. */
         fun multiply(a: Matrix4, b: Matrix4): Matrix4 = Matrix4(
             a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20 + a.m03 * b.m30,
@@ -90,4 +105,6 @@ data class Matrix4(
             a.m30 * b.m03 + a.m31 * b.m13 + a.m32 * b.m23 + a.m33 * b.m33,
         )
     }
+
+    operator fun times(other: Matrix4): Matrix4 = multiply(this, other)
 }

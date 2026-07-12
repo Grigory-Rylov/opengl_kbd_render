@@ -2,9 +2,9 @@ package com.github.grishberg.cad3d.keyboard
 
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.util.fromModel
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cube
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Cube
+import com.github.grishberg.openscad.utils.Color
 
 class KeyCaps(private val cfg: KeyboardConfig) {
 

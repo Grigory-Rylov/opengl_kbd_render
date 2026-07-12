@@ -3,13 +3,13 @@ package com.github.grishberg.cad3d.keyboard.casebody.controllers
 import com.github.grishberg.cad3d.keyboard.ModelHolder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.util.fromModel
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.coords.Angles3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cube
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.models.Hull
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.openscad.basic.Radius
+import com.github.grishberg.openscad.coords.Angles3d
+import com.github.grishberg.openscad.models.Abstract3dModel
+import com.github.grishberg.openscad.models.Cube
+import com.github.grishberg.openscad.models.Cylinder
+import com.github.grishberg.openscad.models.Hull
+import com.github.grishberg.openscad.utils.Color
 
 class RP2040Pink(
     private val cfg: KeyboardConfig,
@@ -26,7 +26,7 @@ class RP2040Pink(
     override fun create(controllerPlace: ControllerPlace): ModelHolder {
         val usbPort = placeUsbPort(createUsb())
         val model = Cube(width, depth, height).moveZ(height / 2)
-        val resetButton = Cube(3.3, 4.4, 2.0).move(2, 14.6, -(height / 2))
+        val resetButton = Cube(3.3, 4.4, 2.0).move(2.0, 14.6, -(height / 2))
 
         return ModelHolder(
             model.addModel(usbPort),
@@ -41,7 +41,7 @@ class RP2040Pink(
     }
 
     override fun createResetButton(controllerPlace: ControllerPlace): Abstract3dModel? {
-        val resetButton = Cube(3.3, 4.4, 2.0).move(2, 14.6, -(height / 2))
+        val resetButton = Cube(3.3, 4.4, 2.0).move(2.0, 14.6, -(height / 2))
         return place(controllerPlace, resetButton).withColor(Color.RED)
     }
 
@@ -53,7 +53,7 @@ class RP2040Pink(
         val diameter = 3.2
         val width = 8.34
 
-        val cylinder = Cylinder(7.5, Radius.fromDiameter(diameter)).rotate(Angles3d.xOnly(90.0))
+        val cylinder = Cylinder(7.5, Radius.fromDiameter(diameter).value).rotate(Angles3d.xOnly(90.0))
         return Hull(
             cylinder.moveX(-width / 2 + diameter / 2), cylinder.moveX(width / 2 - diameter / 2)
         ).moveZ(diameter / 2).moveY(-2.6)

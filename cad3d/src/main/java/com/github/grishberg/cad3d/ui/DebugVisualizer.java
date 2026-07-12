@@ -1,10 +1,10 @@
 package com.github.grishberg.cad3d.ui;
 
 import com.github.grishberg.cad3d.debug.DebugCmd;
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.utils.Color;
-import eu.printingin3d.javascad.vrl.Facet;
-import eu.printingin3d.javascad.vrl.Polygon;
+import com.github.grishberg.openscad.coords.V3d;
+import com.github.grishberg.openscad.utils.Color;
+import com.github.grishberg.openscad.vrl.Facet;
+import com.github.grishberg.openscad.vrl.Polygon;
 import java.util.List;
 
 /**

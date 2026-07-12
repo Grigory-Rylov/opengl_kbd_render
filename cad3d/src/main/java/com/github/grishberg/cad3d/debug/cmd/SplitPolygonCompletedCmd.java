@@ -3,8 +3,8 @@ package com.github.grishberg.cad3d.debug.cmd;
 
 import com.github.grishberg.cad3d.debug.DebugCmd;
 import com.github.grishberg.cad3d.ui.DebugVisualizer;
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.utils.Color;
+import com.github.grishberg.openscad.coords.V3d;
+import com.github.grishberg.openscad.utils.Color;
 import java.util.ArrayList;
 import java.util.List;
 
