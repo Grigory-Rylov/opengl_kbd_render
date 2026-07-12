@@ -60,46 +60,41 @@ object StlExporter {
      */
     @Throws(IOException::class)
     fun writeBinaryStl(mesh: PolySet3, channel: WritableByteChannel) {
-        // Header: 80 bytes + 4 bytes triangle count
-        val header = ByteBuffer.allocate(84).order(ByteOrder.LITTLE_ENDIAN)
+        val totalSize = 84 + 50 * mesh.indices.size
+        val buffer = ByteBuffer.allocate(totalSize).order(ByteOrder.LITTLE_ENDIAN)
+
+        // 80-byte header
         val headerStr = "CSG Engine Model".toByteArray(Charsets.US_ASCII)
-        System.arraycopy(headerStr, 0, header.array(), 0, headerStr.size)
-        header.putInt(mesh.indices.size)
+        buffer.put(headerStr)
+        buffer.put(ByteArray(80 - headerStr.size)) // pad to 80
 
-        val triBuf = ByteBuffer.allocate(50).order(ByteOrder.LITTLE_ENDIAN)
+        // Triangle count
+        buffer.putInt(mesh.indices.size)
 
-        val buffers = arrayOfNulls<java.nio.ByteBuffer>(mesh.indices.size + 1)
-        buffers[0] = header
-
-        var bufIdx = 1
+        // Triangles
         for (tri in mesh.indices) {
             val p0 = mesh.vertices[tri.a]
             val p1 = mesh.vertices[tri.b]
             val p2 = mesh.vertices[tri.c]
             val normal = computeNormal(p0, p1, p2)
 
-            triBuf.clear()
-            triBuf.putFloat(normal.x.toFloat())
-            triBuf.putFloat(normal.y.toFloat())
-            triBuf.putFloat(normal.z.toFloat())
-            triBuf.putFloat(p0.x.toFloat())
-            triBuf.putFloat(p0.y.toFloat())
-            triBuf.putFloat(p0.z.toFloat())
-            triBuf.putFloat(p1.x.toFloat())
-            triBuf.putFloat(p1.y.toFloat())
-            triBuf.putFloat(p1.z.toFloat())
-            triBuf.putFloat(p2.x.toFloat())
-            triBuf.putFloat(p2.y.toFloat())
-            triBuf.putFloat(p2.z.toFloat())
-            triBuf.putShort(0.toShort())
-            triBuf.flip()
-
-            buffers[bufIdx++] = triBuf.duplicate()
+            buffer.putFloat(normal.x.toFloat())
+            buffer.putFloat(normal.y.toFloat())
+            buffer.putFloat(normal.z.toFloat())
+            buffer.putFloat(p0.x.toFloat())
+            buffer.putFloat(p0.y.toFloat())
+            buffer.putFloat(p0.z.toFloat())
+            buffer.putFloat(p1.x.toFloat())
+            buffer.putFloat(p1.y.toFloat())
+            buffer.putFloat(p1.z.toFloat())
+            buffer.putFloat(p2.x.toFloat())
+            buffer.putFloat(p2.y.toFloat())
+            buffer.putFloat(p2.z.toFloat())
+            buffer.putShort(0.toShort())
         }
 
-        for (buf in buffers) {
-            buf?.let { channel.write(it) }
-        }
+        buffer.flip()
+        channel.write(buffer)
     }
 
     /** Compute normalized face normal from 3 vertices. */

@@ -273,7 +273,7 @@ fun csgOperation(a: PolySet3, b: PolySet3, op: CsgOp): PolySet3 {
         }
     }
 
-    return polygonsToMesh(result)
+    return meshFromPolygons(result)
 }
 
 /** Convert PolySet3 to polygon list. */
@@ -288,7 +288,7 @@ private fun meshToPolygons(mesh: PolySet3): MutableList<Polygon> {
 }
 
 /** Convert polygon list back to PolySet3 with SHARED vertices. */
-private fun polygonsToMesh(polys: List<Polygon>): PolySet3 {
+fun meshFromPolygons(polys: List<Polygon>): PolySet3 {
     data class VKey(val x: Double, val y: Double, val z: Double)
 
     val vertexMap = mutableMapOf<VKey, Int>()
