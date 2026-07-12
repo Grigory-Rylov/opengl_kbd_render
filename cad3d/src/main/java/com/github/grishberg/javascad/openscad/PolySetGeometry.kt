@@ -106,9 +106,9 @@ class PolySetGeometry(
                 val normal = poly.getNormal()
                 val triVerts = Triangulator3d.triangulatePolygon(vlist, normal)
                 for ((v0, v1, v2) in triVerts) {
-                    val idx0 = getOrCreateVertex(vertMap, verts, v0)
-                    val idx1 = getOrCreateVertex(vertMap, verts, v1)
-                    val idx2 = getOrCreateVertex(vertMap, verts, v2)
+                    val idx0 = getOrCreateVertex(vertMap, verts, v0.roundedToEpsilon())
+                    val idx1 = getOrCreateVertex(vertMap, verts, v1.roundedToEpsilon())
+                    val idx2 = getOrCreateVertex(vertMap, verts, v2.roundedToEpsilon())
                     tris.add(IndexedTriangle(idx0, idx1, idx2))
                 }
             }
@@ -116,17 +116,33 @@ class PolySetGeometry(
             return PolySetGeometry(verts, tris, polygons.firstOrNull()?.getColor() ?: Color.BLACK)
         }
 
+        fun fromFacets(facets: List<Facet>): PolySetGeometry {
+            val vertMap = mutableMapOf<V3d, Int>()
+            val verts = mutableListOf<V3d>()
+            val tris = mutableListOf<IndexedTriangle>()
+            val color = facets.firstOrNull()?.getColor() ?: Color.BLACK
+
+            for (facet in facets) {
+                val pts = facet.getTriangle().getPoints()
+                val idx0 = getOrCreateVertex(vertMap, verts, pts[0].roundedToEpsilon())
+                val idx1 = getOrCreateVertex(vertMap, verts, pts[1].roundedToEpsilon())
+                val idx2 = getOrCreateVertex(vertMap, verts, pts[2].roundedToEpsilon())
+                tris.add(IndexedTriangle(idx0, idx1, idx2))
+            }
+
+            return PolySetGeometry(verts, tris, color)
+        }
+
         private fun getOrCreateVertex(
             map: MutableMap<V3d, Int>,
             list: MutableList<V3d>,
             v: V3d
         ): Int {
-            val rounded = v.roundedToEpsilon()
-            val existing = map[rounded]
+            val existing = map[v]
             if (existing != null) return existing
             val idx = list.size
             list.add(v)
-            map[rounded] = idx
+            map[v] = idx
             return idx
         }
     }

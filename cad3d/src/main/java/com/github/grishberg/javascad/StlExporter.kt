@@ -33,39 +33,81 @@ object StlExporter {
         println("saveStlCsg: Start OpenSCAD-style pipeline, ${polygons.size} polygons")
 
         val startTime = System.currentTimeMillis()
-
         progressListener?.onExportProgress(fileName, 0)
 
-        val rootNode = CsgNode.fromPolygons(polygons)
-        val evaluator = GeometryEvaluator(autoRepair)
-        val geometry = evaluator.evaluate(rootNode)
+        val fixPolygons = PolygonValidatorMultithreading().fixPolygons(
+            polygons, object : ProgressObserver {
+                override fun onProgress(progress: Int) {
+                    println(fileName + " : progress = " + progress)
+                    progressListener?.onExportProgress(fileName, (progress * 0.5).toInt())
+                }
+            })
 
-        println("saveStlCsg: evaluation completed, takes ${System.currentTimeMillis() - startTime} ms")
-
+        println("saveStlCsg: fix polygons completed, takes ${System.currentTimeMillis() - startTime} ms")
         progressListener?.onExportProgress(fileName, 50)
 
-        if (geometry is PolySetGeometry) {
-            val polySet = geometry
-            println("saveStlCsg: ${polySet.triangleCount()} triangles, ${polySet.vertexCount()} vertices, manifold=${polySet.isManifold}")
+        val triangulationStartTime = System.currentTimeMillis()
+        val facetsFromPolygons: MutableList<Facet> = ArrayList()
+        for ((idx, p) in fixPolygons.withIndex()) {
+            val triangles = Triangulator.triangulate(p.getVertices(), p.getNormal())
+            for (t in triangles) {
+                val rounded = ArrayList<V3d>()
+                for (trianglePoint in t.getPoints()) {
+                    rounded.add(trianglePoint.roundedToEpsilon())
+                }
+                val newT = Triangle3d(rounded[0], rounded[1], rounded[2])
+                facetsFromPolygons.add(Facet(newT, p.getNormal(), p.getColor()))
+            }
+            if (fixPolygons.size > 0) {
+                val pct = 50 + ((idx + 1) * 30 / fixPolygons.size)
+                progressListener?.onExportProgress(fileName, pct)
+            }
+        }
 
-            if (autoRepair && !polySet.isManifold) {
-                println("saveStlCsg: mesh is not manifold, repairing via StlRepairer")
-                val (repaired, _) = StlRepairer().repair(polygons)
-                val repairedPolySet = PolySetGeometry.fromPolygons(repaired)
-                repairedPolySet.isManifold = StlValidator().validate(repaired).isManifold
-                progressListener?.onExportProgress(fileName, 80)
-                writeBinaryStlFromPolySet(repairedPolySet, fileName)
-                println("saveStlCsg: done with repair, ${repairedPolySet.triangleCount()} triangles")
+        println("saveStlCsg: triangulation completed, takes ${System.currentTimeMillis() - triangulationStartTime} ms")
+        progressListener?.onExportProgress(fileName, 80)
+
+        if (autoRepair) {
+            val facetsAsPolygons = facetsFromPolygons.map { f ->
+                Polygon.fromPolygons(f.getTriangle().getPoints(), f.getNormal(), f.getColor())
+            }
+            val validationResult = StlValidator().validate(facetsAsPolygons)
+            if (!validationResult.isManifold) {
+                println("saveStlCsg: non-manifold mesh detected — ${validationResult.openEdges} open edges, ${validationResult.degenerateTriangles} degenerate")
+
+                val repairStartTime = System.currentTimeMillis()
+                val (repairedPolygons, repairResult) = StlRepairer().repair(facetsAsPolygons)
+                println("saveStlCsg: repair result — $repairResult")
+
+                val repairedFacets = mutableListOf<Facet>()
+                for (p in repairedPolygons) {
+                    val triangles = Triangulator.triangulate(p.getVertices(), p.getNormal())
+                    for (t in triangles) {
+                        val rounded = ArrayList<V3d>()
+                        for (point in t.getPoints()) {
+                            rounded.add(point.roundedToEpsilon())
+                        }
+                        val newT = Triangle3d(rounded[0], rounded[1], rounded[2])
+                        repairedFacets.add(Facet(newT, p.getNormal(), p.getColor()))
+                    }
+                }
+                println("saveStlCsg: repair completed, takes ${System.currentTimeMillis() - repairStartTime} ms")
+                importPolySetAndWrite(repairedFacets, fileName)
             } else {
-                writeBinaryStlFromPolySet(polySet, fileName)
-                println("saveStlCsg: done, ${polySet.triangleCount()} triangles")
+                println("saveStlCsg: mesh is already manifold")
+                importPolySetAndWrite(facetsFromPolygons, fileName)
             }
         } else {
-            println("saveStlCsg: unexpected geometry type, falling back to legacy pipeline")
-            saveStl(polygons, fileName, autoRepair, progressListener)
+            importPolySetAndWrite(facetsFromPolygons, fileName)
         }
 
         progressListener?.onExportProgress(fileName, 100)
+    }
+
+    private fun importPolySetAndWrite(facets: List<Facet>, fileName: String) {
+        val polySet = PolySetGeometry.fromFacets(facets)
+        println("saveStlCsg: PolySetGeometry: ${polySet.triangleCount()} triangles, ${polySet.vertexCount()} vertices (shared dedup)")
+        writeBinaryStlFromPolySet(polySet, fileName)
     }
 
     @Throws(IOException::class)
