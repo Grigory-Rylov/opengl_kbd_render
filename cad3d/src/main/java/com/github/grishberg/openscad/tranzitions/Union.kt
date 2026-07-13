@@ -17,12 +17,13 @@ class Union(vararg models: IModel) : Abstract3dModel(CsgModel(PolySet3.EMPTY)) {
 
     override fun toCSG(context: FacetGenerationContext): CSG {
         if (children.isEmpty()) return super.toCSG(context)
+        if (children.size == 1) return children[0].toCSG(context)
 
-        // Collect CSG from all children and merge polygons
+        // BSP-объединение: последовательно union всех child-моделей
         var combined = children[0].toCSG(context)
         for (i in 1 until children.size) {
             val otherCsg = children[i].toCSG(context)
-            combined.polygons.addAll(otherCsg.polygons)
+            combined = combined.union(otherCsg)
         }
         return combined
     }
@@ -33,18 +34,19 @@ class Union(vararg models: IModel) : Abstract3dModel(CsgModel(PolySet3.EMPTY)) {
 class Difference(val model1: IModel, val model2: IModel) : Abstract3dModel(CsgModel(PolySet3.EMPTY)) {
     constructor(models: List<IModel>) : this(
         models[0],
-        models.getOrElse(1) { CubePlaceholder() }
+        models.getOrElse(1) { EmptyModel }
     )
 
     override fun toCSG(context: FacetGenerationContext): CSG {
-        // For now: just return model1's CSG (difference not implemented yet)
-        return model1.toCSG(context)
+        return model1.toCSG(context).difference(model2.toCSG(context))
     }
 
     override fun cloneModel(): Difference = Difference(model1, model2)
 
-    private class CubePlaceholder : IModel {
-        override fun toCSG(context: FacetGenerationContext): CSG = CSG()
-        override fun cloneModel(): IModel = CubePlaceholder()
+    companion object {
+        private val EmptyModel = object : IModel {
+            override fun toCSG(context: FacetGenerationContext): CSG = CSG()
+            override fun cloneModel(): IModel = this
+        }
     }
 }

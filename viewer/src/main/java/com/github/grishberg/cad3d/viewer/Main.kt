@@ -1,6 +1,5 @@
 package com.github.grishberg.cad3d.viewer
 
-import com.github.grishberg.cad3d.debug.DebugCmd
 import com.github.grishberg.cad3d.keyboard.ControlPointsController
 import com.github.grishberg.cad3d.plugin.Cad3dPlugin
 import com.github.grishberg.cad3d.plugin.ResultListener
@@ -8,7 +7,6 @@ import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
 import com.github.grishberg.cad3d.plugins.PluginManager
 import com.github.grishberg.cad3d.plugins.PluginManagerImpl
-import com.github.grishberg.cad3d.viewer.debug.DebugVisualizerImpl
 import com.github.grishberg.cad3d.viewer.dialog.ConfigEditor
 import com.github.grishberg.cad3d.viewer.dialog.StlExportDialog
 import com.jogamp.opengl.GL2
@@ -62,18 +60,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private val pointsController = ControlPointsController()
     private var glCanvas: GLCanvas? = null
 
-    //    private val sceneBuilder: SceneBuilder
-    private val debugVisualizer = DebugVisualizerImpl()
-    private val debugCommands = mutableListOf<DebugCmd>()
-
-    private var showDebugInfo = false
-    private var currentDebugCommandIndex = 0
-    private lateinit var debugNavigationPanel: JPanel
-    private lateinit var debugInfoLabel: JLabel
-    private lateinit var helpLabel: JLabel
-    private lateinit var statusLabel: JLabel
-    private lateinit var prevDebugButton: JButton
-    private lateinit var nextDebugButton: JButton
+    private var statusLabel: JLabel? = null
     private val pluginManager: PluginManager
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var plugins: List<Cad3dPlugin> = emptyList()
@@ -101,9 +88,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         // Создаем панель управления
         val controlPanel = createControlPanel()
 
-        // Создаем панель навигации по debug командам
-        createDebugNavigationPanel()
-
         val glProfile = GLProfile.get(GLProfile.GL2)
         val glCapabilities = GLCapabilities(glProfile)
         glCapabilities.depthBits = 24
@@ -121,7 +105,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         animator.start()
         contentPane.add(glCanvas, BorderLayout.CENTER)
         contentPane.add(controlPanel, BorderLayout.NORTH)
-        contentPane.add(debugNavigationPanel, BorderLayout.SOUTH)
 
         // Обработка закрытия окна
         addWindowListener(object : WindowAdapter() {
@@ -202,17 +185,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             settingsHolder.showTrackballCasePlate = it
             rebuildConfigAndRequestRendering(plugins, emptySet())
         }
-        val debugButton = createToggleButton("Debug", showDebugInfo) {
-            showDebugInfo = it
-            if (!it) {
-                debugVisualizer.clearVisualization()
-            } else {
-                addDebugCommands()
-                updateDebugDisplay()
-            }
-            updateDebugNavigationState()
-        }
-
         val configButton = JButton("Конфигурации")
         configButton.addActionListener {
             showConfigDialog()
@@ -244,71 +216,26 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         // row1.add(trackballSensorCapButton) // Можно перенести на вторую строку, если не помещается
 
         // Нижний ряд (row2)
-        // Добавим оставшиеся кнопки на вторую строку
-        row2.add(trackballSensorCapButton) // Перенесли сюда
+        row2.add(trackballSensorCapButton)
         row2.add(showControllerHolderButton)
         row2.add(showControllerButton)
         row2.add(showAmoebaButton)
         row2.add(showTrackballCaseButton)
         row2.add(showTrackballCasePlateButton)
 
-        row2.add(debugButton)
-
         // Добавляем строки на основную панель
         controlPanel.add(row1)
         controlPanel.add(row2)
+        controlPanel.add(createStatusPanel())
         return controlPanel
     }
 
-    private fun createDebugNavigationPanel() {
-        debugNavigationPanel = JPanel()
-        debugNavigationPanel.layout = FlowLayout(FlowLayout.CENTER)
-        debugNavigationPanel.preferredSize = Dimension(1200, 40)
-
-        // Кнопка "Предыдущая"
-        prevDebugButton = JButton("◀ Пред.")
-        prevDebugButton.preferredSize = Dimension(80, 30)
-        prevDebugButton.addActionListener {
-            if (debugCommands.isNotEmpty()) {
-                currentDebugCommandIndex = (currentDebugCommandIndex - 1 + debugCommands.size) % debugCommands.size
-                updateDebugDisplay()
-            }
-        }
-
-        // Кнопка "Следующая"  
-        nextDebugButton = JButton("След. ▶")
-        nextDebugButton.preferredSize = Dimension(80, 30)
-        nextDebugButton.addActionListener {
-            if (debugCommands.isNotEmpty()) {
-                currentDebugCommandIndex = (currentDebugCommandIndex + 1) % debugCommands.size
-                updateDebugDisplay()
-            }
-        }
-
-        // Информационная метка
-        debugInfoLabel = JLabel("Debug: выключен")
-        debugInfoLabel.preferredSize = Dimension(350, 30)
-
-        // Метка статуса рендеринга
+    private fun createStatusPanel(): JPanel {
+        val panel = JPanel(FlowLayout(FlowLayout.LEFT))
         statusLabel = JLabel("Готово")
-        statusLabel.preferredSize = Dimension(200, 30)
-
-        // Подсказка о горячих клавишах
-        helpLabel = JLabel("Горячие клавиши: R - вкл/выкл debug, Q/E - переключение команд")
-        helpLabel.preferredSize = Dimension(400, 30)
-
-        debugNavigationPanel.add(statusLabel)
-        debugNavigationPanel.add(prevDebugButton)
-        debugNavigationPanel.add(debugInfoLabel)
-        debugNavigationPanel.add(nextDebugButton)
-        debugNavigationPanel.add(helpLabel)
-
-        // Изначально кнопки отключены
-        updateDebugNavigationState()
-
-        // Панель не видна, если debug выключен
-        // Панель всегда видима, статус слева, debug-инфо по флагу
-        debugNavigationPanel.isVisible = true
+        statusLabel!!.preferredSize = Dimension(150, 25)
+        panel.add(statusLabel!!)
+        return panel
     }
 
     private fun showConfigDialog() {
@@ -365,50 +292,16 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     }
 
     private fun addDebugCommands() {
-        currentDebugCommandIndex = 0
-        updateDebugNavigationState()
-    }
-
-    private fun updateDebugNavigationState() {
-        prevDebugButton.isEnabled = showDebugInfo
-        nextDebugButton.isEnabled = showDebugInfo
-        debugInfoLabel.isVisible = showDebugInfo
-        prevDebugButton.isVisible = showDebugInfo
-        nextDebugButton.isVisible = showDebugInfo
-        helpLabel.isVisible = showDebugInfo
-
-        if (showDebugInfo && debugCommands.isNotEmpty()) {
-            val currentCmd = debugCommands[currentDebugCommandIndex]
-            debugInfoLabel.text =
-                "Debug (${currentDebugCommandIndex + 1}/${debugCommands.size}): ${currentCmd.description}"
-        } else {
-            debugInfoLabel.text = "Debug: выключен"
-        }
-
-        // Обновляем layout окна при изменении видимости панели
-        debugNavigationPanel.revalidate()
-        debugNavigationPanel.repaint()
-        contentPane.revalidate()
-        contentPane.repaint()
     }
 
     private fun setRenderingStatus(isRendering: Boolean) {
-        statusLabel.text = if (isRendering) "Рендеринг" else "Готово"
-        statusLabel.background = if (isRendering) Color.ORANGE else Color.GREEN
+        statusLabel?.text = if (isRendering) "Рендеринг" else "Готово"
     }
 
     private fun updateDebugDisplay() {
-        debugVisualizer.clearVisualization()
+    }
 
-        if (showDebugInfo && debugCommands.isNotEmpty()) {
-            // Рендерим статические debug объекты
-
-            // Рендерим только текущую debug команду
-            val currentCmd = debugCommands[currentDebugCommandIndex]
-            debugVisualizer.applyDebugVisualization(currentCmd)
-        }
-
-        updateDebugNavigationState()
+    private fun updateDebugNavigationState() {
     }
 
     private fun requestRender() {
@@ -434,9 +327,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         val gl = drawable.gl.gL2
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT or GL2.GL_DEPTH_BUFFER_BIT)
         gl.glLoadIdentity()
-
-        // Устанавливаем GL контекст для debug визуализатора
-        debugVisualizer.setGL(gl)
 
         // Установка материала для куба
         val materialDiffuse = floatArrayOf(0.7f, 0.7f, 0.7f, 1.0f)
@@ -472,12 +362,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             gl.glEnd()
         }
 
-        // Рендерим debug объекты если они включены (ВНУТРИ трансформаций)
-        if (showDebugInfo) {
-            debugVisualizer.renderDebugObjects()
-        }
-
-        gl.glPopMatrix() // Возвращаемся к исходной матрице
+        gl.glPopMatrix()
 
         gl.glFlush()
     }
@@ -606,35 +491,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
                 KeyEvent.VK_D, KeyEvent.VK_RIGHT -> settingsHolder.translateX += TRANSLATE_STEP
                 KeyEvent.VK_W, KeyEvent.VK_UP -> settingsHolder.translateY += TRANSLATE_STEP
                 KeyEvent.VK_S, KeyEvent.VK_DOWN -> settingsHolder.translateY -= TRANSLATE_STEP
-
-                // Горячие клавиши для debug навигации
-                KeyEvent.VK_Q -> {
-                    if (showDebugInfo && debugCommands.isNotEmpty()) {
-                        currentDebugCommandIndex =
-                            (currentDebugCommandIndex - 1 + debugCommands.size) % debugCommands.size
-                        updateDebugDisplay()
-                    }
-                }
-
-                KeyEvent.VK_E -> {
-                    if (showDebugInfo && debugCommands.isNotEmpty()) {
-                        currentDebugCommandIndex = (currentDebugCommandIndex + 1) % debugCommands.size
-                        updateDebugDisplay()
-                    }
-                }
-
-                KeyEvent.VK_R -> {
-                    // Переключение debug режима
-                    showDebugInfo = !showDebugInfo
-                    if (!showDebugInfo) {
-                        debugVisualizer.clearVisualization()
-                        //debugCommands.clear()
-                    } else {
-                        addDebugCommands()
-                        updateDebugDisplay()
-                    }
-                    updateDebugNavigationState()
-                }
             }
             requestRender()
         }

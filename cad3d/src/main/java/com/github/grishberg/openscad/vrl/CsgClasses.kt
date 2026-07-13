@@ -1,5 +1,9 @@
 package com.github.grishberg.openscad.vrl
 
+import com.github.grishberg.csg.adapter.JscadAdapter
+import com.github.grishberg.csg.bsp.csgOperation
+import com.github.grishberg.csg.bsp.CsgOp
+import com.github.grishberg.csg.geom.PolySet3
 import com.github.grishberg.openscad.coords.V3d
 import com.github.grishberg.openscad.utils.Color
 
@@ -96,6 +100,53 @@ open class CSG {
             }
         }
         return facets
+    }
+
+    /** BSP-объединение двух CSG. */
+    fun union(other: CSG): CSG {
+        if (polygons.isEmpty()) return other
+        if (other.polygons.isEmpty()) return this
+        val ps1 = JscadAdapter.polygonsToPolySet3(polygons)
+        val ps2 = JscadAdapter.polygonsToPolySet3(other.polygons)
+        val result = csgOperation(ps1, ps2, CsgOp.UNION)
+        return polySet3ToCSG(result, polygons.firstOrNull()?.color ?: Color.GRAY)
+    }
+
+    /** BSP-разность: this - other. */
+    fun difference(other: CSG): CSG {
+        if (this.polygons.isEmpty()) return CSG()
+        if (other.polygons.isEmpty()) return this
+        val ps1 = JscadAdapter.polygonsToPolySet3(polygons)
+        val ps2 = JscadAdapter.polygonsToPolySet3(other.polygons)
+        val result = csgOperation(ps1, ps2, CsgOp.DIFFERENCE)
+        return polySet3ToCSG(result, polygons.firstOrNull()?.color ?: Color.GRAY)
+    }
+
+    /** BSP-пересечение. */
+    fun intersect(other: CSG): CSG {
+        if (this.polygons.isEmpty() || other.polygons.isEmpty()) return CSG()
+        val ps1 = JscadAdapter.polygonsToPolySet3(polygons)
+        val ps2 = JscadAdapter.polygonsToPolySet3(other.polygons)
+        val result = csgOperation(ps1, ps2, CsgOp.INTERSECTION)
+        return polySet3ToCSG(result, polygons.firstOrNull()?.color ?: Color.GRAY)
+    }
+
+    private fun polySet3ToCSG(ps: PolySet3, defaultColor: Color): CSG {
+        val result = CSG()
+        val verts = ps.vertices
+        for (idx in ps.indices.indices) {
+            val tri = ps.indices[idx]
+            val v0 = V3d(verts[tri.a].x, verts[tri.a].y, verts[tri.a].z)
+            val v1 = V3d(verts[tri.b].x, verts[tri.b].y, verts[tri.b].z)
+            val v2 = V3d(verts[tri.c].x, verts[tri.c].y, verts[tri.c].z)
+            val a = v1 - v0
+            val b = v2 - v0
+            val cr = a.cross(b)
+            val mag = cr.magnitude()
+            val normal = if (mag > 1e-15) cr / mag else V3d(0.0, 0.0, 1.0)
+            result.polygons.add(Polygon(listOf(v0, v1, v2), normal, defaultColor))
+        }
+        return result
     }
 }
 

@@ -3,6 +3,8 @@ package com.github.grishberg.openscad.models
 import com.github.grishberg.csg.geom.PolySet3
 import com.github.grishberg.csg.primitives.Primitives
 import com.github.grishberg.csg.model.Model as CsgModel
+import com.github.grishberg.openscad.vrl.CSG
+import com.github.grishberg.openscad.vrl.FacetGenerationContext
 
 class Cube(
     val sizeX: Double, val sizeY: Double, val sizeZ: Double
@@ -34,7 +36,20 @@ class Sphere(
 
 class Hull @JvmOverloads constructor(vararg models: IModel?) : Abstract3dModel(CsgModel(PolySet3.EMPTY)) {
     constructor(list: List<Abstract3dModel>) : this(*list.toTypedArray())
-    override fun cloneModel(): Hull = Hull()
+    private val children: List<IModel> = models.filterNotNull()
+
+    override fun toCSG(context: FacetGenerationContext): CSG {
+        if (children.isEmpty()) return super.toCSG(context)
+        if (children.size == 1) return children[0].toCSG(context)
+        var combined = children[0].toCSG(context)
+        for (i in 1 until children.size) {
+            val otherCsg = children[i].toCSG(context)
+            combined = combined.union(otherCsg)
+        }
+        return combined
+    }
+
+    override fun cloneModel(): Hull = Hull(*children.toTypedArray())
 }
 
 class StlModel(
@@ -75,5 +90,18 @@ class StlModel(
 
 class Minkowski(vararg models: IModel) : Abstract3dModel(CsgModel(PolySet3.EMPTY)) {
     constructor(list: List<IModel>) : this(*list.toTypedArray())
-    override fun cloneModel(): Minkowski = Minkowski()
+    private val children: List<IModel> = models.filterNotNull()
+
+    override fun toCSG(context: FacetGenerationContext): CSG {
+        if (children.isEmpty()) return super.toCSG(context)
+        if (children.size == 1) return children[0].toCSG(context)
+        var combined = children[0].toCSG(context)
+        for (i in 1 until children.size) {
+            val otherCsg = children[i].toCSG(context)
+            combined = combined.union(otherCsg)
+        }
+        return combined
+    }
+
+    override fun cloneModel(): Minkowski = Minkowski(*children.toTypedArray())
 }
