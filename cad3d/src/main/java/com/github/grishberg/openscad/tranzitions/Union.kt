@@ -19,13 +19,12 @@ class Union(vararg models: IModel) : Abstract3dModel(CsgModel(PolySet3.EMPTY)) {
         if (children.isEmpty()) return super.toCSG(context)
         if (children.size == 1) return children[0].toCSG(context)
 
-        // BSP-объединение: последовательно union всех child-моделей
-        var combined = children[0].toCSG(context)
-        for (i in 1 until children.size) {
-            val otherCsg = children[i].toCSG(context)
-            combined = combined.union(otherCsg)
+        // Конкатенация полигонов (как в оригинальном JSCAD Union)
+        val result = CSG()
+        for (child in children) {
+            result.polygons.addAll(child.toCSG(context).polygons)
         }
-        return combined
+        return result
     }
 
     override fun cloneModel(): Union = Union(*children.toTypedArray())

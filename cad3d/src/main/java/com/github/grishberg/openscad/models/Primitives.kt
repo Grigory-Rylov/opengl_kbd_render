@@ -3,8 +3,12 @@ package com.github.grishberg.openscad.models
 import com.github.grishberg.csg.geom.PolySet3
 import com.github.grishberg.csg.primitives.Primitives
 import com.github.grishberg.csg.model.Model as CsgModel
+import com.github.grishberg.openscad.coords.V3d
+import com.github.grishberg.openscad.utils.Color
 import com.github.grishberg.openscad.vrl.CSG
+import com.github.grishberg.openscad.vrl.ColorFacetGenerationContext
 import com.github.grishberg.openscad.vrl.FacetGenerationContext
+import com.github.grishberg.openscad.vrl.Polygon
 
 class Cube(
     val sizeX: Double, val sizeY: Double, val sizeZ: Double
@@ -41,12 +45,63 @@ class Hull @JvmOverloads constructor(vararg models: IModel?) : Abstract3dModel(C
     override fun toCSG(context: FacetGenerationContext): CSG {
         if (children.isEmpty()) return super.toCSG(context)
         if (children.size == 1) return children[0].toCSG(context)
-        var combined = children[0].toCSG(context)
-        for (i in 1 until children.size) {
-            val otherCsg = children[i].toCSG(context)
-            combined = combined.union(otherCsg)
+
+        val points = HashSet<V3d>()
+        for (child in children) {
+            for (polygon in child.toCSG(context).polygons) {
+                points.addAll(polygon.vertices)
+            }
         }
-        return combined
+
+        return generateHull(context, points.toList())
+    }
+
+    companion object {
+        private fun generateHull(context: FacetGenerationContext, points: List<V3d>): CSG {
+            val uniquePoints = HashSet<V3d>(points)
+            if (uniquePoints.size < 4) {
+                return CSG()
+            }
+
+            val hull = com.github.quickhull3d.QuickHull3D(uniquePoints.toList())
+            val vertices = hull.getVertices()
+            val faces = hull.getFaces()
+            val color = (context as? ColorFacetGenerationContext)?.defaultColor ?: Color.GRAY
+
+            val hullPolygons = mutableListOf<Polygon>()
+
+            for (face in faces) {
+                if (face.size == 3) {
+                    val v0 = vertices[face[0]].toCoords3d()
+                    val v1 = vertices[face[1]].toCoords3d()
+                    val v2 = vertices[face[2]].toCoords3d()
+                    hullPolygons.add(Polygon.fromPolygons(listOf(v0, v1, v2), color))
+                } else {
+                    val p0 = vertices[face[0]].toCoords3d()
+                    val p1 = vertices[face[1]].toCoords3d()
+                    val p2 = vertices[face[2]].toCoords3d()
+                    val faceNormal = (p1 - p0).cross(p2 - p0).unit()
+                    val faceDist = faceNormal.dot(p0)
+
+                    val sp0 = snapToPlane(p0, faceNormal, faceDist)
+                    for (i in 1 until face.size - 1) {
+                        val vi = snapToPlane(vertices[face[i]].toCoords3d(), faceNormal, faceDist)
+                        val vi1 = snapToPlane(vertices[face[i + 1]].toCoords3d(), faceNormal, faceDist)
+                        hullPolygons.add(Polygon(listOf(sp0, vi, vi1), faceNormal, color))
+                    }
+                }
+            }
+
+            return CSG().apply { polygons.addAll(hullPolygons) }
+        }
+
+        private fun snapToPlane(point: V3d, normal: V3d, dist: Double): V3d {
+            val deviation = normal.dot(point) - dist
+            if (Math.abs(deviation) > 1e-10) {
+                return point + normal.mul(deviation)
+            }
+            return point
+        }
     }
 
     override fun cloneModel(): Hull = Hull(*children.toTypedArray())
