@@ -8,10 +8,9 @@ object TestModel {
     fun main(args: Array<String>) {
         val mb = Manifold3dEngine.bindings()
 
-        // Sphere R=10 at origin, Cube 10x10x10 at origin
-        // Hull them
+        // Hull: сфера R=10 в origin + куб 10x10x10 смещён вправо на 20
         val sphere = mb.sphere(10.0, 64)
-        val cube = mb.cube(10.0, 10.0, 10.0, true)
+        val cube = mb.translate(mb.cube(10.0, 10.0, 10.0, true), 20.0, 0.0, 0.0)
         val hull = mb.batchHull(longArrayOf(sphere, cube))
         println("Hull: ${mb.numTri(hull)} tris")
 
