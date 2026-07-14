@@ -4,95 +4,184 @@ import com.cadoodlecad.manifold.ManifoldBindings
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.utils.Color
 import eu.printingin3d.javascad.vrl.Polygon
+import java.io.File
+import java.io.FileOutputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-/**
- * Thin wrapper over native manifold3d (JNI) that works with [Polygon] lists.
- *
- * Converts [Polygon] -> manifold mesh -> operation -> manifold mesh -> [Polygon].
- */
 object Manifold3dEngine {
 
     private val lock = ReentrantLock()
     private var bindings: ManifoldBindings? = null
 
-    private fun getBindings(): ManifoldBindings {
-        return bindings ?: lock.withLock {
-            bindings ?: ManifoldBindings().also { bindings = it }
-        }
-    }
+    private fun getBindings(): ManifoldBindings =
+        bindings ?: lock.withLock { bindings ?: ManifoldBindings().also { bindings = it } }
 
-    // ---- public API (same signature as old ManifoldEngine) ----
+    // ---- CSG operations ----
 
     fun union(a: List<Polygon>, b: List<Polygon>): List<Polygon> =
-        operate(a, b, ManifoldBindings.OPTYPE_UNION)
+        operatePolygons(a, b, ManifoldBindings.OPTYPE_UNION)
 
     fun difference(a: List<Polygon>, b: List<Polygon>): List<Polygon> =
-        operate(a, b, ManifoldBindings.OPTYPE_DIFFERENCE)
+        operatePolygons(a, b, ManifoldBindings.OPTYPE_DIFFERENCE)
 
     fun intersection(a: List<Polygon>, b: List<Polygon>): List<Polygon> =
-        operate(a, b, ManifoldBindings.OPTYPE_INTERSECTION)
+        operatePolygons(a, b, ManifoldBindings.OPTYPE_INTERSECTION)
 
-    // ---- Hull ----
+    // ---- Hull (returns manifold handle) ----
 
     fun hull(a: List<Polygon>, b: List<Polygon>): List<Polygon> {
         if (a.isEmpty()) return b
         if (b.isEmpty()) return a
-
         val mb = getBindings()
         val manA = polygonsToManifold(mb, a)
         val manB = polygonsToManifold(mb, b)
-
         return try {
             val result = mb.batchHull(longArrayOf(manA, manB))
-            if (mb.isEmpty(result)) emptyList()
-            else manifoldToPolygons(mb, result)
-        } finally {
-            mb.delete(manA)
-            mb.delete(manB)
+            if (mb.isEmpty(result)) emptyList() else manifoldToPolygons(mb, result)
+        } catch (e: Exception) {
+            println("  [hull] error: ${e.message}")
+            emptyList()
         }
+        // batchHull consumes inputs
     }
 
-    fun center(polygons: List<Polygon>): V3d {
+    // ---- Native primitives ----
+
+    fun sphere(radius: Double, segments: Int): List<Polygon> {
+        val mb = getBindings()
+        val man = mb.sphere(radius, segments)
+        return manifoldToPolygons(mb, man)
+    }
+
+    fun cube(w: Double, h: Double, d: Double, center: Boolean = true): List<Polygon> {
+        val mb = getBindings()
+        val man = mb.cube(w, h, d, center)
+        return manifoldToPolygons(mb, man)
+    }
+
+    fun cylinder(radius: Double, height: Double, segments: Int): List<Polygon> {
+        val mb = getBindings()
+        val man = mb.cylinder(radius, height, segments.toDouble(), segments, segments)
+        return manifoldToPolygons(mb, man)
+    }
+
+    // ---- Transform primitives (native handles) ----
+
+    fun transformAndReturn(manifold: Long, tx: Double, ty: Double, tz: Double): Long {
+        val mb = getBindings()
+        return mb.transform(manifold,
+            1.0, 0.0, 0.0, tx,
+            0.0, 1.0, 0.0, ty,
+            0.0, 0.0, 1.0, tz)
+    }
+
+    fun centerOfPolygons(polygons: List<Polygon>): V3d {
         val mb = getBindings()
         val man = polygonsToManifold(mb, polygons)
         return try {
-            val bounds = mb.getJavaFXBounds(man)
-            V3d(bounds.centerX, bounds.centerY, bounds.centerZ)
+            val b = mb.getBounds(man)
+            V3d(b.centerX, b.centerY, b.centerZ)
         } finally {
             mb.delete(man)
         }
     }
 
-    // ---- core ----
-
-    private fun operate(a: List<Polygon>, b: List<Polygon>, opType: Int): List<Polygon> {
-        if (a.isEmpty()) return b
-        if (b.isEmpty()) return a
-
+    fun centerOfNative(manifold: Long): V3d {
         val mb = getBindings()
-        val manA = polygonsToManifold(mb, a)
-        val manB = polygonsToManifold(mb, b)
+        val b = mb.getBounds(manifold)
+        return V3d(b.centerX, b.centerY, b.centerZ)
+    }
 
-        return try {
-            val result = when (opType) {
-                ManifoldBindings.OPTYPE_UNION -> mb.union(manA, manB)
-                ManifoldBindings.OPTYPE_DIFFERENCE -> mb.difference(manA, manB)
-                ManifoldBindings.OPTYPE_INTERSECTION -> mb.intersection(manA, manB)
-                else -> throw IllegalArgumentException("Unknown op: $opType")
-            }
-            if (mb.isEmpty(result)) emptyList()
-            else manifoldToPolygons(mb, result)
-        } finally {
-            mb.delete(manA)
-            mb.delete(manB)
+    fun manifoldToPolygonsExport(manifold: Long): List<Polygon> {
+        val mb = getBindings()
+        val data = mb.exportMeshGL64(manifold)
+        val verts = data.vertices()
+        val tris = data.triangles()
+        val triCount = data.triCount().toInt()
+        val vertCount = verts.size / 3
+        println("  [export] triCount=$triCount, vertCount=$vertCount")
+        if (triCount == 0) return emptyList()
+
+        // Validate triangle indices
+        var maxIdx = 0L
+        var minIdx = Long.MAX_VALUE
+        for (i in 0 until triCount * 3) {
+            maxIdx = maxOf(maxIdx, tris[i])
+            minIdx = minOf(minIdx, tris[i])
         }
+        println("  [export] tri indices range: [$minIdx, $maxIdx], verts=$vertCount")
+
+        // Check vertex range
+        var vxMin = Double.MAX_VALUE
+        var vxMax = -Double.MAX_VALUE
+        var vyMin = Double.MAX_VALUE
+        var vyMax = -Double.MAX_VALUE
+        var vzMin = Double.MAX_VALUE
+        var vzMax = -Double.MAX_VALUE
+        for (v in 0 until vertCount) {
+            vxMin = minOf(vxMin, verts[v * 3])
+            vxMax = maxOf(vxMax, verts[v * 3])
+            vyMin = minOf(vyMin, verts[v * 3 + 1])
+            vyMax = maxOf(vyMax, verts[v * 3 + 1])
+            vzMin = minOf(vzMin, verts[v * 3 + 2])
+            vzMax = maxOf(vzMax, verts[v * 3 + 2])
+        }
+        println("  [export] vertex range: X[$vxMin, $vxMax] Y[$vyMin, $vyMax] Z[$vzMin, $vzMax]")
+
+        val result = ArrayList<Polygon>(triCount)
+        for (i in 0 until triCount) {
+            val vi0 = tris[i * 3].toInt()
+            val vi1 = tris[i * 3 + 1].toInt()
+            val vi2 = tris[i * 3 + 2].toInt()
+
+            if (vi0 < 0 || vi0 >= vertCount || vi1 < 0 || vi1 >= vertCount || vi2 < 0 || vi2 >= vertCount) {
+                println("  [export] INVALID tri $i: indices ($vi0, $vi1, $vi2) vertCount=$vertCount")
+                continue
+            }
+
+            val a = V3d(verts[vi0 * 3], verts[vi0 * 3 + 1], verts[vi0 * 3 + 2])
+            val b = V3d(verts[vi1 * 3], verts[vi1 * 3 + 1], verts[vi1 * 3 + 2])
+            val c = V3d(verts[vi2 * 3], verts[vi2 * 3 + 1], verts[vi2 * 3 + 2])
+
+            val ab = b.subtract(a)
+            val ac = c.subtract(a)
+            val n = ab.cross(ac).unit()
+            result.add(Polygon.fromPolygons(listOf(a, b, c), n, Color.white))
+        }
+        mb.delete(manifold)
+        return result
+    }
+
+    fun bindings(): ManifoldBindings = getBindings()
+
+    // ---- Low-level native operations ----
+
+    fun operateNative(a: Long, b: Long, opType: Int): Long {
+        val mb = getBindings()
+        return when (opType) {
+            ManifoldBindings.OPTYPE_UNION -> mb.union(a, b)
+            ManifoldBindings.OPTYPE_DIFFERENCE -> mb.difference(a, b)
+            ManifoldBindings.OPTYPE_INTERSECTION -> mb.intersection(a, b)
+            else -> throw IllegalArgumentException("Unknown op: $opType")
+        }
+    }
+
+    fun nativeHull(handles: LongArray): Long {
+        val mb = getBindings()
+        return mb.batchHull(handles)
+    }
+
+    fun nativeDelete(handle: Long) {
+        val mb = getBindings()
+        mb.delete(handle)
     }
 
     // ---- Polygon -> manifold ----
 
-    private fun polygonsToManifold(mb: ManifoldBindings, polygons: List<Polygon>): Long {
+    internal fun polygonsToManifold(mb: ManifoldBindings, polygons: List<Polygon>): Long {
         val vertices = java.util.ArrayList<Double>()
         val triangles = java.util.ArrayList<Long>()
 
@@ -101,11 +190,9 @@ object Manifold3dEngine {
             if (pts.size < 3) continue
             val v0 = pts[0]
             for (i in 1 until pts.size - 1) {
-                val v1 = pts[i]
-                val v2 = pts[i + 1]
                 triangles.add(addVertex(vertices, v0))
-                triangles.add(addVertex(vertices, v1))
-                triangles.add(addVertex(vertices, v2))
+                triangles.add(addVertex(vertices, pts[i]))
+                triangles.add(addVertex(vertices, pts[i + 1]))
             }
         }
 
@@ -129,7 +216,27 @@ object Manifold3dEngine {
         return idx
     }
 
-    // ---- manifold -> Polygon (one triangle = one polygon) ----
+    // ---- manifold -> Polygon ----
+
+    private fun operatePolygons(a: List<Polygon>, b: List<Polygon>, opType: Int): List<Polygon> {
+        if (a.isEmpty()) return b
+        if (b.isEmpty()) return a
+        val mb = getBindings()
+        val manA = polygonsToManifold(mb, a)
+        val manB = polygonsToManifold(mb, b)
+        return try {
+            val result = when (opType) {
+                ManifoldBindings.OPTYPE_UNION -> mb.union(manA, manB)
+                ManifoldBindings.OPTYPE_DIFFERENCE -> mb.difference(manA, manB)
+                ManifoldBindings.OPTYPE_INTERSECTION -> mb.intersection(manA, manB)
+                else -> throw IllegalArgumentException("Unknown op: $opType")
+            }
+            if (mb.isEmpty(result)) emptyList() else manifoldToPolygons(mb, result)
+        } finally {
+            mb.delete(manA)
+            mb.delete(manB)
+        }
+    }
 
     private fun manifoldToPolygons(mb: ManifoldBindings, manifold: Long): List<Polygon> {
         try {
@@ -137,7 +244,6 @@ object Manifold3dEngine {
             val verts = data.vertices()
             val tris = data.triangles()
             val triCount = data.triCount().toInt()
-
             if (triCount == 0) return emptyList()
 
             val result = ArrayList<Polygon>(triCount)
@@ -150,15 +256,59 @@ object Manifold3dEngine {
                 val b = V3d(verts[i1], verts[i1 + 1], verts[i1 + 2])
                 val c = V3d(verts[i2], verts[i2 + 1], verts[i2 + 2])
 
-                val n = b.subtract(a).cross(c.subtract(a)).unit()
-                val pa = a.subtract(n.scale(a.dot(n) - n.dot(a)))
-                val pb = b.subtract(n.scale(b.dot(n) - n.dot(b)))
-                val pc = c.subtract(n.scale(c.dot(n) - n.dot(c)))
-                result.add(Polygon.fromPolygons(listOf(pa, pb, pc), n, Color.white))
+                val ab = b.subtract(a)
+                val ac = c.subtract(a)
+                val n = ab.cross(ac).unit()
+                result.add(Polygon.fromPolygons(listOf(a, b, c), n, Color.white))
             }
             return result
         } finally {
             mb.delete(manifold)
         }
     }
+
+    // ---- STL export ----
+
+    fun writeStl(polygons: List<Polygon>, file: File) {
+        val tris = mutableListOf<Triangle>()
+        for (poly in polygons) {
+            val pts = poly.vertices
+            if (pts.size == 3) {
+                val n = poly.normal
+                tris.add(Triangle(pts[0], pts[1], pts[2], n))
+            } else if (pts.size > 3) {
+                val n = poly.normal
+                val v0 = pts[0]
+                for (i in 1 until pts.size - 1) {
+                    tris.add(Triangle(v0, pts[i], pts[i + 1], n))
+                }
+            }
+        }
+
+        FileOutputStream(file).channel.use { channel ->
+            val bb = ByteBuffer.allocate(80 + 4 + tris.size * 50).order(ByteOrder.LITTLE_ENDIAN)
+            // 80 byte header
+            val header = "binary stl - manifold3d engine".toByteArray()
+            for (b in header) bb.put(b)
+            for (i in header.size until 80) bb.put(0.toByte())
+            bb.putInt(tris.size)
+
+            for (t in tris) {
+                bb.putFloat(t.n.x.toFloat())
+                bb.putFloat(t.n.y.toFloat())
+                bb.putFloat(t.n.z.toFloat())
+                for (v in listOf(t.a, t.b, t.c)) {
+                    bb.putFloat(v.x.toFloat())
+                    bb.putFloat(v.y.toFloat())
+                    bb.putFloat(v.z.toFloat())
+                }
+                bb.putShort(0.toShort())
+            }
+
+            bb.flip()
+            channel.write(bb)
+        }
+    }
 }
+
+private data class Triangle(val a: V3d, val b: V3d, val c: V3d, val n: V3d)
