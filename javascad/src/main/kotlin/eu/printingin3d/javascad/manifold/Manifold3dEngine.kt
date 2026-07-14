@@ -34,6 +34,37 @@ object Manifold3dEngine {
     fun intersection(a: List<Polygon>, b: List<Polygon>): List<Polygon> =
         operate(a, b, ManifoldBindings.OPTYPE_INTERSECTION)
 
+    // ---- Hull ----
+
+    fun hull(a: List<Polygon>, b: List<Polygon>): List<Polygon> {
+        if (a.isEmpty()) return b
+        if (b.isEmpty()) return a
+
+        val mb = getBindings()
+        val manA = polygonsToManifold(mb, a)
+        val manB = polygonsToManifold(mb, b)
+
+        return try {
+            val result = mb.batchHull(longArrayOf(manA, manB))
+            if (mb.isEmpty(result)) emptyList()
+            else manifoldToPolygons(mb, result)
+        } finally {
+            mb.delete(manA)
+            mb.delete(manB)
+        }
+    }
+
+    fun center(polygons: List<Polygon>): V3d {
+        val mb = getBindings()
+        val man = polygonsToManifold(mb, polygons)
+        return try {
+            val bounds = mb.getJavaFXBounds(man)
+            V3d(bounds.centerX, bounds.centerY, bounds.centerZ)
+        } finally {
+            mb.delete(man)
+        }
+    }
+
     // ---- core ----
 
     private fun operate(a: List<Polygon>, b: List<Polygon>, opType: Int): List<Polygon> {

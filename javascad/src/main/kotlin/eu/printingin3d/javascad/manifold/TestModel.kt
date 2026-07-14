@@ -10,26 +10,43 @@ object TestModel {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        val sphere = makeSphere(10.0, 32, 16)
-        val cube = makeCube(10.0, 10.0, 10.0, 25.0, 0.0, 0.0)
-        val cyl = makeCylinder(3.5, 30.0, 32)
+        generateTestPart()
+    }
+
+    /**
+     * Hull из сферы D=20 и куба 10×10×10 (смещён +20 по X),
+     * в центре вырезан цилиндр D=7, H=30.
+     */
+    fun generateTestPart() {
+        val sphere = makeSphere(10.0, 64, 32)
+        val cube = makeCube(10.0, 10.0, 10.0, 20.0, 0.0, 0.0)
 
         println("Sphere: ${sphere.size} polys")
         println("Cube: ${cube.size} polys")
+
+        val hullResult = Manifold3dEngine.hull(sphere, cube)
+        println("Hull: ${hullResult.size} polys")
+
+        val c = Manifold3dEngine.center(hullResult)
+        println("Hull center: ($c)")
+
+        val cyl = makeCylinder(3.5, 30.0, 64, c)
         println("Cylinder: ${cyl.size} polys")
 
-        val union = Manifold3dEngine.union(sphere, cube)
-        println("Union (sphere+cube): ${union.size} polys")
+        val result = Manifold3dEngine.difference(hullResult, cyl)
+        println("Result (hull - cyl): ${result.size} polys")
 
-        val result = Manifold3dEngine.difference(union, cyl)
-        println("Difference (union-cyl): ${result.size} polys")
-
-        val file = File("test.stl")
+        val file = File("test_part.stl")
         writeStl(result, file)
         println("Exported ${file.absolutePath} (${file.length()} bytes)")
     }
 
-    private fun makeSphere(radius: Double, slices: Int, stacks: Int): List<Polygon> {
+    // ---- Прimitives ----
+
+    private fun makeSphere(radius: Double, slices: Int, stacks: Int): List<Polygon> =
+        makeSphere(radius, slices, stacks, V3d.ZERO)
+
+    private fun makeSphere(radius: Double, slices: Int, stacks: Int, center: V3d): List<Polygon> {
         val polys = mutableListOf<Polygon>()
         for (i in 0 until stacks) {
             val theta1 = Math.PI * (i / stacks.toDouble())
@@ -43,8 +60,8 @@ object TestModel {
             val ring2 = mutableListOf<V3d>()
             for (j in 0 until slices) {
                 val phi = 2.0 * Math.PI * (j / slices.toDouble())
-                ring1.add(V3d(r1 * Math.cos(phi), y1, r1 * Math.sin(phi)))
-                ring2.add(V3d(r2 * Math.cos(phi), y2, r2 * Math.sin(phi)))
+                ring1.add(V3d(center.x + r1 * Math.cos(phi), center.y + y1, center.z + r1 * Math.sin(phi)))
+                ring2.add(V3d(center.x + r2 * Math.cos(phi), center.y + y2, center.z + r2 * Math.sin(phi)))
             }
 
             if (r1 > 1e-10 && r2 > 1e-10) {
@@ -63,17 +80,17 @@ object TestModel {
         val hh = h / 2.0
         val hd = d / 2.0
         val faces = listOf(
-            listOf(V3d(cx-hw, cy-hh, cz+hd), V3d(cx+hw, cy-hh, cz+hd), V3d(cx+hw, cy+hh, cz+hd), V3d(cx-hw, cy+hh, cz+hd)),
-            listOf(V3d(cx+hw, cy-hh, cz-hd), V3d(cx-hw, cy-hh, cz-hd), V3d(cx-hw, cy+hh, cz-hd), V3d(cx+hw, cy+hh, cz-hd)),
-            listOf(V3d(cx-hw, cy-hh, cz-hd), V3d(cx-hw, cy-hh, cz+hd), V3d(cx-hw, cy+hh, cz+hd), V3d(cx-hw, cy+hh, cz-hd)),
-            listOf(V3d(cx+hw, cy-hh, cz+hd), V3d(cx+hw, cy-hh, cz-hd), V3d(cx+hw, cy+hh, cz-hd), V3d(cx+hw, cy+hh, cz+hd)),
-            listOf(V3d(cx-hw, cy-hh, cz-hd), V3d(cx+hw, cy-hh, cz-hd), V3d(cx+hw, cy-hh, cz+hd), V3d(cx-hw, cy-hh, cz+hd)),
-            listOf(V3d(cx-hw, cy+hh, cz+hd), V3d(cx+hw, cy+hh, cz+hd), V3d(cx+hw, cy+hh, cz-hd), V3d(cx-hw, cy+hh, cz-hd)),
+            listOf(V3d(cx - hw, cy - hh, cz + hd), V3d(cx + hw, cy - hh, cz + hd), V3d(cx + hw, cy + hh, cz + hd), V3d(cx - hw, cy + hh, cz + hd)),
+            listOf(V3d(cx + hw, cy - hh, cz - hd), V3d(cx - hw, cy - hh, cz - hd), V3d(cx - hw, cy + hh, cz - hd), V3d(cx + hw, cy + hh, cz - hd)),
+            listOf(V3d(cx - hw, cy - hh, cz - hd), V3d(cx - hw, cy - hh, cz + hd), V3d(cx - hw, cy + hh, cz + hd), V3d(cx - hw, cy + hh, cz - hd)),
+            listOf(V3d(cx + hw, cy - hh, cz + hd), V3d(cx + hw, cy - hh, cz - hd), V3d(cx + hw, cy + hh, cz - hd), V3d(cx + hw, cy + hh, cz + hd)),
+            listOf(V3d(cx - hw, cy - hh, cz - hd), V3d(cx + hw, cy - hh, cz - hd), V3d(cx + hw, cy - hh, cz + hd), V3d(cx - hw, cy - hh, cz + hd)),
+            listOf(V3d(cx - hw, cy + hh, cz + hd), V3d(cx + hw, cy + hh, cz + hd), V3d(cx + hw, cy + hh, cz - hd), V3d(cx - hw, cy + hh, cz - hd)),
         )
         return faces.map { Polygon.fromPolygons(it, Color.white) }
     }
 
-    private fun makeCylinder(radius: Double, height: Double, segments: Int): List<Polygon> {
+    private fun makeCylinder(radius: Double, height: Double, segments: Int, center: V3d = V3d.ZERO): List<Polygon> {
         val polys = mutableListOf<Polygon>()
         val halfH = height / 2.0
         val bottom = mutableListOf<V3d>()
@@ -81,8 +98,8 @@ object TestModel {
 
         for (i in 0 until segments) {
             val theta = 2.0 * Math.PI * (i / segments.toDouble())
-            bottom.add(V3d(radius * Math.cos(theta), -halfH, radius * Math.sin(theta)))
-            top.add(V3d(radius * Math.cos(theta), halfH, radius * Math.sin(theta)))
+            bottom.add(V3d(center.x + radius * Math.cos(theta), center.y - halfH, center.z + radius * Math.sin(theta)))
+            top.add(V3d(center.x + radius * Math.cos(theta), center.y + halfH, center.z + radius * Math.sin(theta)))
         }
 
         for (i in 0 until segments) {
@@ -100,6 +117,8 @@ object TestModel {
 
         return polys
     }
+
+    // ---- STL export ----
 
     private fun writeStl(polygons: List<Polygon>, file: File) {
         val tris = mutableListOf<Triangle>()
