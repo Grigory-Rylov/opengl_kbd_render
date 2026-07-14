@@ -15,9 +15,8 @@ object TestModel {
         val hull = mb.batchHull(longArrayOf(sphere, cube))
         println("Hull: ${mb.numTri(hull)} tris")
 
-        // Cylinder R=3.5, H=30 at origin (manifold3d cylinder is along Z axis)
-        // 3rd param = taper ratio? Let me try 1.0 for straight cylinder
-        val cyl = mb.cylinder(3.5, 1.0, 30.0, 64, 64)
+        // Cylinder: height=30, radiusLow=3.5, radiusHigh=3.5, segments=64, center=1
+        val cyl = mb.cylinder(30.0, 3.5, 3.5, 64, 1)
         println("Cylinder: ${mb.numTri(cyl)} tris")
 
         // Difference: hull - cylinder
