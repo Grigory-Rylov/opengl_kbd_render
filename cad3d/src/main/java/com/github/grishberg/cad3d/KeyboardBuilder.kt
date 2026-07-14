@@ -62,6 +62,8 @@ import java.io.File
 import java.io.IOException
 import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -582,6 +584,7 @@ class KeyboardBuilder(
 
     private var stlExportListener: WeakReference<StlExportListener>? = null
     private var isExportMode: Boolean = false
+    private var exportLatch: CountDownLatch? = null
 
     private fun saveModel(cfg: KeyboardConfig, name: String, model: Abstract3dModel, needCheck: Boolean = false) {
         if (!isExportMode) {
@@ -607,6 +610,8 @@ class KeyboardBuilder(
                 println("Error while stl exporting $name " + e.message)
                 stlExportListener?.get()?.onExportFinish(name, false, e.message)
                 throw RuntimeException(e)
+            } finally {
+                exportLatch?.countDown()
             }
         }.start()
     }
