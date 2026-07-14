@@ -682,4 +682,31 @@ public class StlValidator {
         Map<Edge, List<ProcessedFacet>> nakedEdges = findNakedEdges(processed);
         return nakedEdges.size();
     }
+
+    /**
+     * Быстрый подсчёт non-manifold edges (exact match, без толерантности).
+     * Так как рёбра уже округлены в preprocessFacets, достаточно exact equality.
+     */
+    public static int countNonManifoldEdges(List<Facet> facets) {
+        List<ProcessedFacet> processed = preprocessFacets(facets);
+        Map<Edge, Integer> edgeCounts = new HashMap<>();
+
+        for (ProcessedFacet facet : processed) {
+            for (Edge edge : getEdges(facet.vertices)) {
+                edgeCounts.merge(edge, 1, Integer::sum);
+            }
+        }
+
+        int nakedCount = 0;
+        int nonManifoldCount = 0;
+        for (int count : edgeCounts.values()) {
+            if (count == 1) nakedCount++;
+            else if (count > 2) nonManifoldCount++;
+        }
+
+        int total = nakedCount + nonManifoldCount;
+        System.out.printf("Non-manifold edges: naked=%d, multi-face=%d, total=%d%n",
+            nakedCount, nonManifoldCount, total);
+        return total;
+    }
 }
