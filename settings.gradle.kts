@@ -5,6 +5,8 @@ rootProject.name = "Ergonomic_kbd_generator"
 
 include("viewer", "cad3d", "javascad", "plugin", "kbd_core", "common")
 
+includeBuild("libs/manifold3d-java/bindings/java")
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
