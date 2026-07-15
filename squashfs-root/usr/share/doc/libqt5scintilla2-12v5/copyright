@@ -1,0 +1,130 @@
+This package was debianized by:
+
+    Torsten Marek <shlomme@debian.org> on Sun, 29 Jul 2007 12:17:49 +0200.
+
+It was downloaded from:
+
+    http://www.riverbankcomputing.co.uk/software/qscintilla/download
+
+Upstream Authors:
+
+    QScintilla 2 (under Qt4Qt5/, Python/ designer-Qt*/ and doc/html-Qt*/):
+    Phil Thompson <phil@river-bank.demon.co.uk>
+    Riverbank Computing Limited <info@riverbankcomputing.com>
+
+    Scintilla (under src/ include/ and doc/Scintilla):
+    Neil Hodgson <neilh@scintilla.org>
+
+Copyright:
+
+    QScintilla 2 (under Qt4Qt5/, Python/ designer-Qt*/ and doc/html-Qt*/):
+    Copyright (c) 2015 Riverbank Computing Limited <info@riverbankcomputing.com>
+
+    Scintilla (under src/ include/ lexers/ lexlib/ and doc/Scintilla):
+    Copyright 1998-2013 by Neil Hodgson <neilh@scintilla.org>
+
+    lexers/LexSML.cpp:// Copyright 2009 by James Moffatt and Yuzhou Xin
+    lexers/LexSML.cpp:// Modified from LexCaml.cxx by Robert Roessler <robertr@rftp.com> Copyright 2005
+    lexers/LexPowerShell.cpp:// Copyright 2008 by Tim Gerundt <tim@gerundt.de>
+    lexers/LexSpice.cpp:// Copyright 2006 by Fabien Proriol
+    lexers/LexAsn1.cpp:// Copyright 2004 by Herr Pfarrer rpfarrer <at> yahoo <dot> de
+    lexers/LexA68k.cpp:// Copyright 2010 Martial Demolins <mdemolins(a)gmail.com>
+    lexers/LexTCL.cpp:// Copyright 1998-2001 by Andre Arpin <arpin@kingston.net>
+    lexers/LexEScript.cpp:// Copyright 2003 by Patrizio Bekerle (patrizio@bekerle.com)
+    lexers/LexRuby.cpp:// Copyright 2001- by Clemens Wyss <wys@helbling.ch>
+    lexers/LexD.cpp: ** Copyright (c) 2006 by Waldemar Augustyn <waldemar@wdmsys.com>
+    lexers/LexFlagship.cpp:// Copyright 2005 by Randy Butler
+    lexers/LexFlagship.cpp:// Copyright 2010 by Xavi <jarabal/at/gmail.com> (Harbour)
+    lexers/LexAda.cpp:// Copyright 2002 by Sergey Koshcheyev <sergey.k@seznam.cz>
+    lexers/LexPO.cpp:// Copyright 2012 by Colomban Wendling <ban@herbesfolles.org>
+    lexers/LexRebol.cpp:// Copyright 2005 by Pascal Hurni <pascal_hurni@fastmail.fm>
+    lexers/LexPLM.cpp:// Copyright (c) 1990-2007, Scientific Toolworks, Inc.
+    lexers/LexNsis.cpp:// Copyright 2003 - 2005 by Angelo Mandato <angelo [at] spaceblue [dot] com>
+    lexers/LexAVS.cpp:// Copyright 2012 by Bruno Barbieri <brunorex@gmail.com>
+    lexers/LexLout.cpp:// Copyright 2003 by Kein-Hong Man <mkh@pl.jaring.my>
+    lexers/LexCLW.cpp:// Copyright 2003-2004 by Ron Schofield <ron@schofieldcomputer.com>
+    lexers/LexMPT.cpp:// Copyright 2003 by Marius Gheorghe <mgheorghe@cabletest.com>
+    lexers/LexProgress.cpp:// Copyright 2006-2007 by Yuval Papish <Yuval@YuvCom.com>
+    lexers/LexCaml.cpp:// Copyright 2005-2009 by Robert Roessler <robertr@rftp.com>
+    lexers/LexKix.cpp:// Copyright 2004 by Manfred Becker <manfred@becker-trdf.de>
+    lexers/LexBaan.cpp:// Copyright 2001- by Vamsi Potluru <vamsi@who.net> & Praveen Ambekar <ambekarpraveen@yahoo.com>
+    lexers/LexYAML.cpp:// Copyright 2003- by Sean O'Dell <sean@celsoft.com>
+    lexers/LexGAP.cpp:// Copyright 2007 by Istvan Szollosi ( szteven <at> gmail <dot> com )
+    lexers/LexCmake.cpp:// Copyright 2007 by Cristian Adam <cristian [dot] adam [at] gmx [dot] net>
+    lexers/LexKVIrc.cpp:// Copyright 2013 by OmegaPhil <OmegaPhil+scintilla@gmail.com>
+    lexers/LexRust.cpp: ** Copyright (c) 2013 by SiegeLord <slabode@aim.com>
+
+    Parts of Qt (under example-Qt3/ and example-Qt4/)
+    Copyright (C) 2004-2006 Trolltech ASA
+
+License:
+
+QScintilla 2 (under Qt4Qt5/ and Python/):
+
+// Copyright (c) 2015 Riverbank Computing Limited <info@riverbankcomputing.com>
+//
+// This file is part of QScintilla.
+//
+// This file may be used under the terms of the GNU General Public License
+// version 3.0 as published by the Free Software Foundation and appearing in
+// the file LICENSE included in the packaging of this file.  Please review the
+// following information to ensure the GNU General Public License version 3.0
+// requirements will be met: http://www.gnu.org/copyleft/gpl.html.
+//
+// If you do not wish to use this file under the terms of the GPL version 3.0
+// then you may purchase a commercial license.  For more information contact
+// info@riverbankcomputing.com.
+//
+// This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+// WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+On Debian systems, the complete text of the GNU General Public License
+Version 3 can be found in `/usr/share/common-licenses/GPL-3'.
+
+Python/configure.py
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+
+
+Scintilla (under src/ include/)
+
+    Permission to use, copy, modify, and distribute this software and its
+    documentation for any purpose and without fee is hereby granted,
+    provided that the above copyright notice appear in all copies and that
+    both that copyright notice and this permission notice appear in
+    supporting documentation.
+
+    NEIL HODGSON DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+    SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+    AND FITNESS, IN NO EVENT SHALL NEIL HODGSON BE LIABLE FOR ANY
+    SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+    WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE
+    OR PERFORMANCE OF THIS SOFTWARE.
+
+
+The Debian packaging is (C) 2007, Torsten Marek <shlomme@debian.org> and
+is licensed under the GPL, see `/usr/share/common-licenses/GPL-3'.
+
