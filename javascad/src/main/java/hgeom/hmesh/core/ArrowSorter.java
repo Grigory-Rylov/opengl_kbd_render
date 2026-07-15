@@ -48,12 +48,12 @@ final class ArrowSorter {
 			int headIndex = toVertexIndex.applyAsInt(head);
 			int[] vertexIndices = { a2TailIndex, headIndex, a1TailIndex };
 
-			// Si premiere fleche a1 consideree a O° dans cercle
+			// Si premiere fleche a1 consideree a OÂ° dans cercle
 			// trigonometrique, alors tableau de sommets avec ordre horaire si
-			// 2eme fleche a2 dans demi-cercle superieur entre ]0° 180°[ (a1 <
+			// 2eme fleche a2 dans demi-cercle superieur entre ]0Â° 180Â°[ (a1 <
 			// a2) ; anti-horaire si 2eme fleche dans demi-cercle inferieur
-			// entre ]-180° 0°[ (a1 > a2) ; indetermine si 2eme fleche a 0° ou
-			// 180°
+			// entre ]-180Â° 0Â°[ (a1 > a2) ; indetermine si 2eme fleche a 0Â° ou
+			// 180Â°
 			Winding winding = windingProvider.get(vertexIndices);
 
 			if (winding == Winding.COUNTERCLOCKWISE) {
@@ -108,21 +108,21 @@ final class ArrowSorter {
 	}
 
 	/**
-	 * @param axe1 une fleche situee par convention a 0°
+	 * @param axe1 une fleche situee par convention a 0Â°
 	 * @param axe2 une fleche situee en dessous de la premier fleche (dans
-	 *             l'intervalle ]-180° 0[)
+	 *             l'intervalle ]-180Â° 0[)
 	 * @return
 	 */
 	private Comparator<Arrow> absoluteComparator(Arrow axe1, Arrow axe2) {
 		return (a1, a2) -> {
 
 			// Positionnement des fleches sur le cercle trigonometrique tel
-			// que 0° est donne par l'axe1 : -180° => -2, ]-180° 0°[ => -1, 0°
-			// => 0, ]0° 180°[ => 1
+			// que 0Â° est donne par l'axe1 : -180Â° => -2, ]-180Â° 0Â°[ => -1, 0Â°
+			// => 0, ]0Â° 180Â°[ => 1
 			int axe1Pos = Integer.signum(relativeComparator.compare(a1, axe1));
 			int axe2Pos = Integer.signum(relativeComparator.compare(a2, axe1));
 
-			// pour le comparateur relatif, 0 peut correspondre a 0° ou a 180°.
+			// pour le comparateur relatif, 0 peut correspondre a 0Â° ou a 180Â°.
 			// La comparaison avec le 2eme axe qui est dans le demi-cercle
 			// inferieur donne la valeur
 			if (axe1Pos == 0 && relativeComparator.compare(a1, axe2) < 0) {
@@ -137,8 +137,8 @@ final class ArrowSorter {
 					|| (axe1Pos == -1 && axe2Pos == -1)) {
 
 				// La comparaison relative est valable puisque les 2 fleches
-				// sont dans un interval de longueur < 180° (]0° 180°[ ou ]-180°
-				// 0°[)
+				// sont dans un interval de longueur < 180Â° (]0Â° 180Â°[ ou ]-180Â°
+				// 0Â°[)
 				return relativeComparator.compare(a1, a2);
 			}
 

@@ -32,6 +32,61 @@ application {
     )
 }
 
+val nativesDir = layout.buildDirectory.dir("manifold-natives")
+
+tasks.register<Copy>("extractManifoldNatives") {
+    val jarFile = file("../libs/manifold3d-3.2.13.jar")
+    from(zipTree(jarFile)) {
+        include("manifold3d/natives/**/libmanifold*.so*")
+        include("manifold3d/natives/**/libmanifold*.dylib*")
+    }
+    into(nativesDir)
+}
+
+fun detectNativeDir(baseDir: File): File? {
+    val os = System.getProperty("os.name").lowercase()
+    val arch = System.getProperty("os.arch").lowercase()
+    val prefix = if (os.contains("mac")) "mac-" else if (os.contains("win")) "win-" else "linux-"
+    val suffix = when {
+        arch.contains("aarch64") || arch.contains("arm64") -> "arm64"
+        arch.contains("amd64") || arch.contains("x86_64") -> "x86_64"
+        else -> null
+    }
+    return baseDir.walkTopDown().find { dir ->
+        dir.name == "${prefix}${suffix}" && dir.listFiles()?.any { f -> f.name.startsWith("libmanifold") } == true
+    }
+}
+
+tasks.withType<JavaExec>().configureEach {
+    dependsOn("extractManifoldNatives")
+    doFirst {
+        val nativeDir = nativesDir.get().asFile
+        if (nativeDir.exists()) {
+            val soDir = detectNativeDir(nativeDir)
+            if (soDir != null) {
+                val os = System.getProperty("os.name").lowercase()
+                if (os.contains("mac")) {
+                    val dylibs = listOf(
+                        File(soDir, "libmanifold.3.dylib"),
+                        File(soDir, "libmanifoldc.3.dylib")
+                    ).filter { it.exists() }
+                    if (dylibs.isNotEmpty()) {
+                        environment("DYLD_FALLBACK_LIBRARY_PATH", dylibs.map { it.absolutePath }.joinToString(":"))
+                    }
+                } else if (os.contains("nix") || os.contains("nux")) {
+                    val preloads = listOf(
+                        File(soDir, "libmanifold.so.3"),
+                        File(soDir, "libmanifoldc.so.3")
+                    ).filter { it.exists() }.map { it.absolutePath }.joinToString(":")
+                    if (preloads.isNotEmpty()) {
+                        environment("LD_PRELOAD", preloads)
+                    }
+                }
+            }
+        }
+    }
+}
+
 kotlin {
     jvmToolchain(17) // Устанавливаем единую версию Java для всех задач
 }
