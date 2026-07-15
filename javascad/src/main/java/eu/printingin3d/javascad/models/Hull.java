@@ -41,7 +41,8 @@ public class Hull extends Atomic3dModel {
         int idx = 0;
         try {
             for (Abstract3dModel model : models) {
-                handles[idx++] = model.toNativeMesh(context);
+                long h = model.toNativeMesh(context);
+                handles[idx++] = h;
             }
         } catch (Exception e) {
             for (int i = 0; i < idx; i++) {
@@ -49,10 +50,17 @@ public class Hull extends Atomic3dModel {
             }
             throw e;
         }
-        long result = Manifold3dEngine.INSTANCE.hullNative(handles);
-        for (int i = 0; i < idx; i++) {
-            Manifold3dEngine.INSTANCE.delete(handles[i]);
+        try {
+            return Manifold3dEngine.INSTANCE.hullNative(handles);
+        } catch (Exception e) {
+            for (int i = 0; i < idx; i++) {
+                Manifold3dEngine.INSTANCE.delete(handles[i]);
+            }
+            return Manifold3dEngine.INSTANCE.emptyManifold();
+        } finally {
+            for (int i = 0; i < idx; i++) {
+                Manifold3dEngine.INSTANCE.delete(handles[i]);
+            }
         }
-        return result;
     }
 }

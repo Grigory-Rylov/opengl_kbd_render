@@ -92,9 +92,15 @@ public class Difference extends Complex3dModel {
     @Override
     protected long toInnerNativeMesh(FacetGenerationContext context) {
         long result = model1.toNativeMesh(context);
+        if (result == 0L) {
+            return 0L;
+        }
         try {
             for (Abstract3dModel model : model2) {
                 long m = model.toNativeMesh(context);
+                if (m == 0L) {
+                    continue;
+                }
                 long r = Manifold3dEngine.INSTANCE.differenceNative(result, m);
                 Manifold3dEngine.INSTANCE.delete(m);
                 Manifold3dEngine.INSTANCE.delete(result);

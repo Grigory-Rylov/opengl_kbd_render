@@ -57,6 +57,9 @@ public class Intersection extends Complex3dModel {
         try {
             for (Abstract3dModel model : models) {
                 long m = model.toNativeMesh(context);
+                if (m == 0L) {
+                    continue;
+                }
                 if (result == 0L) {
                     result = m;
                 } else {

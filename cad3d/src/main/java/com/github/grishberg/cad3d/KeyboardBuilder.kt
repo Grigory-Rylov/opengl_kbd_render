@@ -604,10 +604,14 @@ class KeyboardBuilder(
                 context.setFn(cfg.stlFn)
                 println("Start stl exporting $name")
                 val mesh = model.toNativeMesh(context)
-                try {
-                    Manifold3dEngine.exportStl(mesh, File(targetPath))
-                } finally {
-                    Manifold3dEngine.delete(mesh)
+                if (mesh == 0L) {
+                    println("Skip stl exporting $name — empty model")
+                } else {
+                    try {
+                        Manifold3dEngine.exportStl(mesh, File(targetPath))
+                    } finally {
+                        Manifold3dEngine.delete(mesh)
+                    }
                 }
                 println("End stl exporting $name")
                 stlExportListener?.get()?.onExportFinish(name, true, null)

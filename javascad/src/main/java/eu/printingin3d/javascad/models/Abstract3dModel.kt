@@ -525,6 +525,10 @@ abstract class Abstract3dModel : IModel {
         val context = aContext.applyTag(tag)
         var mesh = toInnerNativeMesh(context)
 
+        if (mesh == 0L) {
+            return@synchronized 0L
+        }
+
         if (!rotate.isZero()) {
             val r = Manifold3dEngine.rotate(mesh, rotate.x, rotate.y, rotate.z)
             Manifold3dEngine.delete(mesh)

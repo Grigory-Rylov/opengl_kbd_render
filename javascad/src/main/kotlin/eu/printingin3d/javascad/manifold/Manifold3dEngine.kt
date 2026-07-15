@@ -1,6 +1,7 @@
 package eu.printingin3d.javascad.manifold
 
 import com.cadoodlecad.manifold.ManifoldBindings
+import com.cadoodlecad.manifold.ManifoldBindings.ManifoldError
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.utils.Color
 import eu.printingin3d.javascad.vrl.Polygon
@@ -49,22 +50,23 @@ object Manifold3dEngine {
 
     // ---- Hull (native handles) ----
 
-    fun hullNative(handles: LongArray): Long {
-        if (handles.isEmpty()) return empty()
-        if (handles.size == 1) return handles[0]
+    fun hullNative(handles: LongArray): Long = synchronized(JNI_SYNC) {
+        if (handles.isEmpty()) return emptyManifold().also { markOwned(it) }
         val mb = getBindings()
-        return mb.batchHull(handles)
+        val r = mb.batchHull(handles)
+        markOwned(r)
+        r
     }
 
-    fun hull(a: List<Polygon>, b: List<Polygon>): List<Polygon> {
+    fun hull(a: List<Polygon>, b: List<Polygon>): List<Polygon> = synchronized(JNI_SYNC) {
         if (a.isEmpty()) return b
         if (b.isEmpty()) return a
         val mb = getBindings()
-        val manA = polygonsToManifold(mb, a)
-        val manB = polygonsToManifold(mb, b)
-        return try {
+        val manA = polygonsToManifoldUnlocked(mb, a)
+        val manB = polygonsToManifoldUnlocked(mb, b)
+        try {
             val result = mb.batchHull(longArrayOf(manA, manB))
-            if (mb.isEmpty(result)) emptyList() else manifoldToPolygons(mb, result)
+            if (mb.isEmpty(result)) emptyList() else manifoldToPolygonsUnlocked(mb, result)
         } catch (e: Exception) {
             println("  [hull] error: ${e.message}")
             emptyList()
@@ -73,22 +75,22 @@ object Manifold3dEngine {
 
     // ---- Native primitives ----
 
-    fun sphere(radius: Double, segments: Int): List<Polygon> {
+    fun sphere(radius: Double, segments: Int): List<Polygon> = synchronized(JNI_SYNC) {
         val mb = getBindings()
         val man = mb.sphere(radius, segments)
-        return manifoldToPolygons(mb, man)
+        manifoldToPolygonsUnlocked(mb, man)
     }
 
-    fun cube(w: Double, h: Double, d: Double, center: Boolean = true): List<Polygon> {
+    fun cube(w: Double, h: Double, d: Double, center: Boolean = true): List<Polygon> = synchronized(JNI_SYNC) {
         val mb = getBindings()
         val man = mb.cube(w, h, d, center)
-        return manifoldToPolygons(mb, man)
+        manifoldToPolygonsUnlocked(mb, man)
     }
 
-    fun cylinder(radius: Double, height: Double, segments: Int): List<Polygon> {
+    fun cylinder(radius: Double, height: Double, segments: Int): List<Polygon> = synchronized(JNI_SYNC) {
         val mb = getBindings()
         val man = mb.cylinder(radius, height, segments.toDouble(), segments, segments)
-        return manifoldToPolygons(mb, man)
+        manifoldToPolygonsUnlocked(mb, man)
     }
 
     // ---- Transform primitives (native handles) ----
@@ -97,38 +99,50 @@ object Manifold3dEngine {
 
     fun translate(manifold: Long, tx: Double, ty: Double, tz: Double): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        mb.translate(manifold, tx, ty, tz)
+        val r = mb.translate(manifold, tx, ty, tz)
+        markOwned(r)
+        r
     }
 
     fun rotate(manifold: Long, rx: Double, ry: Double, rz: Double): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        mb.rotate(manifold, rx, ry, rz)
+        val r = mb.rotate(manifold, rx, ry, rz)
+        markOwned(r)
+        r
     }
 
     fun scale(manifold: Long, sx: Double, sy: Double, sz: Double): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        mb.scale(manifold, sx, sy, sz)
+        val r = mb.scale(manifold, sx, sy, sz)
+        markOwned(r)
+        r
     }
 
     fun transform(manifold: Long, m: DoubleArray): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        mb.transform(manifold,
+        val r = mb.transform(manifold,
             m[0], m[1], m[2], m[3],
             m[4], m[5], m[6], m[7],
             m[8], m[9], m[10], m[11])
+        markOwned(r)
+        r
     }
 
     fun transformAndReturn(manifold: Long, tx: Double, ty: Double, tz: Double): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        mb.transform(manifold,
+        val r = mb.transform(manifold,
             1.0, 0.0, 0.0, tx,
             0.0, 1.0, 0.0, ty,
             0.0, 0.0, 1.0, tz)
+        markOwned(r)
+        r
     }
 
     fun empty(): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        mb.empty()
+        val r = mb.empty()
+        markOwned(r)
+        r
     }
 
     fun isEmpty(manifold: Long): Boolean = synchronized(JNI_SYNC) {
@@ -136,15 +150,30 @@ object Manifold3dEngine {
         mb.isEmpty(manifold)
     }
 
+    private val liveHandles = java.util.concurrent.ConcurrentHashMap.newKeySet<Long>()
+
     fun delete(manifold: Long) = synchronized(JNI_SYNC) {
+        if (manifold == 0L) return
+        // Only delete handles the engine actually owns. Handles created elsewhere
+        // (e.g. imported meshes or bindings-level helpers) are not tracked; skipping
+        // them here avoids a double-free / use-after-free that previously crashed the
+        // JVM inside the native boolean/manifold code.
+        if (!liveHandles.remove(manifold)) {
+            return
+        }
         val mb = getBindings()
         mb.delete(manifold)
     }
 
-    fun centerOfPolygons(polygons: List<Polygon>): V3d {
+    /** Marks a handle as owned by the engine (created by a native op). */
+    fun markOwned(handle: Long) {
+        if (handle != 0L) liveHandles.add(handle)
+    }
+
+    fun centerOfPolygons(polygons: List<Polygon>): V3d = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        val man = polygonsToManifold(mb, polygons)
-        return try {
+        val man = polygonsToManifoldUnlocked(mb, polygons)
+        try {
             val b = mb.getBounds(man)
             V3d(b.centerX, b.centerY, b.centerZ)
         } finally {
@@ -152,10 +181,10 @@ object Manifold3dEngine {
         }
     }
 
-    fun centerOfNative(manifold: Long): V3d {
+    fun centerOfNative(manifold: Long): V3d = synchronized(JNI_SYNC) {
         val mb = getBindings()
         val b = mb.getBounds(manifold)
-        return V3d(b.centerX, b.centerY, b.centerZ)
+        V3d(b.centerX, b.centerY, b.centerZ)
     }
 
     fun manifoldToPolygonsExport(manifold: Long): List<Polygon> = synchronized(JNI_SYNC) {
@@ -224,12 +253,14 @@ object Manifold3dEngine {
 
     fun operateNative(a: Long, b: Long, opType: Int): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        when (opType) {
+        val r = when (opType) {
             ManifoldBindings.OPTYPE_UNION -> mb.union(a, b)
             ManifoldBindings.OPTYPE_DIFFERENCE -> mb.difference(a, b)
             ManifoldBindings.OPTYPE_INTERSECTION -> mb.intersection(a, b)
             else -> throw IllegalArgumentException("Unknown op: $opType")
         }
+        markOwned(r)
+        r
     }
 
     fun nativeHull(handles: LongArray): Long = synchronized(JNI_SYNC) {
@@ -241,6 +272,9 @@ object Manifold3dEngine {
         val mb = getBindings()
         mb.delete(handle)
     }
+
+    /** Returns an empty manifold handle (never 0L; safe to pass to native ops). */
+    fun emptyManifold(): Long = synchronized(JNI_SYNC) { getBindings().empty() }
 
     // ---- Polygon -> manifold ----
 
@@ -272,7 +306,9 @@ object Manifold3dEngine {
         val triArray = LongArray(triangles.size)
         for (i in triangles.indices) triArray[i] = triangles[i]
 
-        return mb.importMeshGL64(vertArray, triArray, (vertices.size / 3).toLong(), triCount.toLong())
+        val r = mb.importMeshGL64(vertArray, triArray, (vertices.size / 3).toLong(), triCount.toLong())
+        markOwned(r)
+        return r
     }
 
     private fun addVertex(vertices: java.util.ArrayList<Double>, v: V3d): Long {
@@ -382,11 +418,11 @@ object Manifold3dEngine {
         }
     }
 
-    fun exportStl(nativeMesh: Long, file: File) {
+    fun exportStl(nativeMesh: Long, file: File) = synchronized(JNI_SYNC) {
         getBindings().exportSTL(nativeMesh, file)
     }
 
-    fun toVertexHolder(nativeMesh: Long, color: Color): NativeVertexHolder {
+    fun toVertexHolder(nativeMesh: Long, color: Color): NativeVertexHolder = synchronized(JNI_SYNC) {
         val mb = getBindings()
         val data = mb.exportMeshGL64(nativeMesh)
         val verts = data.vertices()

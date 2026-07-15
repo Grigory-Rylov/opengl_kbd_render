@@ -23,6 +23,9 @@ fun fromModelNative(model: Abstract3dModel, fn: Int): VertexHolder {
     val context: FacetGenerationContext = ColorFacetGenerationContext(model.color)
     context.setFn(fn)
     val mesh = model.toNativeMesh(context)
+    if (mesh == 0L) {
+        return VertexHolder(FloatArray(0), FloatArray(0), 0)
+    }
     return try {
         val nv = Manifold3dEngine.toVertexHolder(mesh, model.color)
         VertexHolder(nv.vertex, nv.normals, nv.verticesCount)
