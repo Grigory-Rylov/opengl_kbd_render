@@ -341,7 +341,6 @@ object Manifold3dEngine {
 
         FileOutputStream(file).channel.use { channel ->
             val bb = ByteBuffer.allocate(80 + 4 + tris.size * 50).order(ByteOrder.LITTLE_ENDIAN)
-            // 80 byte header
             val header = "binary stl - manifold3d engine".toByteArray()
             for (b in header) bb.put(b)
             for (i in header.size until 80) bb.put(0.toByte())
@@ -362,6 +361,10 @@ object Manifold3dEngine {
             bb.flip()
             channel.write(bb)
         }
+    }
+
+    fun exportStl(nativeMesh: Long, file: File) {
+        getBindings().exportSTL(nativeMesh, file)
     }
 }
 

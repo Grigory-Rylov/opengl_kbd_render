@@ -49,6 +49,7 @@ import com.github.grishberg.cad3d.trackball.TrackballCase
 import com.github.grishberg.cad3d.util.fromModel
 import com.github.grishberg.javascad.StlExporter
 import com.github.grishberg.javascad.StlImporter
+import eu.printingin3d.javascad.manifold.Manifold3dEngine
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
 import eu.printingin3d.javascad.models.Cylinder
@@ -602,9 +603,12 @@ class KeyboardBuilder(
                 val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
                 context.setFn(cfg.stlFn)
                 println("Start stl exporting $name")
-                StlExporter.saveStl(
-                    model.toNativeMesh(context), targetPath
-                )
+                val mesh = model.toNativeMesh(context)
+                try {
+                    Manifold3dEngine.exportStl(mesh, File(targetPath))
+                } finally {
+                    Manifold3dEngine.delete(mesh)
+                }
                 println("End stl exporting $name")
                 stlExportListener?.get()?.onExportFinish(name, true, null)
             } catch (e: IOException) {
