@@ -1,6 +1,7 @@
 package com.github.grishberg.cad3d.common
 
 import eu.printingin3d.javascad.basic.Radius
+import eu.printingin3d.javascad.manifold.Manifold3dEngine
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cylinder
 import eu.printingin3d.javascad.models.StlModel
@@ -18,7 +19,8 @@ class Nuts {
         val params = map[m]!!
         val context = FacetGenerationContext.DEFAULT
         context.setFn(6)
-        val polygons = Cylinder(height.toDouble(), Radius.fromDiameter(params.e)).toCSG(context).polygons
+        val mesh = Cylinder(height.toDouble(), Radius.fromDiameter(params.e)).toNativeMesh(context)
+        val polygons = Manifold3dEngine.manifoldToPolygonsExport(mesh)
         return StlModel(polygons)
     }
 
