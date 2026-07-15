@@ -55,6 +55,10 @@ public class SmoothSurface extends Atomic3dModel {
     }
 
     @Override
+    protected long toInnerNativeMesh(FacetGenerationContext context) {
+        throw new UnsupportedOperationException("Surface is not supported in native mode");
+    }
+
     protected CSG toInnerCSG(FacetGenerationContext context) {
         SurfaceStrategy.Result topSurfaceResult = strategy.buildSurface();
         List<V3d> topSurface = topSurfaceResult.points;

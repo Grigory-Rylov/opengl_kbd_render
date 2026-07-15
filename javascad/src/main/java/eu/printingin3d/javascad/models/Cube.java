@@ -74,32 +74,6 @@ public class Cube extends Atomic3dModel {
 	}
 
     @Override
-    protected CSG toInnerCSG(FacetGenerationContext context) {
-        int[][] a = {
-            {0, 4, 6, 2},
-            {1, 3, 7, 5},
-            {0, 1, 5, 4},
-            {2, 6, 7, 3},
-            {0, 2, 3, 1},
-            {4, 5, 7, 6}
-        };
-        List<Polygon> polygons = new ArrayList<>();
-        for (int[] info : a) {
-            List<V3d> vertices = new ArrayList<>();
-            for (int i : info) {
-                V3d pos = new V3d(
-                        size.getX() * (1 * Math.min(1, i & 1) - 0.5),
-                        size.getY() * (1 * Math.min(1, i & 2) - 0.5),
-                        size.getZ() * (1 * Math.min(1, i & 4) - 0.5)
-                );
-                vertices.add(pos);
-            }
-            polygons.add(Polygon.fromPolygons(vertices, context.getColor()));
-        }
-        return new CSG(polygons);
-    }
-
-    @Override
     protected long toInnerNativeMesh(FacetGenerationContext context) {
         return Manifold3dEngine.INSTANCE.bindings().cube(size.getX(), size.getY(), size.getZ(), true);
     }

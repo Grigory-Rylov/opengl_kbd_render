@@ -91,17 +91,6 @@ public class Difference extends Complex3dModel {
 	}
 
     @Override
-    protected CSG toInnerCSG(FacetGenerationContext context) {
-        CSG csg = model1.toCSG(context);
-
-        for (Abstract3dModel model : model2) {
-            csg = csg.difference(model.toCSG(context));
-        }
-
-        return csg;
-    }
-
-    @Override
     protected long toInnerNativeMesh(FacetGenerationContext context) {
         long result = model1.toNativeMesh(context);
         try {

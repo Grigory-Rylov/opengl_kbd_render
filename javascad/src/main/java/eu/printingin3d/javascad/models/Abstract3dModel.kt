@@ -519,28 +519,7 @@ abstract class Abstract3dModel : IModel {
         return result
     }
 
-    protected abstract fun toInnerCSG(context: FacetGenerationContext): CSG
-
-    protected open fun toInnerNativeMesh(context: FacetGenerationContext): Long {
-        val mb = Manifold3dEngine.bindings()
-        return Manifold3dEngine.polygonsToManifold(mb, toInnerCSG(context).getPolygons())
-    }
-
-    override fun toCSG(aContext: FacetGenerationContext): CSG {
-        val context = aContext.applyTag(tag)
-
-        var csg = toInnerCSG(context)
-
-        if (!rotate.isZero()) {
-            csg = csg.transformed(TransformationFactory.getRotationMatrix(rotate))
-        }
-
-        if (!move.isZero()) {
-            csg = csg.transformed(TransformationFactory.getTranlationMatrix(move))
-        }
-
-        return csg
-    }
+    protected abstract fun toInnerNativeMesh(context: FacetGenerationContext): Long
 
     override fun toNativeMesh(aContext: FacetGenerationContext): Long {
         val context = aContext.applyTag(tag)
@@ -563,16 +542,6 @@ abstract class Abstract3dModel : IModel {
 
     fun toNativeMesh(): Long {
         return toNativeMesh(FacetGenerationContext.DEFAULT)
-    }
-
-    /**
-     * Renders this model to its CSG interpretation - convenient method which used the default
-     * generation context.
-     *
-     * @return the CSG interpretation
-     */
-    fun toCSG(): CSG {
-        return toCSG(FacetGenerationContext.DEFAULT)
     }
 
     /**

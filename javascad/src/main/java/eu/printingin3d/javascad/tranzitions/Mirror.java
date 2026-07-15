@@ -3,12 +3,11 @@ package eu.printingin3d.javascad.tranzitions;
 import eu.printingin3d.javascad.context.IScadGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
+import eu.printingin3d.javascad.manifold.Manifold3dEngine;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import eu.printingin3d.javascad.models.Complex3dModel;
-import eu.printingin3d.javascad.tranform.ITransformation;
 import eu.printingin3d.javascad.tranform.TransformationFactory;
 import eu.printingin3d.javascad.utils.AssertValue;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import java.util.Collections;
 import java.util.List;
@@ -75,9 +74,24 @@ public final class Mirror extends Complex3dModel {
 	}
 
 	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-		ITransformation tr = TransformationFactory.getMirrorMatrix(direction);
-		return model.toCSG(context).transformed(tr);
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		long m = model.toNativeMesh(context);
+		double[] mat;
+		switch (direction) {
+			case X:
+				mat = new double[]{-1,0,0,0, 0,1,0,0, 0,0,1,0};
+				break;
+			case Y:
+				mat = new double[]{1,0,0,0, 0,-1,0,0, 0,0,1,0};
+				break;
+			case Z:
+			default:
+				mat = new double[]{1,0,0,0, 0,1,0,0, 0,0,-1,0};
+				break;
+		}
+		long r = Manifold3dEngine.INSTANCE.transform(m, mat);
+		Manifold3dEngine.INSTANCE.delete(m);
+		return r;
 	}
 
 	@Override

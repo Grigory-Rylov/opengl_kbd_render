@@ -54,8 +54,8 @@ public class Ring extends Atomic3dModel {
 	}
 
 	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-		throw new NotImplementedException();
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		throw new UnsupportedOperationException("Ring is not supported in native mode");
 	}
 
 }
