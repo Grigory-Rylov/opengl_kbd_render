@@ -9,17 +9,6 @@ application {
     mainClass.set("com.github.grishberg.cad3d.cli.CliRunnerKt")
 }
 
-val nativesDir = layout.buildDirectory.dir("manifold-natives")
-
-tasks.register<Copy>("extractManifoldNatives") {
-    val jarFile = file("../libs/manifold3d-3.2.13.jar")
-    from(zipTree(jarFile)) {
-        include("manifold3d/natives/**/libmanifold*.so*")
-        include("manifold3d/natives/**/libmanifold*.dylib*")
-    }
-    into(nativesDir)
-}
-
 fun detectNativeDir(baseDir: File): File? {
     val os = System.getProperty("os.name").lowercase()
     val arch = System.getProperty("os.arch").lowercase()
@@ -34,21 +23,33 @@ fun detectNativeDir(baseDir: File): File? {
     }
 }
 
+val nativesDir = layout.buildDirectory.dir("manifold-natives")
+
+tasks.register<Copy>("extractManifoldNatives") {
+    val jarFile = file("../libs/manifold3d-3.2.13.jar")
+    from(zipTree(jarFile)) {
+        include("manifold3d/natives/**/libmanifold*.so*")
+        include("manifold3d/natives/**/libmanifold*.dylib*")
+    }
+    into(nativesDir)
+}
+
 tasks.withType<JavaExec>().configureEach {
     dependsOn("extractManifoldNatives")
     doFirst {
-        val nativeDir = nativesDir.get().asFile
-        if (nativeDir.exists()) {
-            val soDir = detectNativeDir(nativeDir)
-            if (soDir != null) {
-                // LD_PRELOAD forces these libraries to be loaded BEFORE the JVM,
-                // so all symbols are available globally
-                val preloads = listOf(
-                    File(soDir, "libmanifold.so.3"),
-                    File(soDir, "libmanifoldc.so.3")
-                ).filter { it.exists() }.map { it.absolutePath }.joinToString(":")
-                if (preloads.isNotEmpty()) {
-                    environment("LD_PRELOAD", preloads)
+        val os = System.getProperty("os.name").lowercase()
+        if (os.contains("nix") || os.contains("nux")) {
+            val nativeDir = nativesDir.get().asFile
+            if (nativeDir.exists()) {
+                val soDir = detectNativeDir(nativeDir)
+                if (soDir != null) {
+                    val preloads = listOf(
+                        File(soDir, "libmanifold.so.3"),
+                        File(soDir, "libmanifoldc.so.3")
+                    ).filter { it.exists() }.map { it.absolutePath }.joinToString(":")
+                    if (preloads.isNotEmpty()) {
+                        environment("LD_PRELOAD", preloads)
+                    }
                 }
             }
         }
