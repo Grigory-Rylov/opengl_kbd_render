@@ -1,7 +1,6 @@
 package eu.printingin3d.javascad.models;
 
 import eu.printingin3d.javascad.coords.Boundaries3d;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 
 /**

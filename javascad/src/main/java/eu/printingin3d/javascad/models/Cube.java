@@ -7,7 +7,6 @@ import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.enums.AlignType;
 import eu.printingin3d.javascad.enums.Side;
 import eu.printingin3d.javascad.manifold.Manifold3dEngine;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
 import java.util.ArrayList;

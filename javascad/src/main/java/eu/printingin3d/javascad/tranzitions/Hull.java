@@ -7,7 +7,6 @@ import eu.printingin3d.javascad.exceptions.NotImplementedException;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import eu.printingin3d.javascad.models.Complex3dModel;
 import eu.printingin3d.javascad.utils.ListUtils;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import java.util.ArrayList;
 import java.util.Arrays;
