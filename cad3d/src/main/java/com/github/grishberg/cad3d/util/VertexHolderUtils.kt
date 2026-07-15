@@ -12,17 +12,11 @@ import eu.printingin3d.javascad.vrl.FacetGenerationContext
 import eu.printingin3d.javascad.vrl.Polygon
 
 fun fromModel(model: IModel, color: Color, fn: Int): VertexHolder {
-    val context: FacetGenerationContext = ColorFacetGenerationContext(color)
-    context.setFn(fn)
-    val csg = model.toCSG(context)
-    return getVerticesAndColorsAsFloatArray(csg.toFacets())
+    return fromModelNative(model, color, fn)
 }
 
 fun fromModel(model: Abstract3dModel, fn: Int): VertexHolder {
-    val context: FacetGenerationContext = ColorFacetGenerationContext(model.color)
-    context.setFn(fn)
-    val csg = model.toCSG(context)
-    return getVerticesAndColorsAsFloatArray(csg.toFacets())
+    return fromModelNative(model, fn)
 }
 
 fun fromModelNative(model: Abstract3dModel, fn: Int): VertexHolder {
