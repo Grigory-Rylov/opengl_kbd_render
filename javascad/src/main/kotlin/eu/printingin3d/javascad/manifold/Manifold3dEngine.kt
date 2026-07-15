@@ -6,6 +6,7 @@ import eu.printingin3d.javascad.utils.Color
 import eu.printingin3d.javascad.vrl.Polygon
 import java.io.File
 import java.io.FileOutputStream
+import java.lang.reflect.Field
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.locks.ReentrantLock
@@ -17,7 +18,64 @@ object Manifold3dEngine {
     private var bindings: ManifoldBindings? = null
 
     private fun getBindings(): ManifoldBindings =
-        bindings ?: lock.withLock { bindings ?: ManifoldBindings().also { bindings = it } }
+        bindings ?: lock.withLock {
+            bindings ?: run {
+                // Pre-load native libs from manifold.natives.dir if available
+                val nativesDir = System.getProperty("manifold.natives.dir")
+                    ?: System.getenv("MANIFOLD_NATIVES_DIR")
+                if (nativesDir != null && !ManifoldBindings.isNativeLibraryLoaded()) {
+                    val dir = File(nativesDir)
+                    if (dir.isDirectory) {
+                        try {
+                            loadPreloadLibraries(dir)
+                            setLoadedTrue()
+                        } catch (e: Exception) {
+                            // fall through to default loading
+                        }
+                    }
+                }
+                ManifoldBindings().also { bindings = it }
+            }
+        }
+
+    private fun loadPreloadLibraries(dir: File) {
+        val os = System.getProperty("os.name").lowercase()
+        val isMac = os.contains("mac")
+
+        val loadOrder = if (isMac) {
+            listOf("libmanifold.3.dylib", "libmanifoldc.3.dylib", "libmanifold_jni.dylib")
+        } else {
+            listOf("libmanifold.so.3", "libmanifoldc.so.3", "libmanifold_jni.so")
+        }
+
+        for (libName in loadOrder) {
+            val libFile = File(dir, libName)
+            if (libFile.exists()) {
+                System.load(libFile.absolutePath)
+            }
+        }
+    }
+
+    private fun setLoadedTrue() {
+        try {
+            val f: Field = ManifoldBindings::class.java.getDeclaredField("loaded")
+            f.isAccessible = true
+            f.setBoolean(null, true)
+        } catch (e: Exception) {
+            // Fallback via Unsafe
+            try {
+                val unsafeCls = Class.forName("sun.misc.Unsafe")
+                val theUnsafe = unsafeCls.getDeclaredField("theUnsafe").apply { isAccessible = true }.get(null)
+                val loadedField = ManifoldBindings::class.java.getDeclaredField("loaded")
+                val base = unsafeCls.getMethod("staticFieldBase", Field::class.java).invoke(theUnsafe, loadedField)
+                val offset = unsafeCls.getMethod("staticFieldOffset", Field::class.java).invoke(theUnsafe, loadedField) as Long
+                unsafeCls.getMethod("putBooleanVolatile", Any::class.java, Long::class.javaPrimitiveType, Boolean::class.javaPrimitiveType)
+                    .invoke(theUnsafe, base, offset, true)
+            } catch (e2: Exception) {
+                // Last resort won't work, will fall back to default loading
+            }
+        }
+    }
 
     // ---- CSG operations (Polygon) ----
 
