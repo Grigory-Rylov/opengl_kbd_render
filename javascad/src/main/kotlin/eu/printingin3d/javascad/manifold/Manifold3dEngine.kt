@@ -366,6 +366,78 @@ object Manifold3dEngine {
     fun exportStl(nativeMesh: Long, file: File) {
         getBindings().exportSTL(nativeMesh, file)
     }
+
+    fun toVertexHolder(nativeMesh: Long, color: Color): NativeVertexHolder {
+        val mb = getBindings()
+        val data = mb.exportMeshGL64(nativeMesh)
+        val verts = data.vertices()
+        val tris = data.triangles()
+        val triCount = data.triCount().toInt()
+        val vertCount = triCount * 3
+
+        val verticesArray = FloatArray(vertCount * 7)
+        val normalsArray = FloatArray(vertCount * 3)
+
+        val r = color.red / 255f
+        val g = color.green / 255f
+        val b = color.blue / 255f
+        val a = color.alpha / 255f
+
+        var vi = 0
+        var ni = 0
+        for (i in 0 until triCount) {
+            val i0 = tris[i * 3].toInt() * 3
+            val i1 = tris[i * 3 + 1].toInt() * 3
+            val i2 = tris[i * 3 + 2].toInt() * 3
+
+            val ax = verts[i0].toFloat()
+            val ay = verts[i0 + 1].toFloat()
+            val az = verts[i0 + 2].toFloat()
+            val bx = verts[i1].toFloat()
+            val by = verts[i1 + 1].toFloat()
+            val bz = verts[i1 + 2].toFloat()
+            val cx = verts[i2].toFloat()
+            val cy = verts[i2 + 1].toFloat()
+            val cz = verts[i2 + 2].toFloat()
+
+            val abx = bx - ax
+            val aby = by - ay
+            val abz = bz - az
+            val acx = cx - ax
+            val acy = cy - ay
+            val acz = cz - az
+
+            var nx = aby * acz - abz * acy
+            var ny = abz * acx - abx * acz
+            var nz = abx * acy - aby * acx
+
+            val len = Math.sqrt((nx * nx + ny * ny + nz * nz).toDouble())
+            if (len > 0.0) {
+                nx /= len.toFloat()
+                ny /= len.toFloat()
+                nz /= len.toFloat()
+            }
+
+            val vertices = arrayOf(arrayOf(ax, ay, az), arrayOf(bx, by, bz), arrayOf(cx, cy, cz))
+            for (v in vertices) {
+                verticesArray[vi++] = v[0]
+                verticesArray[vi++] = v[1]
+                verticesArray[vi++] = v[2]
+                verticesArray[vi++] = r
+                verticesArray[vi++] = g
+                verticesArray[vi++] = b
+                verticesArray[vi++] = a
+
+                normalsArray[ni++] = nx
+                normalsArray[ni++] = ny
+                normalsArray[ni++] = nz
+            }
+        }
+
+        return NativeVertexHolder(verticesArray, normalsArray, vertCount)
+    }
 }
+
+data class NativeVertexHolder(val vertex: FloatArray, val normals: FloatArray, val verticesCount: Int)
 
 private data class Triangle(val a: V3d, val b: V3d, val c: V3d, val n: V3d)

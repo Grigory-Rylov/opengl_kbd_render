@@ -46,7 +46,7 @@ import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
 import com.github.grishberg.cad3d.plugin.cfg.TrackballMode
 import com.github.grishberg.cad3d.trackball.Trackball
 import com.github.grishberg.cad3d.trackball.TrackballCase
-import com.github.grishberg.cad3d.util.fromModel
+import com.github.grishberg.cad3d.util.fromModelNative
 import com.github.grishberg.javascad.StlExporter
 import com.github.grishberg.javascad.StlImporter
 import eu.printingin3d.javascad.manifold.Manifold3dEngine
@@ -387,7 +387,7 @@ class KeyboardBuilder(
         if (cfg.trackball.mode != TrackballMode.None) {
             val tb = Trackball(cfg)
             val trackBallHolder = tb.placeTrackball(tb.trackBallCaseHolderOrigin(), keyPlace)
-            result.add(fromModel(trackBallHolder, cfg.fn))
+            result.add(fromModelNative(trackBallHolder, cfg.fn))
         }
 
         result.addAll(caseWalls.vertexHolders)
@@ -843,7 +843,7 @@ class KeyboardBuilder(
             }
         }
         val result = Union(color, models)
-        return ModelHolder(result, fromModel(result, color, 20))
+        return ModelHolder(result, fromModelNative(result, color, 20))
     }
 
     private fun createCaseModel(
@@ -976,7 +976,7 @@ class KeyboardBuilder(
     }
 
     private fun createVertexHolder(cfg: KeyboardConfig, model: IModel, color: Color): VertexHolder {
-        return fromModel(model, color, cfg.fn)
+        return fromModelNative(model, color, cfg.fn)
     }
 
     companion object {
