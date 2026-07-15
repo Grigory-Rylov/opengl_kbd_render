@@ -602,7 +602,7 @@ class KeyboardBuilder(
                 context.setFn(cfg.stlFn)
                 println("Start stl exporting $name")
                 StlExporter.saveStl(
-                    model.toCSG(context).polygons, targetPath
+                    model.toNativeMesh(context), targetPath
                 )
                 println("End stl exporting $name")
                 stlExportListener?.get()?.onExportFinish(name, true, null)

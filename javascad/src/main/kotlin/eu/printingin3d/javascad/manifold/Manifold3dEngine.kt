@@ -19,7 +19,7 @@ object Manifold3dEngine {
     private fun getBindings(): ManifoldBindings =
         bindings ?: lock.withLock { bindings ?: ManifoldBindings().also { bindings = it } }
 
-    // ---- CSG operations ----
+    // ---- CSG operations (Polygon) ----
 
     fun union(a: List<Polygon>, b: List<Polygon>): List<Polygon> =
         operatePolygons(a, b, ManifoldBindings.OPTYPE_UNION)
@@ -30,7 +30,22 @@ object Manifold3dEngine {
     fun intersection(a: List<Polygon>, b: List<Polygon>): List<Polygon> =
         operatePolygons(a, b, ManifoldBindings.OPTYPE_INTERSECTION)
 
-    // ---- Hull (returns manifold handle) ----
+    // ---- CSG operations (native handles) ----
+
+    fun unionNative(a: Long, b: Long): Long = operateNative(a, b, ManifoldBindings.OPTYPE_UNION)
+
+    fun differenceNative(a: Long, b: Long): Long = operateNative(a, b, ManifoldBindings.OPTYPE_DIFFERENCE)
+
+    fun intersectionNative(a: Long, b: Long): Long = operateNative(a, b, ManifoldBindings.OPTYPE_INTERSECTION)
+
+    // ---- Hull (native handles) ----
+
+    fun hullNative(handles: LongArray): Long {
+        if (handles.isEmpty()) return empty()
+        if (handles.size == 1) return handles[0]
+        val mb = getBindings()
+        return mb.batchHull(handles)
+    }
 
     fun hull(a: List<Polygon>, b: List<Polygon>): List<Polygon> {
         if (a.isEmpty()) return b
@@ -45,7 +60,6 @@ object Manifold3dEngine {
             println("  [hull] error: ${e.message}")
             emptyList()
         }
-        // batchHull consumes inputs
     }
 
     // ---- Native primitives ----
@@ -70,12 +84,52 @@ object Manifold3dEngine {
 
     // ---- Transform primitives (native handles) ----
 
+    // ---- Native transform operations ----
+
+    fun translate(manifold: Long, tx: Double, ty: Double, tz: Double): Long {
+        val mb = getBindings()
+        return mb.translate(manifold, tx, ty, tz)
+    }
+
+    fun rotate(manifold: Long, rx: Double, ry: Double, rz: Double): Long {
+        val mb = getBindings()
+        return mb.rotate(manifold, rx, ry, rz)
+    }
+
+    fun scale(manifold: Long, sx: Double, sy: Double, sz: Double): Long {
+        val mb = getBindings()
+        return mb.scale(manifold, sx, sy, sz)
+    }
+
+    fun transform(manifold: Long, m: DoubleArray): Long {
+        val mb = getBindings()
+        return mb.transform(manifold,
+            m[0], m[1], m[2], m[3],
+            m[4], m[5], m[6], m[7],
+            m[8], m[9], m[10], m[11])
+    }
+
     fun transformAndReturn(manifold: Long, tx: Double, ty: Double, tz: Double): Long {
         val mb = getBindings()
         return mb.transform(manifold,
             1.0, 0.0, 0.0, tx,
             0.0, 1.0, 0.0, ty,
             0.0, 0.0, 1.0, tz)
+    }
+
+    fun empty(): Long {
+        val mb = getBindings()
+        return mb.empty()
+    }
+
+    fun isEmpty(manifold: Long): Boolean {
+        val mb = getBindings()
+        return mb.isEmpty(manifold)
+    }
+
+    fun delete(manifold: Long) {
+        val mb = getBindings()
+        mb.delete(manifold)
     }
 
     fun centerOfPolygons(polygons: List<Polygon>): V3d {
@@ -181,7 +235,7 @@ object Manifold3dEngine {
 
     // ---- Polygon -> manifold ----
 
-    internal fun polygonsToManifold(mb: ManifoldBindings, polygons: List<Polygon>): Long {
+    fun polygonsToManifold(mb: ManifoldBindings, polygons: List<Polygon>): Long {
         val vertices = java.util.ArrayList<Double>()
         val triangles = java.util.ArrayList<Long>()
 
