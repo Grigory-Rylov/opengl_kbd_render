@@ -55,7 +55,7 @@ class ControllerHolderBuilder(
 
             if (showPreview) {
                 vertexHolders.add(
-                    fromModel(
+fromModel(
                         placeBatteryHolder(battery.createBatteryPreview()), Color.RED, 20
                     )
                 )
