@@ -53,20 +53,6 @@ public class Intersection extends Complex3dModel {
 	}
 
     @Override
-    protected CSG toInnerCSG(FacetGenerationContext context) {
-        CSG csg = null;
-        for (Abstract3dModel model : models) {
-            if (csg==null) {
-                csg = model.toCSG(context);
-            }
-            else {
-                csg = csg.intersect(model.toCSG(context));
-            }
-        }
-        return csg;
-    }
-
-    @Override
     protected long toInnerNativeMesh(FacetGenerationContext context) {
         long result = 0L;
         try {

@@ -55,9 +55,8 @@ public class Hull extends Complex3dModel {
 	}
 
 	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-		// It is very hard to implement hull with CSG
-		throw new NotImplementedException();
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		return new eu.printingin3d.javascad.models.Hull(models).toNativeMesh(context);
 	}
 
 	@Override

@@ -120,10 +120,10 @@ public class Slicer extends Complex3dModel {
         return new Slicer(model, direction, lowRate, highRate);
     }
 
-    @Override
-    protected CSG toInnerCSG(FacetGenerationContext context) {
-        return new Difference(model, sliceModel()).toCSG(context);
-    }
+	@Override
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		return new Difference(model, sliceModel()).toNativeMesh(context);
+	}
 
     @Override
     protected Abstract3dModel innerSubModel(IScadGenerationContext context) {

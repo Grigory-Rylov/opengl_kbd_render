@@ -121,6 +121,10 @@ public class LinearExtrude extends Atomic3dModel {
 	}
 	
 	@Override
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		throw new UnsupportedOperationException("LinearExtrude is not supported in native mode");
+	}
+
 	protected CSG toInnerCSG(FacetGenerationContext context) {
 		Color color = context.getColor();
 		List<Polygon> polygons = new ArrayList<>();

@@ -31,8 +31,8 @@ public class Empty3dModel extends Atomic3dModel {
 	}
 
 	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-		return CSG.fromPolygons();
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		return 0L;
 	}
 
 	@Override

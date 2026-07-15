@@ -1,7 +1,6 @@
 package eu.printingin3d.javascad.openscad;
 
 import eu.printingin3d.javascad.models.IModel;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 
 /**
@@ -30,9 +29,8 @@ public class Consts implements IModel {
 	}
 
 	@Override
-	public CSG toCSG(FacetGenerationContext context) {
+	public long toNativeMesh(FacetGenerationContext context) {
 		context.setFn(fn);
-		
-		return CSG.fromPolygons();
+		return 0L;
 	}
 }

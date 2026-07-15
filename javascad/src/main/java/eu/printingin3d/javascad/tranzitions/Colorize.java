@@ -48,8 +48,8 @@ public class Colorize extends Complex3dModel {
 	}
 
 	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-		return baseModel.toCSG(context);
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		return baseModel.toNativeMesh(context);
 	}
 
 	/**

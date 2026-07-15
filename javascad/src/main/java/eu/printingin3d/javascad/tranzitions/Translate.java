@@ -4,11 +4,11 @@ import eu.printingin3d.javascad.context.IScadGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
+import eu.printingin3d.javascad.manifold.Manifold3dEngine;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import eu.printingin3d.javascad.models.Complex3dModel;
 import eu.printingin3d.javascad.tranform.TransformationFactory;
 import eu.printingin3d.javascad.utils.AssertValue;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import java.util.Collections;
 import java.util.List;
@@ -60,8 +60,11 @@ public class Translate extends Complex3dModel {
 	}
 
 	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-		return model.toCSG(context).transformed(TransformationFactory.getTranlationMatrix(move));
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		long m = model.toNativeMesh(context);
+		long r = Manifold3dEngine.INSTANCE.translate(m, move.getX(), move.getY(), move.getZ());
+		Manifold3dEngine.INSTANCE.delete(m);
+		return r;
 	}
 
 	@Override

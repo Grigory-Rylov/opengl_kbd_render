@@ -130,8 +130,8 @@ public class Support extends Atomic3dModel {
 	}
 
 	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-		return getModel().toCSG(context);
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		return getModel().toNativeMesh(context);
 	}
 
 }
