@@ -43,13 +43,7 @@ tasks.withType<JavaExec>().configureEach {
             if (nativeDir.exists()) {
                 val soDir = detectNativeDir(nativeDir)
                 if (soDir != null) {
-                    val preloads = listOf(
-                        File(soDir, "libmanifold.so.3"),
-                        File(soDir, "libmanifoldc.so.3")
-                    ).filter { it.exists() }.map { it.absolutePath }.joinToString(":")
-                    if (preloads.isNotEmpty()) {
-                        environment("LD_PRELOAD", preloads)
-                    }
+                    systemProperty("java.library.path", soDir.absolutePath)
                 }
             }
         }

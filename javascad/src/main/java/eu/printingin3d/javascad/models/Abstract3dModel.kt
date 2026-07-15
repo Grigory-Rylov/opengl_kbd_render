@@ -521,7 +521,7 @@ abstract class Abstract3dModel : IModel {
 
     protected abstract fun toInnerNativeMesh(context: FacetGenerationContext): Long
 
-    override fun toNativeMesh(aContext: FacetGenerationContext): Long {
+    override fun toNativeMesh(aContext: FacetGenerationContext): Long = synchronized(Manifold3dEngine.JNI_SYNC) {
         val context = aContext.applyTag(tag)
         var mesh = toInnerNativeMesh(context)
 
@@ -537,7 +537,7 @@ abstract class Abstract3dModel : IModel {
             mesh = t
         }
 
-        return mesh
+        mesh
     }
 
     fun toNativeMesh(): Long {

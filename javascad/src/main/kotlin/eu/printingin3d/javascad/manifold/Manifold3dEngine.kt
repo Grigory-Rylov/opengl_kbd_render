@@ -15,6 +15,15 @@ object Manifold3dEngine {
 
     private val lock = ReentrantLock()
     private var bindings: ManifoldBindings? = null
+    @JvmField
+    val JNI_SYNC = Any() // Manifold is not thread-safe, use synchronized(JNI_SYNC)
+
+    fun initialize() {
+        getBindings()
+    }
+
+    // Serialize a block of manifold operations (not thread-safe inside)
+    fun <T> synchronizedBlock(block: () -> T): T = synchronized(JNI_SYNC) { block() }
 
     private fun getBindings(): ManifoldBindings =
         bindings ?: lock.withLock { bindings ?: ManifoldBindings().also { bindings = it } }
@@ -86,48 +95,48 @@ object Manifold3dEngine {
 
     // ---- Native transform operations ----
 
-    fun translate(manifold: Long, tx: Double, ty: Double, tz: Double): Long {
+    fun translate(manifold: Long, tx: Double, ty: Double, tz: Double): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        return mb.translate(manifold, tx, ty, tz)
+        mb.translate(manifold, tx, ty, tz)
     }
 
-    fun rotate(manifold: Long, rx: Double, ry: Double, rz: Double): Long {
+    fun rotate(manifold: Long, rx: Double, ry: Double, rz: Double): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        return mb.rotate(manifold, rx, ry, rz)
+        mb.rotate(manifold, rx, ry, rz)
     }
 
-    fun scale(manifold: Long, sx: Double, sy: Double, sz: Double): Long {
+    fun scale(manifold: Long, sx: Double, sy: Double, sz: Double): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        return mb.scale(manifold, sx, sy, sz)
+        mb.scale(manifold, sx, sy, sz)
     }
 
-    fun transform(manifold: Long, m: DoubleArray): Long {
+    fun transform(manifold: Long, m: DoubleArray): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        return mb.transform(manifold,
+        mb.transform(manifold,
             m[0], m[1], m[2], m[3],
             m[4], m[5], m[6], m[7],
             m[8], m[9], m[10], m[11])
     }
 
-    fun transformAndReturn(manifold: Long, tx: Double, ty: Double, tz: Double): Long {
+    fun transformAndReturn(manifold: Long, tx: Double, ty: Double, tz: Double): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        return mb.transform(manifold,
+        mb.transform(manifold,
             1.0, 0.0, 0.0, tx,
             0.0, 1.0, 0.0, ty,
             0.0, 0.0, 1.0, tz)
     }
 
-    fun empty(): Long {
+    fun empty(): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        return mb.empty()
+        mb.empty()
     }
 
-    fun isEmpty(manifold: Long): Boolean {
+    fun isEmpty(manifold: Long): Boolean = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        return mb.isEmpty(manifold)
+        mb.isEmpty(manifold)
     }
 
-    fun delete(manifold: Long) {
+    fun delete(manifold: Long) = synchronized(JNI_SYNC) {
         val mb = getBindings()
         mb.delete(manifold)
     }
@@ -149,7 +158,7 @@ object Manifold3dEngine {
         return V3d(b.centerX, b.centerY, b.centerZ)
     }
 
-    fun manifoldToPolygonsExport(manifold: Long): List<Polygon> {
+    fun manifoldToPolygonsExport(manifold: Long): List<Polygon> = synchronized(JNI_SYNC) {
         val mb = getBindings()
         val data = mb.exportMeshGL64(manifold)
         val verts = data.vertices()
@@ -213,9 +222,9 @@ object Manifold3dEngine {
 
     // ---- Low-level native operations ----
 
-    fun operateNative(a: Long, b: Long, opType: Int): Long {
+    fun operateNative(a: Long, b: Long, opType: Int): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        return when (opType) {
+        when (opType) {
             ManifoldBindings.OPTYPE_UNION -> mb.union(a, b)
             ManifoldBindings.OPTYPE_DIFFERENCE -> mb.difference(a, b)
             ManifoldBindings.OPTYPE_INTERSECTION -> mb.intersection(a, b)
@@ -223,19 +232,23 @@ object Manifold3dEngine {
         }
     }
 
-    fun nativeHull(handles: LongArray): Long {
+    fun nativeHull(handles: LongArray): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        return mb.batchHull(handles)
+        mb.batchHull(handles)
     }
 
-    fun nativeDelete(handle: Long) {
+    fun nativeDelete(handle: Long) = synchronized(JNI_SYNC) {
         val mb = getBindings()
         mb.delete(handle)
     }
 
     // ---- Polygon -> manifold ----
 
-    fun polygonsToManifold(mb: ManifoldBindings, polygons: List<Polygon>): Long {
+    fun polygonsToManifold(mb: ManifoldBindings, polygons: List<Polygon>): Long = synchronized(JNI_SYNC) {
+        polygonsToManifoldUnlocked(mb, polygons)
+    }
+
+    private fun polygonsToManifoldUnlocked(mb: ManifoldBindings, polygons: List<Polygon>): Long {
         val vertices = java.util.ArrayList<Double>()
         val triangles = java.util.ArrayList<Long>()
 
@@ -275,24 +288,30 @@ object Manifold3dEngine {
     private fun operatePolygons(a: List<Polygon>, b: List<Polygon>, opType: Int): List<Polygon> {
         if (a.isEmpty()) return b
         if (b.isEmpty()) return a
-        val mb = getBindings()
-        val manA = polygonsToManifold(mb, a)
-        val manB = polygonsToManifold(mb, b)
-        return try {
-            val result = when (opType) {
-                ManifoldBindings.OPTYPE_UNION -> mb.union(manA, manB)
-                ManifoldBindings.OPTYPE_DIFFERENCE -> mb.difference(manA, manB)
-                ManifoldBindings.OPTYPE_INTERSECTION -> mb.intersection(manA, manB)
-                else -> throw IllegalArgumentException("Unknown op: $opType")
+        synchronized(JNI_SYNC) {
+            val mb = getBindings()
+            val manA = polygonsToManifoldUnlocked(mb, a)
+            val manB = polygonsToManifoldUnlocked(mb, b)
+            return try {
+                val result = when (opType) {
+                    ManifoldBindings.OPTYPE_UNION -> mb.union(manA, manB)
+                    ManifoldBindings.OPTYPE_DIFFERENCE -> mb.difference(manA, manB)
+                    ManifoldBindings.OPTYPE_INTERSECTION -> mb.intersection(manA, manB)
+                    else -> throw IllegalArgumentException("Unknown op: $opType")
+                }
+                if (mb.isEmpty(result)) emptyList() else manifoldToPolygonsUnlocked(mb, result)
+            } finally {
+                mb.delete(manA)
+                mb.delete(manB)
             }
-            if (mb.isEmpty(result)) emptyList() else manifoldToPolygons(mb, result)
-        } finally {
-            mb.delete(manA)
-            mb.delete(manB)
         }
     }
 
-    private fun manifoldToPolygons(mb: ManifoldBindings, manifold: Long): List<Polygon> {
+    private fun manifoldToPolygons(mb: ManifoldBindings, manifold: Long): List<Polygon> = synchronized(JNI_SYNC) {
+        manifoldToPolygonsUnlocked(mb, manifold)
+    }
+
+    private fun manifoldToPolygonsUnlocked(mb: ManifoldBindings, manifold: Long): List<Polygon> {
         try {
             val data = mb.exportMeshGL64(manifold)
             val verts = data.vertices()

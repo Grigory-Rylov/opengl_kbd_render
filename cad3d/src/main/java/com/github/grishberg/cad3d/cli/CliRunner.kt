@@ -4,12 +4,16 @@ import com.github.grishberg.cad3d.KeyboardBuilder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig.Companion.getKeyboardConfig
 import com.github.grishberg.cad3d.plugin.StlExportListener
 import com.github.grishberg.cad3d.plugin.cfg.*
+import eu.printingin3d.javascad.manifold.Manifold3dEngine
 import kotlinx.coroutines.*
 import java.io.File
 
 class CliRunner {
 
     fun generate(part: String) {
+        // Initialize Manifold3d bindings once before coroutines start
+        Manifold3dEngine.initialize()
+
         val settings = getDefaultSettings(part)
         val cfg = settings.getKeyboardConfig(emptySet())
 
