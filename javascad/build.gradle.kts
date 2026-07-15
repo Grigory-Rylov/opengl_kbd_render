@@ -15,7 +15,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     implementation(kotlin("stdlib-jdk8"))
-    implementation(files("../libs/manifold3d-3.2.13.jar"))
+    implementation(files("../libs/manifold3d-0.1.4.jar"))
 }
 
 tasks.test {
