@@ -60,20 +60,12 @@ fun detectNativeDir(baseDir: File): File? {
 tasks.withType<JavaExec>().configureEach {
     dependsOn("extractManifoldNatives")
     doFirst {
-        val nativeDir = nativesDir.get().asFile
-        if (nativeDir.exists()) {
-            val soDir = detectNativeDir(nativeDir)
-            if (soDir != null) {
-                val os = System.getProperty("os.name").lowercase()
-                if (os.contains("mac")) {
-                    val dylibs = listOf(
-                        File(soDir, "libmanifold.3.dylib"),
-                        File(soDir, "libmanifoldc.3.dylib")
-                    ).filter { it.exists() }
-                    if (dylibs.isNotEmpty()) {
-                        environment("DYLD_FALLBACK_LIBRARY_PATH", dylibs.map { it.absolutePath }.joinToString(":"))
-                    }
-                } else if (os.contains("nix") || os.contains("nux")) {
+        val os = System.getProperty("os.name").lowercase()
+        if (os.contains("nix") || os.contains("nux")) {
+            val nativeDir = nativesDir.get().asFile
+            if (nativeDir.exists()) {
+                val soDir = detectNativeDir(nativeDir)
+                if (soDir != null) {
                     val preloads = listOf(
                         File(soDir, "libmanifold.so.3"),
                         File(soDir, "libmanifoldc.so.3")
