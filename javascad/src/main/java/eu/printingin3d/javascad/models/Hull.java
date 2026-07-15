@@ -4,6 +4,7 @@ import com.github.quickhull3d.Point3d;
 import com.github.quickhull3d.QuickHull3D;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.V3d;
+import eu.printingin3d.javascad.manifold.Manifold3dEngine;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
@@ -46,16 +47,35 @@ public class Hull extends Atomic3dModel {
     protected CSG toInnerCSG(FacetGenerationContext context) {
         List<V3d> points = new ArrayList<>();
 
-        // Собираем все точки из всех CSG объектов
         for (Abstract3dModel model : models) {
             for (Polygon polygon : model.toCSG(context).getPolygons()) {
                 points.addAll(polygon.getVertices());
             }
         }
 
-        // Удаляем дубликаты точек
         List<Polygon> hullPolygons = generateHull(context, points);
         return new CSG(hullPolygons);
+    }
+
+    @Override
+    protected long toInnerNativeMesh(FacetGenerationContext context) {
+        long[] handles = new long[models.size()];
+        int idx = 0;
+        try {
+            for (Abstract3dModel model : models) {
+                handles[idx++] = model.toNativeMesh(context);
+            }
+        } catch (Exception e) {
+            for (int i = 0; i < idx; i++) {
+                Manifold3dEngine.INSTANCE.delete(handles[i]);
+            }
+            throw e;
+        }
+        long result = Manifold3dEngine.INSTANCE.hullNative(handles);
+        for (int i = 0; i < idx; i++) {
+            Manifold3dEngine.INSTANCE.delete(handles[i]);
+        }
+        return result;
     }
 
     public static List<Polygon> generateHull(

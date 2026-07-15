@@ -6,6 +6,7 @@ import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
+import eu.printingin3d.javascad.manifold.Manifold3dEngine;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
@@ -98,5 +99,10 @@ public class Sphere extends Atomic3dModel {
                 theta.sin() * phi.sin()
         );
         return dir.mul(r.getRadius());
+    }
+
+    @Override
+    protected long toInnerNativeMesh(FacetGenerationContext context) {
+        return Manifold3dEngine.INSTANCE.bindings().sphere(r.getRadius(), context.calculateNumberOfSlices(r));
     }
 }

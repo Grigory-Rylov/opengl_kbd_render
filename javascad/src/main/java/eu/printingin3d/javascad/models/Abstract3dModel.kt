@@ -10,6 +10,7 @@ import eu.printingin3d.javascad.exceptions.IllegalValueException
 import eu.printingin3d.javascad.tranform.TransformationFactory
 import eu.printingin3d.javascad.tranzitions.Difference
 import eu.printingin3d.javascad.tranzitions.Union
+import eu.printingin3d.javascad.manifold.Manifold3dEngine
 import eu.printingin3d.javascad.utils.AssertValue
 import eu.printingin3d.javascad.utils.Color
 import eu.printingin3d.javascad.utils.RoundProperties
@@ -520,6 +521,11 @@ abstract class Abstract3dModel : IModel {
 
     protected abstract fun toInnerCSG(context: FacetGenerationContext): CSG
 
+    protected open fun toInnerNativeMesh(context: FacetGenerationContext): Long {
+        val mb = Manifold3dEngine.bindings()
+        return Manifold3dEngine.polygonsToManifold(mb, toInnerCSG(context).getPolygons())
+    }
+
     override fun toCSG(aContext: FacetGenerationContext): CSG {
         val context = aContext.applyTag(tag)
 
@@ -534,6 +540,29 @@ abstract class Abstract3dModel : IModel {
         }
 
         return csg
+    }
+
+    override fun toNativeMesh(aContext: FacetGenerationContext): Long {
+        val context = aContext.applyTag(tag)
+        var mesh = toInnerNativeMesh(context)
+
+        if (!rotate.isZero()) {
+            val r = Manifold3dEngine.rotate(mesh, rotate.x, rotate.y, rotate.z)
+            Manifold3dEngine.delete(mesh)
+            mesh = r
+        }
+
+        if (!move.isZero()) {
+            val t = Manifold3dEngine.translate(mesh, move.x, move.y, move.z)
+            Manifold3dEngine.delete(mesh)
+            mesh = t
+        }
+
+        return mesh
+    }
+
+    fun toNativeMesh(): Long {
+        return toNativeMesh(FacetGenerationContext.DEFAULT)
     }
 
     /**

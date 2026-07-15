@@ -9,6 +9,7 @@ import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
+import eu.printingin3d.javascad.manifold.Manifold3dEngine;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
@@ -142,5 +143,12 @@ public class Cylinder extends Atomic3dModel {
 
     private V3d cylPoint(double z, Radius r, double slice) {
         return r.toCoordinate(Angle.A360.mul(slice)).withZ(z);
+    }
+
+    @Override
+    protected long toInnerNativeMesh(FacetGenerationContext context) {
+        int segments = context.calculateNumberOfSlices(topRadius.min(bottomRadius));
+        return Manifold3dEngine.INSTANCE.bindings().cylinder(
+            length, bottomRadius.getRadius(), topRadius.getRadius(), segments, 1);
     }
 }

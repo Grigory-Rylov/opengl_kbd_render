@@ -4,6 +4,7 @@ import eu.printingin3d.javascad.context.IScadGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
+import eu.printingin3d.javascad.manifold.Manifold3dEngine;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import eu.printingin3d.javascad.models.Complex3dModel;
 import eu.printingin3d.javascad.models.Cube;
@@ -89,16 +90,34 @@ public class Difference extends Complex3dModel {
 		return new Difference(model1, new ArrayList<Abstract3dModel>(model2));
 	}
 
-	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-		CSG csg = model1.toCSG(context);
-		
-		for (Abstract3dModel model : model2) {
-			csg = csg.difference(model.toCSG(context));
-		}
-		
-		return csg;
-	}
+    @Override
+    protected CSG toInnerCSG(FacetGenerationContext context) {
+        CSG csg = model1.toCSG(context);
+
+        for (Abstract3dModel model : model2) {
+            csg = csg.difference(model.toCSG(context));
+        }
+
+        return csg;
+    }
+
+    @Override
+    protected long toInnerNativeMesh(FacetGenerationContext context) {
+        long result = model1.toNativeMesh(context);
+        try {
+            for (Abstract3dModel model : model2) {
+                long m = model.toNativeMesh(context);
+                long r = Manifold3dEngine.INSTANCE.differenceNative(result, m);
+                Manifold3dEngine.INSTANCE.delete(m);
+                Manifold3dEngine.INSTANCE.delete(result);
+                result = r;
+            }
+        } catch (Exception e) {
+            Manifold3dEngine.INSTANCE.delete(result);
+            throw e;
+        }
+        return result;
+    }
 	
 	@Override
 	public Abstract3dModel subtractModel(Abstract3dModel model) {
