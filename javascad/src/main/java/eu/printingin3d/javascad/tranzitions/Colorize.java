@@ -7,7 +7,6 @@ import eu.printingin3d.javascad.models.Complex3dModel;
 import eu.printingin3d.javascad.utils.AssertValue;
 import eu.printingin3d.javascad.utils.Color;
 import eu.printingin3d.javascad.utils.DoubleUtils;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import java.util.Collections;
 import java.util.List;

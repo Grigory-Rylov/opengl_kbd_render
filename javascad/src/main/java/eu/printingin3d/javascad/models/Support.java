@@ -7,7 +7,6 @@ import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.enums.AlignType;
 import eu.printingin3d.javascad.enums.Side;
 import eu.printingin3d.javascad.tranzitions.Difference;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import java.util.ArrayList;
 import java.util.List;

@@ -7,7 +7,6 @@ import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
 import eu.printingin3d.javascad.manifold.Manifold3dEngine;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
 import java.util.ArrayList;

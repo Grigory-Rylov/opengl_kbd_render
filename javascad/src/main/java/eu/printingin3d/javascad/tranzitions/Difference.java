@@ -10,7 +10,6 @@ import eu.printingin3d.javascad.models.Complex3dModel;
 import eu.printingin3d.javascad.models.Cube;
 import eu.printingin3d.javascad.utils.AssertValue;
 import eu.printingin3d.javascad.utils.ListUtils;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import java.util.ArrayList;
 import java.util.Arrays;

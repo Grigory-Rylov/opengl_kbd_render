@@ -14,7 +14,7 @@ import eu.printingin3d.javascad.manifold.Manifold3dEngine
 import eu.printingin3d.javascad.utils.AssertValue
 import eu.printingin3d.javascad.utils.Color
 import eu.printingin3d.javascad.utils.RoundProperties
-import eu.printingin3d.javascad.vrl.CSG
+
 import eu.printingin3d.javascad.vrl.FacetGenerationContext
 import java.util.Arrays
 import java.util.stream.Collectors
