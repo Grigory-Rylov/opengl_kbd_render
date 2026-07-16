@@ -4,7 +4,6 @@ import eu.printingin3d.javascad.context.IScadGenerationContext;
 import eu.printingin3d.javascad.context.ScadGenerationContextFactory;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import java.lang.reflect.Constructor;
 import java.util.Collections;
@@ -34,8 +33,8 @@ public abstract class Extendable3dModel extends Complex3dModel {
 
 
 	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-		return baseModel.toCSG(context);
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		return baseModel.toNativeMesh(context);
 	}
 	
 	@Override

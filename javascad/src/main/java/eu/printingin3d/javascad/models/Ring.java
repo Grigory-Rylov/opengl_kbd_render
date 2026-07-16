@@ -6,7 +6,6 @@ import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.coords2d.Boundaries2d;
 import eu.printingin3d.javascad.exceptions.NotImplementedException;
 import eu.printingin3d.javascad.models2d.Abstract2dModel;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 
 /**
@@ -54,8 +53,8 @@ public class Ring extends Atomic3dModel {
 	}
 
 	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-		throw new NotImplementedException();
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		throw new UnsupportedOperationException("Ring is not supported in native mode");
 	}
 
 }

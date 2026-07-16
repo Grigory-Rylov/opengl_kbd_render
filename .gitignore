@@ -40,3 +40,7 @@ bin/
 ### Mac OS ###
 .DS_Store
 squashfs-root/
+
+### Native crash dumps ###
+cad3d/hs_err_pid*.log
+hs_err_pid*.log

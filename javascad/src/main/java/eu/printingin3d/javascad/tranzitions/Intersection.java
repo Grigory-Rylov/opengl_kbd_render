@@ -2,10 +2,10 @@ package eu.printingin3d.javascad.tranzitions;
 
 import eu.printingin3d.javascad.context.IScadGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
+import eu.printingin3d.javascad.manifold.Manifold3dEngine;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import eu.printingin3d.javascad.models.Complex3dModel;
 import eu.printingin3d.javascad.utils.ListUtils;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,19 +51,30 @@ public class Intersection extends Complex3dModel {
 		return boundaries.isEmpty() ? Boundaries3d.EMPTY : Boundaries3d.intersect(boundaries);
 	}
 
-	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-		CSG csg = null;
-		for (Abstract3dModel model : models) {
-			if (csg==null) {
-				csg = model.toCSG(context);
-			}
-			else {
-				csg = csg.intersect(model.toCSG(context));
-			}
-		}
-		return csg;
-	}
+    @Override
+    protected long toInnerNativeMesh(FacetGenerationContext context) {
+        long result = 0L;
+        try {
+            for (Abstract3dModel model : models) {
+                long m = model.toNativeMesh(context);
+                if (m == 0L) {
+                    continue;
+                }
+                if (result == 0L) {
+                    result = m;
+                } else {
+                    long r = Manifold3dEngine.INSTANCE.intersectionNative(result, m);
+                    Manifold3dEngine.INSTANCE.delete(m);
+                    Manifold3dEngine.INSTANCE.delete(result);
+                    result = r;
+                }
+            }
+        } catch (Exception e) {
+            if (result != 0L) Manifold3dEngine.INSTANCE.delete(result);
+            throw e;
+        }
+        return result;
+    }
 
 	@Override
 	protected Abstract3dModel innerSubModel(IScadGenerationContext context) {

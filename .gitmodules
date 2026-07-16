@@ -1,0 +1,4 @@
+[submodule "libs/manifold3d-java"]
+	path = libs/manifold3d-java
+	url = git@github.com:Grigory-Rylov/manifold3d-java.git
+	branch = development

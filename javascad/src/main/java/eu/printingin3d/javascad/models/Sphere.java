@@ -6,7 +6,7 @@ import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
-import eu.printingin3d.javascad.vrl.CSG;
+import eu.printingin3d.javascad.manifold.Manifold3dEngine;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
 import java.util.ArrayList;
@@ -52,23 +52,6 @@ public class Sphere extends Atomic3dModel {
 		return new Sphere(r);
 	}
 
-	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-        List<Polygon> polygons = new ArrayList<>();
-
-        int numSlices = context.calculateNumberOfSlices(r);
-        int numStacks = numSlices/2;
-        
-        Angle oneSlice = Angle.A360.divide(numSlices);
-        for (int i = 0; i < numSlices; i++) {
-            for (int j = 0; j < numStacks; j++) {
-                List<V3d> vertices = getVertices(oneSlice, numStacks, i, j);
-                polygons.add(Polygon.fromPolygons(vertices, context.getColor()));
-            }
-        }
-        return new CSG(polygons);
-	}
-
 	private List<V3d> getVertices(Angle oneSlice, int numStacks, int i, int j) {
 		List<V3d> vertices = new ArrayList<>();
 
@@ -98,5 +81,10 @@ public class Sphere extends Atomic3dModel {
                 theta.sin() * phi.sin()
         );
         return dir.mul(r.getRadius());
+    }
+
+    @Override
+    protected long toInnerNativeMesh(FacetGenerationContext context) {
+        return Manifold3dEngine.INSTANCE.sphereNative(r.getRadius(), context.calculateNumberOfSlices(r));
     }
 }

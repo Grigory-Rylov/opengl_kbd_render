@@ -9,7 +9,6 @@ import eu.printingin3d.javascad.models.Abstract3dModel;
 import eu.printingin3d.javascad.models.Complex3dModel;
 import eu.printingin3d.javascad.tranzitions.slicer.CoverFactory;
 import eu.printingin3d.javascad.utils.AssertValue;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import java.util.Collections;
 import java.util.List;
@@ -120,10 +119,10 @@ public class Slicer extends Complex3dModel {
         return new Slicer(model, direction, lowRate, highRate);
     }
 
-    @Override
-    protected CSG toInnerCSG(FacetGenerationContext context) {
-        return new Difference(model, sliceModel()).toCSG(context);
-    }
+	@Override
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		return new Difference(model, sliceModel()).toNativeMesh(context);
+	}
 
     @Override
     protected Abstract3dModel innerSubModel(IScadGenerationContext context) {

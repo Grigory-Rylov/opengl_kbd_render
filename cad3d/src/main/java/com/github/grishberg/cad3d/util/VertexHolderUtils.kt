@@ -2,6 +2,7 @@ package com.github.grishberg.cad3d.util
 
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.javascad.Triangulator
+import eu.printingin3d.javascad.manifold.Manifold3dEngine
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.IModel
 import eu.printingin3d.javascad.utils.Color
@@ -11,17 +12,48 @@ import eu.printingin3d.javascad.vrl.FacetGenerationContext
 import eu.printingin3d.javascad.vrl.Polygon
 
 fun fromModel(model: IModel, color: Color, fn: Int): VertexHolder {
-    val context: FacetGenerationContext = ColorFacetGenerationContext(color)
-    context.setFn(fn)
-    val csg = model.toCSG(context)
-    return getVerticesAndColorsAsFloatArray(csg.toFacets())
+    return fromModelNative(model, color, fn)
 }
 
 fun fromModel(model: Abstract3dModel, fn: Int): VertexHolder {
+    return fromModelNative(model, fn)
+}
+
+fun fromModelNative(model: Abstract3dModel, fn: Int): VertexHolder {
     val context: FacetGenerationContext = ColorFacetGenerationContext(model.color)
     context.setFn(fn)
-    val csg = model.toCSG(context)
-    return getVerticesAndColorsAsFloatArray(csg.toFacets())
+    val mesh = model.toNativeMesh(context)
+    if (mesh == 0L) {
+        return VertexHolder(FloatArray(0), FloatArray(0), 0)
+    }
+    return try {
+        val nv = Manifold3dEngine.toVertexHolder(mesh, model.color)
+        VertexHolder(nv.vertex, nv.normals, nv.verticesCount)
+    } finally {
+        Manifold3dEngine.delete(mesh)
+    }
+}
+
+fun fromModelNative(model: Abstract3dModel, color: Color): VertexHolder {
+    val mesh = model.toNativeMesh()
+    return try {
+        val nv = Manifold3dEngine.toVertexHolder(mesh, color)
+        VertexHolder(nv.vertex, nv.normals, nv.verticesCount)
+    } finally {
+        Manifold3dEngine.delete(mesh)
+    }
+}
+
+fun fromModelNative(model: IModel, color: Color, fn: Int): VertexHolder {
+    val context: FacetGenerationContext = ColorFacetGenerationContext(color)
+    context.setFn(fn)
+    val mesh = model.toNativeMesh(context)
+    return try {
+        val nv = Manifold3dEngine.toVertexHolder(mesh, color)
+        VertexHolder(nv.vertex, nv.normals, nv.verticesCount)
+    } finally {
+        Manifold3dEngine.delete(mesh)
+    }
 }
 
 fun fromPolygons(polygons: List<Polygon>, color: Color): VertexHolder {

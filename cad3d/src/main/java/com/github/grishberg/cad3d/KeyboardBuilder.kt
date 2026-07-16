@@ -46,9 +46,10 @@ import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
 import com.github.grishberg.cad3d.plugin.cfg.TrackballMode
 import com.github.grishberg.cad3d.trackball.Trackball
 import com.github.grishberg.cad3d.trackball.TrackballCase
-import com.github.grishberg.cad3d.util.fromModel
+import com.github.grishberg.cad3d.util.fromModelNative
 import com.github.grishberg.javascad.StlExporter
 import com.github.grishberg.javascad.StlImporter
+import eu.printingin3d.javascad.manifold.Manifold3dEngine
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
 import eu.printingin3d.javascad.models.Cylinder
@@ -62,6 +63,8 @@ import java.io.File
 import java.io.IOException
 import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -85,6 +88,7 @@ class KeyboardBuilder(
         if (resolution == 0) {
             resolution = 20
         }
+        Manifold3dEngine.clearAll()
         create3dModels(cfg, listener)
     }
 
@@ -384,7 +388,7 @@ class KeyboardBuilder(
         if (cfg.trackball.mode != TrackballMode.None) {
             val tb = Trackball(cfg)
             val trackBallHolder = tb.placeTrackball(tb.trackBallCaseHolderOrigin(), keyPlace)
-            result.add(fromModel(trackBallHolder, cfg.fn))
+            result.add(fromModelNative(trackBallHolder, cfg.fn))
         }
 
         result.addAll(caseWalls.vertexHolders)
@@ -582,6 +586,7 @@ class KeyboardBuilder(
 
     private var stlExportListener: WeakReference<StlExportListener>? = null
     private var isExportMode: Boolean = false
+    private var exportLatch: CountDownLatch? = null
 
     private fun saveModel(cfg: KeyboardConfig, name: String, model: Abstract3dModel, needCheck: Boolean = false) {
         if (!isExportMode) {
@@ -598,12 +603,16 @@ class KeyboardBuilder(
                 stlExportListener?.get()?.onExportProgress(name, "Рендеринг CSG...")
                 val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
                 context.setFn(cfg.stlFn)
-                val polygons = model.toCSG(context).polygons
                 println("Start stl exporting $name")
-                StlExporter.saveStl(
-                    polygons, targetPath
-                ) { stage ->
-                    stlExportListener?.get()?.onExportProgress(name, stage)
+                val mesh = model.toNativeMesh(context)
+                if (mesh == 0L) {
+                    println("Skip stl exporting $name — empty model")
+                } else {
+                    try {
+                        Manifold3dEngine.exportStl(mesh, File(targetPath))
+                    } finally {
+                        Manifold3dEngine.delete(mesh)
+                    }
                 }
                 println("End stl exporting $name")
                 stlExportListener?.get()?.onExportFinish(name, true, null)
@@ -611,6 +620,8 @@ class KeyboardBuilder(
                 println("Error while stl exporting $name " + e.message)
                 stlExportListener?.get()?.onExportFinish(name, false, e.message)
                 throw RuntimeException(e)
+            } finally {
+                exportLatch?.countDown()
             }
         }.start()
     }
@@ -838,7 +849,7 @@ class KeyboardBuilder(
             }
         }
         val result = Union(color, models)
-        return ModelHolder(result, fromModel(result, color, 20))
+        return ModelHolder(result, fromModelNative(result, color, 20))
     }
 
     private fun createCaseModel(
@@ -971,7 +982,7 @@ class KeyboardBuilder(
     }
 
     private fun createVertexHolder(cfg: KeyboardConfig, model: IModel, color: Color): VertexHolder {
-        return fromModel(model, color, cfg.fn)
+        return fromModelNative(model, color, cfg.fn)
     }
 
     companion object {

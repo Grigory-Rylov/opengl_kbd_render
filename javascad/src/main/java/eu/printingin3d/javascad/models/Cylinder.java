@@ -9,7 +9,7 @@ import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
-import eu.printingin3d.javascad.vrl.CSG;
+import eu.printingin3d.javascad.manifold.Manifold3dEngine;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
 import java.util.ArrayList;
@@ -103,44 +103,14 @@ public class Cylinder extends Atomic3dModel {
 		return new Cylinder(length, bottomRadius, topRadius);
 	}
 
-	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-		double z = length/2.0;
-		
-		V3d startV = V3d.zOnly(+z);
-		V3d endV = V3d.zOnly(-z);
-        List<Polygon> polygons = new ArrayList<>();
-
-        int numSlices = context.calculateNumberOfSlices(topRadius.min(bottomRadius));
-        for (int i = 0; i < numSlices; i++) {
-            double t0 = i / (double) numSlices;
-            double t1 = (i + 1) / (double) numSlices;
-            polygons.add(Polygon.fromPolygons(Arrays.asList(
-                    startV,
-                    cylPoint(+z, topRadius, t1),
-                    cylPoint(+z, topRadius, t0)
-                ), context.getColor()
-            ));
-            polygons.add(Polygon.fromPolygons(Arrays.asList(
-                    cylPoint(+z, topRadius, t0),
-                    cylPoint(+z, topRadius, t1),
-                    cylPoint(-z, bottomRadius, t1),
-                    cylPoint(-z, bottomRadius, t0)
-                
-            ), context.getColor()));
-            polygons.add(Polygon.fromPolygons(Arrays.asList(
-                            endV,
-                            cylPoint(-z, bottomRadius, t0),
-                            cylPoint(-z, bottomRadius, t1)
-            ), context.getColor())
-            
-            );
-        }
-
-        return new CSG(polygons);
-	}
-
     private V3d cylPoint(double z, Radius r, double slice) {
         return r.toCoordinate(Angle.A360.mul(slice)).withZ(z);
+    }
+
+    @Override
+    protected long toInnerNativeMesh(FacetGenerationContext context) {
+        int segments = context.calculateNumberOfSlices(topRadius.min(bottomRadius));
+        return Manifold3dEngine.INSTANCE.cylinderNative(
+            length, bottomRadius.getRadius(), topRadius.getRadius(), segments, 1);
     }
 }

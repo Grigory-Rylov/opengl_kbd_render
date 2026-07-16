@@ -10,10 +10,11 @@ import eu.printingin3d.javascad.exceptions.IllegalValueException
 import eu.printingin3d.javascad.tranform.TransformationFactory
 import eu.printingin3d.javascad.tranzitions.Difference
 import eu.printingin3d.javascad.tranzitions.Union
+import eu.printingin3d.javascad.manifold.Manifold3dEngine
 import eu.printingin3d.javascad.utils.AssertValue
 import eu.printingin3d.javascad.utils.Color
 import eu.printingin3d.javascad.utils.RoundProperties
-import eu.printingin3d.javascad.vrl.CSG
+
 import eu.printingin3d.javascad.vrl.FacetGenerationContext
 import java.util.Arrays
 import java.util.stream.Collectors
@@ -518,32 +519,33 @@ abstract class Abstract3dModel : IModel {
         return result
     }
 
-    protected abstract fun toInnerCSG(context: FacetGenerationContext): CSG
+    protected abstract fun toInnerNativeMesh(context: FacetGenerationContext): Long
 
-    override fun toCSG(aContext: FacetGenerationContext): CSG {
+    override fun toNativeMesh(aContext: FacetGenerationContext): Long = synchronized(Manifold3dEngine.JNI_SYNC) {
         val context = aContext.applyTag(tag)
+        var mesh = toInnerNativeMesh(context)
 
-        var csg = toInnerCSG(context)
+        if (mesh == 0L) {
+            return@synchronized 0L
+        }
 
         if (!rotate.isZero()) {
-            csg = csg.transformed(TransformationFactory.getRotationMatrix(rotate))
+            val r = Manifold3dEngine.rotate(mesh, rotate.x, rotate.y, rotate.z)
+            Manifold3dEngine.delete(mesh)
+            mesh = r
         }
 
         if (!move.isZero()) {
-            csg = csg.transformed(TransformationFactory.getTranlationMatrix(move))
+            val t = Manifold3dEngine.translate(mesh, move.x, move.y, move.z)
+            Manifold3dEngine.delete(mesh)
+            mesh = t
         }
 
-        return csg
+        mesh
     }
 
-    /**
-     * Renders this model to its CSG interpretation - convenient method which used the default
-     * generation context.
-     *
-     * @return the CSG interpretation
-     */
-    fun toCSG(): CSG {
-        return toCSG(FacetGenerationContext.DEFAULT)
+    fun toNativeMesh(): Long {
+        return toNativeMesh(FacetGenerationContext.DEFAULT)
     }
 
     /**

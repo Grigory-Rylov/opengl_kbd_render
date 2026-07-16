@@ -1,6 +1,5 @@
 package eu.printingin3d.javascad.models;
 
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 
 /**
@@ -9,11 +8,11 @@ import eu.printingin3d.javascad.vrl.FacetGenerationContext;
  * @author ivivan <ivivan@printingin3d.eu>
  */
 public interface IModel {
-	
+
 	/**
-	 * Renders this model to its CSG interpretation.
+	 * Renders this model to a native manifold handle.
 	 * @param context the context to be used during the generation process.
-	 * @return the CSG interpretation
+	 * @return native manifold handle (Long), caller is responsible for deleting it
 	 */
-	CSG toCSG(FacetGenerationContext context);
+	long toNativeMesh(FacetGenerationContext context);
 }

@@ -16,7 +16,7 @@ import eu.printingin3d.javascad.exceptions.UnknownFileExtensionException;
  *  <blockquote><pre>
  * FileExporterFactory
  *     .createExporter(new File("path/to/the/file/file.ext"))
- *     .writeToFile(object.toCSG().toFacets());
+ *     .writeToFile(object.toNativeMesh());
  *	</pre></blockquote>
  * @author Ivan
  *

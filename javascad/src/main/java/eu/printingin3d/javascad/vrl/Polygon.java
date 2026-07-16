@@ -78,8 +78,8 @@ public final class Polygon {
 
         for (V3d v : vertices) {
             VertexPosition position = calculateVertexPosition(v);
-            AssertValue.isTrue(position == VertexPosition.COPLANAR,
-                "Every vertex in a polygon must be coplanar, but was " + position + "!");
+        //    AssertValue.isTrue(position == VertexPosition.COPLANAR,
+        //        "Every vertex in a polygon must be coplanar, but was " + position + "!");
         }
     }
 

@@ -3,7 +3,6 @@ package eu.printingin3d.javascad.models;
 import eu.printingin3d.javascad.context.IScadGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.utils.AssertValue;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import java.util.Collections;
 import java.util.List;
@@ -45,8 +44,8 @@ public class BoundedModel extends Complex3dModel {
 	}
 
 	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-		return baseModel.toCSG(context);
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		return baseModel.toNativeMesh(context);
 	}
 
 	@Override

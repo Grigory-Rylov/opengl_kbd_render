@@ -6,6 +6,7 @@ import com.github.grishberg.cad3d.plugin.StlExportListener
 import com.github.grishberg.cad3d.plugin.ResultListener
 import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
 import com.github.grishberg.cad3d.plugin.cfg.SettingsContainer
+import eu.printingin3d.javascad.manifold.Manifold3dEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -32,6 +33,7 @@ class KeyboardBuilderPlugin : Cad3dPlugin {
     override fun onUnload() {
         println("onUnload $this")
         coroutineScope.cancel()
+        Manifold3dEngine.clearAll()
     }
 
     override val version: Long = 1

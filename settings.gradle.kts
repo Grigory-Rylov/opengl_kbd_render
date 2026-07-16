@@ -13,5 +13,8 @@ dependencyResolutionManagement {
         maven {
             url = uri("https://jogamp.org/deployment/maven/")
         }
+        flatDir {
+            dirs("libs")
+        }
     }
 }

@@ -4,6 +4,7 @@ import com.github.grishberg.javascad.optimizator.PolygonValidatorMultithreading
 import com.github.grishberg.javascad.optimizator.ProgressObserver
 import eu.printingin3d.javascad.coords.Triangle3d
 import eu.printingin3d.javascad.coords.V3d
+import eu.printingin3d.javascad.manifold.Manifold3dEngine
 import eu.printingin3d.javascad.vrl.Facet
 import eu.printingin3d.javascad.vrl.Polygon
 import java.io.File
@@ -17,6 +18,16 @@ import java.nio.channels.WritableByteChannel
 data class DoubleTriple(val x: Double, val y: Double, val z: Double)
 
 object StlExporter {
+
+    private const val X = 0
+    private const val Y = 0
+    private const val Z = 0
+
+    fun saveStl(nativeMesh: Long, fileName: String) {
+        val polygons = Manifold3dEngine.manifoldToPolygonsExport(nativeMesh)
+        saveStl(polygons, fileName)
+    }
+
     fun saveStl(polygons: List<Polygon>, fileName: String) {
         saveStl(polygons, fileName, null)
     }

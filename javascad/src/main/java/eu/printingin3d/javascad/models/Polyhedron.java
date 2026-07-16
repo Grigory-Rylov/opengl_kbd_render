@@ -4,8 +4,8 @@ import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Triangle3d;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
+import eu.printingin3d.javascad.manifold.Manifold3dEngine;
 import eu.printingin3d.javascad.utils.AssertValue;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
 import java.util.ArrayList;
@@ -76,11 +76,11 @@ public class Polyhedron extends Atomic3dModel {
 	}
 
 	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
 		List<Polygon> polygons = new ArrayList<>();
 		for (Triangle3d c : triangles) {
 			polygons.add(Polygon.fromPolygons(c.getPoints(), context.getColor()));
 		}
-		return new CSG(polygons);
+		return Manifold3dEngine.INSTANCE.polygonsToManifold(Manifold3dEngine.INSTANCE.bindings(), polygons);
 	}
 }

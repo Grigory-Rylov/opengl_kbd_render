@@ -1,7 +1,6 @@
 package eu.printingin3d.javascad.models;
 
 import eu.printingin3d.javascad.coords.Boundaries3d;
-import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 
 /**
@@ -31,8 +30,8 @@ public class Empty3dModel extends Atomic3dModel {
 	}
 
 	@Override
-	protected CSG toInnerCSG(FacetGenerationContext context) {
-		return CSG.fromPolygons();
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		return 0L;
 	}
 
 	@Override

@@ -71,6 +71,10 @@ public class SurfaceBuilderOrigin extends Atomic3dModel {
     }
 
     @Override
+    protected long toInnerNativeMesh(FacetGenerationContext context) {
+        throw new UnsupportedOperationException("Surface is not supported in native mode");
+    }
+
     protected CSG toInnerCSG(FacetGenerationContext context) {
         color = context.getColor();
         List<Polygon> polygons = buildSurface();

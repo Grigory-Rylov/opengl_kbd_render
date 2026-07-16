@@ -1,0 +1,70 @@
+{
+    "assemblySettings": {
+        "settingsShowCaps": true,
+        "settingsShowCase": true,
+        "settingsShowMatrix": true,
+        "settingsShowPlate": false,
+        "settingsShowWristRest": false,
+        "settingsTrackball": false,
+        "showController": false,
+        "showTrackballSensor": false,
+        "showTrackbalSensorCap": false,
+        "showTrackballBall": false,
+        "showTrackballCase": false,
+        "showTrackballCasePlate": false,
+        "showControllerHolder": false,
+        "showAmoeba": false
+    },
+    "viewerSettings": {
+        "rotateX": 293.0,
+        "rotateY": 0.0,
+        "rotateZ": 361.0,
+        "translateX": 0.0,
+        "translateY": 0.0,
+        "translateZ": -185.0
+    },
+    "keyboardSettings": {
+        "fn": 20,
+        "stlFn": 60,
+        "plateZOffset": 8.0,
+        "rowCurvature": 10.0,
+        "tentingAngle": 8.0,
+        "columnCurvature": 5.0,
+        "plateThickness": 2.0,
+        "saProfileKeyHeight": 4.5,
+        "columnsCount": 6,
+        "rowsCount": 3,
+        "centerRow": 1,
+        "centerCol": 2,
+        "isLowProfile": true,
+        "powerSwitcherType": "None",
+        "isHasHotswap": false,
+        "isMagneticWristRestHolder": false,
+        "bordersOffset": 4.0,
+        "screwNutHoleDiameter": 4.0,
+        "screwHolderWallhickness": 1.6,
+        "isSkeletonMode": false,
+        "keyPlaceholderType": "None",
+        "horizontalExtraSpace": 1.0,
+        "verticalExtraSpace": 1.0,
+        "controllerType": "SuperMiniNRF52840",
+        "batteryType": "Bt18650"
+    },
+    "thumbClusterSettings": {
+        "xOffset": 0.0,
+        "yOffset": -55.0,
+        "zOffset": 14.0,
+        "rotateY": -15.0,
+        "rotateZ": 0.0,
+        "arcRadiusZ": -90.0,
+        "arcRadiusY": -0.0,
+        "spaceBetweenKey": 6.5,
+        "type": "SingleColumn3Buttons"
+    },
+    "trackballSettings": {
+        "mode": "None",
+        "ballDiameter": 25.0,
+        "bearingDiameter": 3.175,
+        "controllerScrewDiameter": 1.3
+    }
+}
