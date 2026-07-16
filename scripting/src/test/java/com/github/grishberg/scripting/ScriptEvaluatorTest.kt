@@ -92,4 +92,25 @@ class ScriptEvaluatorTest {
         assertNotNull(result.error)
         assertNull(result.model)
     }
+
+    @Test
+    fun `matrix_project multi-file build`() {
+        val evaluator = getEvaluator()
+        val matrixProject = File("examples/matrix_project")
+        if (!matrixProject.exists()) {
+            println("[WARN] Skipping matrix_project test — directory not found: ${matrixProject.absolutePath}")
+            return
+        }
+
+        val result = evaluator.evaluateScriptDir(matrixProject.absolutePath)
+        val err = result.error
+
+        if (err != null) {
+            println("[ERROR] matrix_project failed: ${err.take(1000)}")
+        }
+
+        assertNull(result.error, "matrix_project should compile and run without errors")
+        assertNotNull(result.model, "matrix_project should produce a 3D model")
+        println("[OK] matrix_project compiled in ${result.compilationTimeMs}ms")
+    }
 }
