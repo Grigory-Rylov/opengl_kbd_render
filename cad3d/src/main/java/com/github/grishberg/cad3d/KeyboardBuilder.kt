@@ -88,6 +88,7 @@ class KeyboardBuilder(
         if (resolution == 0) {
             resolution = 20
         }
+        Manifold3dEngine.clearAll()
         create3dModels(cfg, listener)
     }
 

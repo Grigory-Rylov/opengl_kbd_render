@@ -110,7 +110,7 @@ public class Cylinder extends Atomic3dModel {
     @Override
     protected long toInnerNativeMesh(FacetGenerationContext context) {
         int segments = context.calculateNumberOfSlices(topRadius.min(bottomRadius));
-        return Manifold3dEngine.INSTANCE.bindings().cylinder(
+        return Manifold3dEngine.INSTANCE.cylinderNative(
             length, bottomRadius.getRadius(), topRadius.getRadius(), segments, 1);
     }
 }

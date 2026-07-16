@@ -66,10 +66,19 @@ object Manifold3dEngine {
         val manB = polygonsToManifoldUnlocked(mb, b)
         try {
             val result = mb.batchHull(longArrayOf(manA, manB))
-            if (mb.isEmpty(result)) emptyList() else manifoldToPolygonsUnlocked(mb, result)
+            markOwned(result)
+            if (mb.isEmpty(result)) {
+                deleteTracked(mb, result)
+                emptyList()
+            } else {
+                manifoldToPolygonsUnlocked(mb, result)
+            }
         } catch (e: Exception) {
             println("  [hull] error: ${e.message}")
             emptyList()
+        } finally {
+            deleteTracked(mb, manA)
+            deleteTracked(mb, manB)
         }
     }
 
@@ -78,19 +87,48 @@ object Manifold3dEngine {
     fun sphere(radius: Double, segments: Int): List<Polygon> = synchronized(JNI_SYNC) {
         val mb = getBindings()
         val man = mb.sphere(radius, segments)
+        markOwned(man)
         manifoldToPolygonsUnlocked(mb, man)
     }
 
     fun cube(w: Double, h: Double, d: Double, center: Boolean = true): List<Polygon> = synchronized(JNI_SYNC) {
         val mb = getBindings()
         val man = mb.cube(w, h, d, center)
+        markOwned(man)
         manifoldToPolygonsUnlocked(mb, man)
     }
 
     fun cylinder(radius: Double, height: Double, segments: Int): List<Polygon> = synchronized(JNI_SYNC) {
         val mb = getBindings()
         val man = mb.cylinder(radius, height, segments.toDouble(), segments, segments)
+        markOwned(man)
         manifoldToPolygonsUnlocked(mb, man)
+    }
+
+    // ---- Native primitives (return owned handles, tracked in liveHandles) ----
+
+    fun sphereNative(radius: Double, segments: Int): Long = synchronized(JNI_SYNC) {
+        val r = getBindings().sphere(radius, segments)
+        markOwned(r)
+        r
+    }
+
+    fun cubeNative(w: Double, h: Double, d: Double, center: Boolean): Long = synchronized(JNI_SYNC) {
+        val r = getBindings().cube(w, h, d, center)
+        markOwned(r)
+        r
+    }
+
+    fun cylinderNative(
+        length: Double,
+        bottomRadius: Double,
+        topRadius: Double,
+        segments: Int,
+        circularSegments: Int,
+    ): Long = synchronized(JNI_SYNC) {
+        val r = getBindings().cylinder(length, bottomRadius, topRadius, segments, circularSegments)
+        markOwned(r)
+        r
     }
 
     // ---- Transform primitives (native handles) ----
@@ -170,6 +208,38 @@ object Manifold3dEngine {
         if (handle != 0L) liveHandles.add(handle)
     }
 
+    /**
+     * Frees a native handle and drops it from [liveHandles] in one step. Used by
+     * engine-internal helpers that consume a handle (e.g. export/bounds) so no
+     * stale entry is left behind for [clearAll] to double-free. Idempotent.
+     */
+    private fun deleteTracked(mb: ManifoldBindings, handle: Long) {
+        if (handle == 0L) return
+        if (liveHandles.remove(handle)) {
+            mb.delete(handle)
+        }
+    }
+
+    /**
+     * Releases every native manifold handle the engine still owns. Intended for
+     * long-lived hosts (e.g. the viewer/plugin system) to call between model
+     * rebuilds or on plugin unload so leaked intermediate handles do not
+     * accumulate in native memory. Safe to call multiple times.
+     */
+    fun clearAll() = synchronized(JNI_SYNC) {
+        if (liveHandles.isEmpty()) return
+        val mb = bindings ?: return
+        val handles = liveHandles.toList()
+        liveHandles.clear()
+        for (h in handles) {
+            try {
+                mb.delete(h)
+            } catch (e: Exception) {
+                println("  [clearAll] failed to delete handle $h: ${e.message}")
+            }
+        }
+    }
+
     fun centerOfPolygons(polygons: List<Polygon>): V3d = synchronized(JNI_SYNC) {
         val mb = getBindings()
         val man = polygonsToManifoldUnlocked(mb, polygons)
@@ -177,7 +247,7 @@ object Manifold3dEngine {
             val b = mb.getBounds(man)
             V3d(b.centerX, b.centerY, b.centerZ)
         } finally {
-            mb.delete(man)
+            deleteTracked(mb, man)
         }
     }
 
@@ -243,7 +313,7 @@ object Manifold3dEngine {
             val n = ab.cross(ac).unit()
             result.add(Polygon.fromPolygons(listOf(a, b, c), n, Color.white))
         }
-        mb.delete(manifold)
+        deleteTracked(mb, manifold)
         return result
     }
 
@@ -274,7 +344,11 @@ object Manifold3dEngine {
     }
 
     /** Returns an empty manifold handle (never 0L; safe to pass to native ops). */
-    fun emptyManifold(): Long = synchronized(JNI_SYNC) { getBindings().empty() }
+    fun emptyManifold(): Long = synchronized(JNI_SYNC) {
+        val r = getBindings().empty()
+        markOwned(r)
+        r
+    }
 
     // ---- Polygon -> manifold ----
 
@@ -297,7 +371,11 @@ object Manifold3dEngine {
             }
         }
 
-        if (vertices.isEmpty()) return mb.empty()
+        if (vertices.isEmpty()) {
+            val e = mb.empty()
+            markOwned(e)
+            return e
+        }
 
         val vertArray = DoubleArray(vertices.size)
         for (i in vertices.indices) vertArray[i] = vertices[i]
@@ -335,10 +413,16 @@ object Manifold3dEngine {
                     ManifoldBindings.OPTYPE_INTERSECTION -> mb.intersection(manA, manB)
                     else -> throw IllegalArgumentException("Unknown op: $opType")
                 }
-                if (mb.isEmpty(result)) emptyList() else manifoldToPolygonsUnlocked(mb, result)
+                markOwned(result)
+                if (mb.isEmpty(result)) {
+                    deleteTracked(mb, result)
+                    emptyList()
+                } else {
+                    manifoldToPolygonsUnlocked(mb, result)
+                }
             } finally {
-                mb.delete(manA)
-                mb.delete(manB)
+                deleteTracked(mb, manA)
+                deleteTracked(mb, manB)
             }
         }
     }
@@ -372,7 +456,7 @@ object Manifold3dEngine {
             }
             return result
         } finally {
-            mb.delete(manifold)
+            deleteTracked(mb, manifold)
         }
     }
 

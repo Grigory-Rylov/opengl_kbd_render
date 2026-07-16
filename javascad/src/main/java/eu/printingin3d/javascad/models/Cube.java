@@ -74,6 +74,6 @@ public class Cube extends Atomic3dModel {
 
     @Override
     protected long toInnerNativeMesh(FacetGenerationContext context) {
-        return Manifold3dEngine.INSTANCE.bindings().cube(size.getX(), size.getY(), size.getZ(), true);
+        return Manifold3dEngine.INSTANCE.cubeNative(size.getX(), size.getY(), size.getZ(), true);
     }
 }

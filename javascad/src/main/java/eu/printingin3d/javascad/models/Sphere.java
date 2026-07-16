@@ -85,6 +85,6 @@ public class Sphere extends Atomic3dModel {
 
     @Override
     protected long toInnerNativeMesh(FacetGenerationContext context) {
-        return Manifold3dEngine.INSTANCE.bindings().sphere(r.getRadius(), context.calculateNumberOfSlices(r));
+        return Manifold3dEngine.INSTANCE.sphereNative(r.getRadius(), context.calculateNumberOfSlices(r));
     }
 }
