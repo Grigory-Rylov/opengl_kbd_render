@@ -78,18 +78,29 @@ public class Union extends Complex3dModel {
             try {
                 for (Abstract3dModel model : models) {
                     long m = model.toNativeMesh(context);
+                    if (m == 0L) {
+                        continue;
+                    }
                     if (result == 0L) {
                         result = m;
                     } else {
-                        long r = Manifold3dEngine.INSTANCE.unionNative(result, m);
-                        Manifold3dEngine.INSTANCE.delete(m);
-                        Manifold3dEngine.INSTANCE.delete(result);
-                        result = r;
+                        try {
+                            long r = Manifold3dEngine.INSTANCE.unionNative(result, m);
+                            Manifold3dEngine.INSTANCE.delete(m);
+                            Manifold3dEngine.INSTANCE.delete(result);
+                            result = r;
+                        } catch (Exception e) {
+                            Manifold3dEngine.INSTANCE.delete(m);
+                            throw e;
+                        }
                     }
                 }
             } catch (Exception e) {
                 if (result != 0L) Manifold3dEngine.INSTANCE.delete(result);
                 throw e;
+            }
+            if (result == 0L) {
+                result = Manifold3dEngine.INSTANCE.empty();
             }
             return result;
         }

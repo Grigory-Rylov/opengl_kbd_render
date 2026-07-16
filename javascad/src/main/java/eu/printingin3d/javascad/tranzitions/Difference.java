@@ -95,13 +95,21 @@ public class Difference extends Complex3dModel {
         try {
             for (Abstract3dModel model : model2) {
                 long m = model.toNativeMesh(context);
-                long r = Manifold3dEngine.INSTANCE.differenceNative(result, m);
-                Manifold3dEngine.INSTANCE.delete(m);
-                Manifold3dEngine.INSTANCE.delete(result);
-                result = r;
+                if (m == 0L) {
+                    continue;
+                }
+                try {
+                    long r = Manifold3dEngine.INSTANCE.differenceNative(result, m);
+                    Manifold3dEngine.INSTANCE.delete(m);
+                    Manifold3dEngine.INSTANCE.delete(result);
+                    result = r;
+                } catch (Exception e) {
+                    Manifold3dEngine.INSTANCE.delete(m);
+                    throw e;
+                }
             }
         } catch (Exception e) {
-            Manifold3dEngine.INSTANCE.delete(result);
+            if (result != 0L) Manifold3dEngine.INSTANCE.delete(result);
             throw e;
         }
         return result;

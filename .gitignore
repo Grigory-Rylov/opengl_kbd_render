@@ -39,3 +39,6 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+hs_err_pid*.log
+cad3d/hs_err_pid*.log
+

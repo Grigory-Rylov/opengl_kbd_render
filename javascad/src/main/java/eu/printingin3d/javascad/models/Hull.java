@@ -49,7 +49,15 @@ public class Hull extends Atomic3dModel {
             }
             throw e;
         }
-        long result = Manifold3dEngine.INSTANCE.hullNative(handles);
+        long result;
+        try {
+            result = Manifold3dEngine.INSTANCE.hullNative(handles);
+        } catch (Exception e) {
+            for (int i = 0; i < idx; i++) {
+                Manifold3dEngine.INSTANCE.delete(handles[i]);
+            }
+            return Manifold3dEngine.INSTANCE.empty();
+        }
         for (int i = 0; i < idx; i++) {
             Manifold3dEngine.INSTANCE.delete(handles[i]);
         }

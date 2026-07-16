@@ -51,9 +51,16 @@ object Manifold3dEngine {
 
     fun hullNative(handles: LongArray): Long {
         if (handles.isEmpty()) return empty()
-        if (handles.size == 1) return handles[0]
+        if (handles.size == 1) {
+            return copyNative(handles[0])
+        }
         val mb = getBindings()
-        return mb.batchHull(handles)
+        return try {
+            mb.batchHull(handles)
+        } catch (e: Exception) {
+            println("  [hullNative] error: ${e.message}")
+            empty()
+        }
     }
 
     fun hull(a: List<Polygon>, b: List<Polygon>): List<Polygon> {
@@ -90,8 +97,6 @@ object Manifold3dEngine {
         val man = mb.cylinder(radius, height, segments.toDouble(), segments, segments)
         return manifoldToPolygons(mb, man)
     }
-
-    // ---- Transform primitives (native handles) ----
 
     // ---- Native transform operations ----
 
@@ -136,9 +141,19 @@ object Manifold3dEngine {
         mb.isEmpty(manifold)
     }
 
-    fun delete(manifold: Long) = synchronized(JNI_SYNC) {
+    fun copyNative(manifold: Long): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        mb.delete(manifold)
+        mb.copy(manifold)
+    }
+
+    fun delete(manifold: Long) = synchronized(JNI_SYNC) {
+        if (manifold == 0L) return
+        try {
+            val mb = getBindings()
+            mb.delete(manifold)
+        } catch (e: Exception) {
+            println("  [Manifold3dEngine.delete] suppressed error for handle $manifold: ${e.message}")
+        }
     }
 
     fun centerOfPolygons(polygons: List<Polygon>): V3d {
@@ -168,7 +183,6 @@ object Manifold3dEngine {
         println("  [export] triCount=$triCount, vertCount=$vertCount")
         if (triCount == 0) return emptyList()
 
-        // Validate triangle indices
         var maxIdx = 0L
         var minIdx = Long.MAX_VALUE
         for (i in 0 until triCount * 3) {
@@ -177,7 +191,6 @@ object Manifold3dEngine {
         }
         println("  [export] tri indices range: [$minIdx, $maxIdx], verts=$vertCount")
 
-        // Check vertex range
         var vxMin = Double.MAX_VALUE
         var vxMax = -Double.MAX_VALUE
         var vyMin = Double.MAX_VALUE
@@ -224,11 +237,17 @@ object Manifold3dEngine {
 
     fun operateNative(a: Long, b: Long, opType: Int): Long = synchronized(JNI_SYNC) {
         val mb = getBindings()
-        when (opType) {
-            ManifoldBindings.OPTYPE_UNION -> mb.union(a, b)
-            ManifoldBindings.OPTYPE_DIFFERENCE -> mb.difference(a, b)
-            ManifoldBindings.OPTYPE_INTERSECTION -> mb.intersection(a, b)
-            else -> throw IllegalArgumentException("Unknown op: $opType")
+        try {
+            when (opType) {
+                ManifoldBindings.OPTYPE_UNION -> mb.union(a, b)
+                ManifoldBindings.OPTYPE_DIFFERENCE -> mb.difference(a, b)
+                ManifoldBindings.OPTYPE_INTERSECTION -> mb.intersection(a, b)
+                else -> throw IllegalArgumentException("Unknown op: $opType")
+            }
+        } catch (e: IllegalArgumentException) {
+            throw e
+        } catch (e: Exception) {
+            throw RuntimeException("Native CSG operation failed (op=$opType): ${e.message}", e)
         }
     }
 
@@ -238,8 +257,13 @@ object Manifold3dEngine {
     }
 
     fun nativeDelete(handle: Long) = synchronized(JNI_SYNC) {
-        val mb = getBindings()
-        mb.delete(handle)
+        if (handle == 0L) return
+        try {
+            val mb = getBindings()
+            mb.delete(handle)
+        } catch (e: Exception) {
+            println("  [Manifold3dEngine.nativeDelete] suppressed error for handle $handle: ${e.message}")
+        }
     }
 
     // ---- Polygon -> manifold ----
