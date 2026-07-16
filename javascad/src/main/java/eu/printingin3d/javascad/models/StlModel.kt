@@ -14,6 +14,10 @@ class StlModel(private val polygons: List<Polygon>) : Abstract3dModel() {
 
     init {
         require(polygons.isNotEmpty()) { "Список полигонов не может быть пустым" }
+        // Native rendering path colors the whole mesh with model.color, so propagate
+        // the polygons' color (set by StlImporter) to the model, otherwise it defaults
+        // to gray regardless of the color passed when loading the STL.
+        polygons.first().color?.let { this.color = it }
     }
 
     // Кэшируем границы для производительности
