@@ -31,6 +31,9 @@ class CliRunner {
             override fun onExportStart(fileName: String) {
                 println("[CLI] Starting: $fileName")
             }
+            override fun onExportProgress(fileName: String, stage: String) {
+                println("[CLI] $fileName: $stage")
+            }
             override fun onExportFinish(fileName: String, success: Boolean, errorMessage: String?) {
                 val status = if (success) "OK" else "FAILED: $errorMessage"
                 println("[CLI] Done: $fileName — $status")
