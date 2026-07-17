@@ -27,7 +27,14 @@ object Manifold3dEngine {
     fun <T> synchronizedBlock(block: () -> T): T = synchronized(JNI_SYNC) { block() }
 
     private fun getBindings(): ManifoldBindings =
-        bindings ?: lock.withLock { bindings ?: ManifoldBindings().also { bindings = it } }
+        bindings ?: lock.withLock {
+            bindings ?: run {
+                val libDir = MacDylibFixer.prepareDylibs()
+                val b = if (libDir != null) ManifoldBindings(libDir) else ManifoldBindings()
+                bindings = b
+                b
+            }
+        }
 
     // ---- CSG operations (Polygon) ----
 
