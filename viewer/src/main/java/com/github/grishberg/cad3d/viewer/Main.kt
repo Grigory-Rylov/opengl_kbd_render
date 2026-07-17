@@ -11,6 +11,7 @@ import com.github.grishberg.cad3d.plugins.PluginManagerImpl
 import com.github.grishberg.cad3d.viewer.debug.DebugVisualizerImpl
 import com.github.grishberg.cad3d.viewer.dialog.ConfigEditor
 import com.github.grishberg.cad3d.viewer.dialog.StlExportDialog
+import com.github.grishberg.cad3d.viewer.dialog.ScriptEditorPanel
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
 import com.jogamp.opengl.GLCapabilities
@@ -77,6 +78,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private val pluginManager: PluginManager
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var plugins: List<Cad3dPlugin> = emptyList()
+    private lateinit var scriptEditorPanel: ScriptEditorPanel
+    private var scriptModelEnabled = false
 
     init {
         settingsHolder.loadSettings()
@@ -94,6 +97,20 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         })
 
         pluginManager.start()
+    }
+
+    private fun createScriptEditorPanel(): ScriptEditorPanel {
+        val classPaths = System.getProperty("java.class.path")
+            .split(java.io.File.pathSeparator)
+            .map { p -> java.io.File(p) }
+            .filter { f -> f.exists() }
+            .map { f -> f.absolutePath }
+
+        return ScriptEditorPanel(classPaths) { vh ->
+            vertexHolderList.clear()
+            vertexHolderList.add(vh)
+            requestRender()
+        }
     }
 
     fun setup() {
@@ -227,6 +244,24 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             dialog.isVisible = true
         }
 
+        val scriptEditorButton = JButton("Скрипты")
+        scriptEditorButton.addActionListener {
+            if (!::scriptEditorPanel.isInitialized) {
+                scriptEditorPanel = createScriptEditorPanel()
+                contentPane.add(scriptEditorPanel, BorderLayout.SOUTH)
+                contentPane.revalidate()
+                contentPane.repaint()
+            }
+            // Load default script from examples/matrix_right
+            val defaultScript = java.io.File("scripting/examples/matrix_right").let {
+                if (it.exists() && it.isDirectory) {
+                    it.listFiles { f -> f.name.endsWith(".kt") }?.sortedBy { f -> f.name }
+                        ?.joinToString("\n\n// === $it ===\n\n") { f -> f.readText() }
+                } else null
+            }
+            defaultScript?.let { scriptEditorPanel.loadScript(it) }
+        }
+
         // --- Распределяем кнопки по строкам ---
         // Вы можете изменить это распределение в зависимости от того, какие кнопки вам
         // нужны чаще и должны быть на верхнем ряду.
@@ -234,6 +269,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         // Верхний ряд (row1)
         row1.add(configButton)
         row1.add(exportStlButton)
+        row1.add(scriptEditorButton)
         row1.add(keysButton)
         row1.add(caseButton)
         row1.add(matrixButton)

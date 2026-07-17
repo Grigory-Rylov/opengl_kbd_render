@@ -12,6 +12,9 @@ application {
 dependencies {
     implementation(project(":javascad"))
     implementation(project(":plugin"))
+    implementation(project(":cad3d"))
+    implementation(project(":kbd_core"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
     implementation("org.jetbrains.kotlin:kotlin-scripting-jvm:1.8.0")
     implementation("org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:1.8.0")

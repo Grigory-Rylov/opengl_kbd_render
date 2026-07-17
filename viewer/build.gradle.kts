@@ -9,12 +9,14 @@ dependencies {
     implementation(project(":cad3d"))
     implementation(project(":javascad"))
     implementation(project(":plugin"))
+    implementation(project(":scripting"))
+    implementation(project(":kbd_core"))
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.8.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
-    implementation("org.jogamp.gluegen:gluegen-rt-main:2.5.0")
+    implementation(files("libs/jogamp-fat.jar"))
     implementation(files("libs/jogl-all-2.5.0.jar"))
     implementation(files("libs/jogl-all-2.5.0-natives-macosx-universal.jar"))
 
@@ -24,7 +26,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("org.example.viewer.MainKt")
+    mainClass.set("com.github.grishberg.cad3d.viewer.Main")
     // Suppress JOGL AppContext reflective access warnings on JDK 17+
     applicationDefaultJvmArgs = listOf(
         "--add-exports=java.desktop/sun.awt=ALL-UNNAMED",
@@ -35,7 +37,7 @@ application {
 val nativesDir = layout.buildDirectory.dir("manifold-natives")
 
 tasks.register<Copy>("extractManifoldNatives") {
-    val jarFile = file("../libs/manifold3d-3.2.13.jar")
+    val jarFile = file("../libs/manifold3d-0.1.4.jar")
     from(zipTree(jarFile)) {
         include("manifold3d/natives/**/libmanifold*.so*")
         include("manifold3d/natives/**/libmanifold*.dylib*")

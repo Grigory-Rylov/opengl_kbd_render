@@ -53,14 +53,49 @@ class ScriptEvaluator(
         return evaluate(File(filePath).readText())
     }
 
-    private val fileImports = """
+    private val baseImports = """
 import eu.printingin3d.javascad.models.*
 import eu.printingin3d.javascad.coords.*
 import eu.printingin3d.javascad.tranzitions.*
 import eu.printingin3d.javascad.utils.*
+import eu.printingin3d.javascad.manifold.*
+import eu.printingin3d.javascad.vrl.*
 import com.github.grishberg.scripting.ScriptBindings
 
 """
+
+    private val cad3dImports = """
+import com.github.grishberg.cad3d.*
+import com.github.grishberg.cad3d.keyboard.*
+import com.github.grishberg.cad3d.keyboard.cfg.*
+import com.github.grishberg.cad3d.keyboard.matrix.*
+import com.github.grishberg.cad3d.keyboard.casebody.*
+import com.github.grishberg.cad3d.keyboard.casebody.controllers.*
+import com.github.grishberg.cad3d.keyboard.casebody.thumb.*
+import com.github.grishberg.cad3d.keyboard.casebody.wall.*
+import com.github.grishberg.cad3d.keyboard.plate.*
+import com.github.grishberg.cad3d.keyboard.screws.*
+import com.github.grishberg.cad3d.keyboard.wristrest.*
+import com.github.grishberg.cad3d.keyboard.amoeba.*
+import com.github.grishberg.cad3d.trackball.*
+import com.github.grishberg.cad3d.util.*
+import com.github.grishberg.cad3d.plugin.*
+import com.github.grishberg.cad3d.plugin.cfg.*
+import com.github.grishberg.cad3d.kbd.core.cfg.*
+import com.github.grishberg.javascad.*
+
+"""
+
+    private val hasCad3d: Boolean by lazy {
+        jarFiles.any { f ->
+            f.name.contains("cad3d", ignoreCase = true) ||
+                f.name.contains("kbd_core", ignoreCase = true) ||
+                f.name.contains("plugin", ignoreCase = true)
+        }
+    }
+
+    private val fileImports: String
+        get() = baseImports + (if (hasCad3d) cad3dImports else "")
 
     private val globalDecls = """
 infix fun Abstract3dModel.union(other: Abstract3dModel) = this.addModel(other)
@@ -105,7 +140,9 @@ var bindings = ScriptBindings()
 
         // Преамбл добавляем только в первый файл
         val prefixedFiles = ktFiles.mapIndexed { idx, orig ->
-            val content = fileImports + (if (idx == 0) globalDecls else "") + orig.readText()
+            val originalContent = orig.readText()
+            val (pkgLine, fileImportsPart, restContent) = extractPackageAndImports(originalContent)
+            val content = pkgLine + fileImports + fileImportsPart + (if (idx == 0) globalDecls else "") + restContent
             val target = File(prefixedDir, orig.name)
             target.writeText(content)
             target
@@ -131,21 +168,64 @@ var bindings = ScriptBindings()
         return outputDir
     }
 
+    private fun extractPackageAndImports(content: String): Triple<String, String, String> {
+        val lines = content.lines()
+        var pkgLine = ""
+        val importLines = mutableListOf<String>()
+        var restStart = 0
+        var foundPkg = false
+        var inHeader = true
+
+        for ((i, line) in lines.withIndex()) {
+            val trimmed = line.trim()
+            if (inHeader) {
+                if (trimmed.startsWith("package ")) {
+                    pkgLine = line
+                    restStart = i + 1
+                    foundPkg = true
+                } else if (trimmed.startsWith("import ")) {
+                    importLines.add(line)
+                    restStart = i + 1
+                } else if (trimmed.isEmpty() && !foundPkg && i < lines.size - 1) {
+                    // Skip blank lines before package/import
+                    continue
+                } else if (trimmed.isEmpty() && foundPkg && i < lines.size - 1 && lines[i + 1].trim().startsWith("import ")) {
+                    continue
+                } else {
+                    inHeader = false
+                }
+            }
+        }
+
+        val pkgStr = if (pkgLine.isNotEmpty()) pkgLine + "\n" else ""
+        val importsStr = importLines.joinToString("\n").takeIf { it.isNotEmpty() }?.let { it + "\n" } ?: ""
+        val rest = lines.drop(restStart).joinToString("\n")
+
+        return Triple(pkgStr, importsStr, rest)
+    }
+
     private fun executeMultiFile(classDir: File, ktFiles: List<File>): Abstract3dModel? {
+        // ktFiles unused — we scan classDir for scriptMain
         val urls = (jarFiles.map { it.toURI().toURL() } + classDir.toURI().toURL()).toTypedArray()
         val loader = URLClassLoader(urls, ScriptEvaluator::class.java.classLoader)
 
-        for (file in ktFiles) {
-            // Kotlin generates <filename>Kt.class for files with top-level functions
-            val className = file.nameWithoutExtension + "Kt"
+        // Collect all class files from output directory
+        val classFiles = classDir.walkTopDown().filter { it.name.endsWith(".class") }.toList()
+
+        for (classFile in classFiles) {
+            // Convert path to class name: package/name/NameKt.class -> package.name.NameKt
+            val relPath = classDir.toURI().relativize(classFile.toURI()).path.trimStart('/')
+            val className = relPath.replace(File.separatorChar, '.').removeSuffix(".class")
             try {
                 val clazz = loader.loadClass(className)
                 val mainMethod = clazz.getMethod("scriptMain")
                 return mainMethod.invoke(null) as? Abstract3dModel
             } catch (e: NoSuchMethodException) {
-                // not the entry point, try next file
+                // not the entry point
             } catch (e: ClassNotFoundException) {
-                // class not found, try next
+                // class not found
+            } catch (e: java.lang.reflect.InvocationTargetException) {
+                throw RuntimeException("Error in scriptMain: ${e.cause?.message}", e.cause)
             }
         }
 
@@ -283,8 +363,16 @@ $scriptBody
 
     private fun buildErrorString(e: Exception): String {
         return buildString {
-            appendLine("${e.javaClass.simpleName}: ${e.message?.take(500)}")
-            e.stackTrace.take(8).forEach { appendLine("\tat $it") }
+            var current: Throwable? = e
+            while (current != null) {
+                appendLine("${current.javaClass.simpleName}: ${current.message?.take(500)}")
+                current.stackTrace.take(4).forEach { appendLine("\tat $it") }
+                val cause = current.cause
+                if (cause != null) {
+                    appendLine("  Caused by: ${cause.javaClass.simpleName}: ${cause.message?.take(500)}")
+                }
+                current = cause
+            }
         }
     }
 

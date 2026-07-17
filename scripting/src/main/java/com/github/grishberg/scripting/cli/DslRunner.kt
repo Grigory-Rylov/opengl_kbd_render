@@ -75,7 +75,7 @@ fun main(args: Array<String>) {
 
 private fun printResult(result: ScriptResult) {
     if (result.error != null) {
-        println("[ERROR] ${result.error.take(300)}")
+        println("[ERROR] ${result.error.take(4000)}")
     } else if (result.model != null) {
         println("[OK] Model created (${result.compilationTimeMs}ms)")
     } else {
