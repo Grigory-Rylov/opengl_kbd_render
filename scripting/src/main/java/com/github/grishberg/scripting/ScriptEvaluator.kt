@@ -12,11 +12,14 @@ import java.net.URLClassLoader
  * Результат выполнения скрипта.
  */
 data class ScriptResult(
-    val model: Abstract3dModel? = null,
+    val models: List<Abstract3dModel> = emptyList(),
     val error: String? = null,
     val stdout: String = "",
     val compilationTimeMs: Long = 0,
-)
+) {
+    // Backward-compatible single-model accessor.
+    val model: Abstract3dModel? get() = models.firstOrNull()
+}
 
 /**
  * Выполняет DSL-скрипты для 3D-моделирования.
@@ -36,9 +39,9 @@ class ScriptEvaluator(
         return try {
             val wrapped = wrapScript(scriptSource)
             val outputDir = compileScript(wrapped)
-            val model = executeCompiled(outputDir)
+            val models = executeCompiled(outputDir)
             ScriptResult(
-                model = model,
+                models = models,
                 compilationTimeMs = System.currentTimeMillis() - start
             )
         } catch (e: Exception) {
@@ -121,7 +124,7 @@ var bindings = ScriptBindings()
 
             val outputDir = compileMultiFile(ktFiles)
             val model = executeMultiFile(outputDir, ktFiles)
-            ScriptResult(model = model, compilationTimeMs = System.currentTimeMillis() - start)
+            ScriptResult(models = if (model != null) listOf(model) else emptyList(), compilationTimeMs = System.currentTimeMillis() - start)
         } catch (e: Exception) {
             ScriptResult(error = buildErrorString(e), compilationTimeMs = System.currentTimeMillis() - start)
         }
@@ -237,12 +240,16 @@ var bindings = ScriptBindings()
         val lines = trimmed.lines()
         // Разделяем на объявления (class/interface/enum/sealed/fun) и код, учитывая вложенность
         val declarations = mutableListOf<String>()
-        val expressions = mutableListOf<String>()
         var braceDepth = 0
         var inDeclaration = false
         var firstDeclLine = true
         var expressionBody = false
 
+        // Group top-level lines into full expressions by brace/paren balance,
+        // so multi-line calls (e.g. hull(...)) stay as one expression.
+        val rawExpressions = mutableListOf<String>()
+        var current = StringBuilder()
+        var depth = 0
         for (line in lines) {
             val l = line.trim()
             val isDeclStart = !inDeclaration && (
@@ -260,7 +267,6 @@ var bindings = ScriptBindings()
                 declarations.add(l)
                 braceDepth += countBraces(l)
                 if (braceDepth == 0) {
-                    // Находим "=" после закрывающей скобки параметров (для fun) или вообще "=" (для typealias)
                     val parensClose = l.lastIndexOf(')')
                     val equalsSearchStart = if (parensClose >= 0) parensClose else 0
                     val equalsIdx = l.indexOf('=', equalsSearchStart)
@@ -276,8 +282,6 @@ var bindings = ScriptBindings()
                 declarations.add(line)
                 braceDepth += countBraces(l)
                 if (expressionBody && !firstDeclLine) {
-                    // Expression body: next line after empty = is the body
-                    // Check if body is complete (no trailing operator)
                     inDeclaration = false
                 } else if (!firstDeclLine && braceDepth <= 0) {
                     inDeclaration = false
@@ -285,12 +289,33 @@ var bindings = ScriptBindings()
                 }
                 firstDeclLine = false
             } else {
-                expressions.add(line)
+                if (current.isNotEmpty()) current.append('\n')
+                current.append(line)
+                depth += countBraces(l)
+                if (depth <= 0 && l.isNotEmpty()) {
+                    rawExpressions.add(current.toString())
+                    current = StringBuilder()
+                    depth = 0
+                }
             }
         }
+        if (current.isNotEmpty()) {
+            rawExpressions.add(current.toString())
+        }
+
+        val expressions = rawExpressions
 
         val declBlock = if (declarations.isNotEmpty()) "\n    ${declarations.joinToString("\n    ")}" else ""
-        val scriptBody = expressions.map { "        $it" }.joinToString("\n")
+        val modelExpressions = expressions.map { it.trim() }.filter { it.isNotEmpty() }
+        val scriptBody = if (modelExpressions.isEmpty()) {
+            "            emptyList<Abstract3dModel>()"
+        } else {
+            // Every top-level model expression is rendered separately (with its own color).
+            val joined = modelExpressions.joinToString(",\n") { "            $it" }
+            """            listOf(
+$joined
+            )"""
+        }
 
         return """$fileImports
 infix fun Abstract3dModel.union(other: Abstract3dModel) = this.addModel(other)
@@ -300,13 +325,13 @@ var bindings = ScriptBindings()
 
 class DslScript {$declBlock
 
-    fun execute(): Abstract3dModel = scriptRun {
+    fun execute(): List<Abstract3dModel> = scriptRun {
         bindings.run {
 $scriptBody
         }
     }
     
-    private fun scriptRun(block: DslScript.() -> Abstract3dModel): Abstract3dModel = block()
+    private fun scriptRun(block: DslScript.() -> List<Abstract3dModel>): List<Abstract3dModel> = block()
 }
 """
     }
@@ -351,7 +376,7 @@ $scriptBody
         return outputDir
     }
 
-    private fun executeCompiled(classDir: File): Abstract3dModel? {
+    private fun executeCompiled(classDir: File): List<Abstract3dModel> {
         val urls = (jarFiles.map { it.toURI().toURL() } + classDir.toURI().toURL()).toTypedArray()
         val loader = URLClassLoader(urls, ScriptEvaluator::class.java.classLoader)
 
@@ -360,7 +385,8 @@ $scriptBody
 
         // Java reflection для вызова run()
         val runMethod = clazz.getMethod("execute")
-        return runMethod.invoke(instance) as? Abstract3dModel
+        @Suppress("UNCHECKED_CAST")
+        return runMethod.invoke(instance) as? List<Abstract3dModel> ?: emptyList()
     }
 
     private fun buildErrorString(e: Exception): String {

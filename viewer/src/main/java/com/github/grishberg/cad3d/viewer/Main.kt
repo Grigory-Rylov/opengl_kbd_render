@@ -177,9 +177,9 @@ bindings.cube(50.0)
     private fun createScriptEditorPanel(initialScript: String = loadMatrixRightText()): ScriptEditorPanel {
         val classPaths = filterScriptClasspath()
 
-        return ScriptEditorPanel(classPaths, { vh ->
+        return ScriptEditorPanel(classPaths, { holders ->
             vertexHolderList.clear()
-            vertexHolderList.add(vh)
+            vertexHolderList.addAll(holders)
             requestRender()
         }, initialScript)
     }

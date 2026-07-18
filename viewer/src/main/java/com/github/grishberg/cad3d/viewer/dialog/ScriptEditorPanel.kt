@@ -28,7 +28,7 @@ import org.fife.ui.rtextarea.RTextScrollPane
 
 class ScriptEditorPanel(
     private val classPaths: List<String>,
-    private val onModelReady: (VertexHolder) -> Unit,
+    private val onModelReady: (List<VertexHolder>) -> Unit,
     initialScript: String = "",
 ) : JPanel(BorderLayout()) {
 
@@ -145,7 +145,7 @@ class ScriptEditorPanel(
             val source = scriptText.text
             val result = evaluator.evaluate(source)
             val err = result.error
-            val mdl = result.model
+            val models = result.models
 
             SwingUtilities.invokeLater {
                 runButton.isEnabled = true
@@ -153,13 +153,14 @@ class ScriptEditorPanel(
                     statusLabel.text = "Ошибка компиляции"
                     statusLabel.foreground = AwtColor.RED
                     setError(err)
-                } else if (mdl != null) {
+                } else if (models.isNotEmpty()) {
                     try {
-                        val vertexHolder = fromModelNative(mdl, 20)
-                        onModelReady(vertexHolder)
-                        statusLabel.text = "OK (${result.compilationTimeMs}ms, ${vertexHolder.verticesCount} вершин)"
+                        val holders = models.map { fromModelNative(it, 20) }
+                        val totalVerts = holders.sumOf { it.verticesCount }
+                        onModelReady(holders)
+                        statusLabel.text = "OK (${result.compilationTimeMs}ms, $totalVerts вершин, ${holders.size} фигур)"
                         statusLabel.foreground = AwtColor.GREEN
-                        setOutput("OK (${result.compilationTimeMs}ms, ${vertexHolder.verticesCount} вершин)")
+                        setOutput("OK (${result.compilationTimeMs}ms, $totalVerts вершин, ${holders.size} фигур)")
                         isModified = false
                     } catch (e: Exception) {
                         val msg = "Ошибка конвертации: ${e.message}"
