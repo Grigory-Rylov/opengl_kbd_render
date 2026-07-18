@@ -24,6 +24,8 @@ import javax.swing.event.DocumentListener
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants
 import org.fife.ui.rsyntaxtextarea.Theme
+import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory
+import org.fife.ui.rsyntaxtextarea.TokenMakerFactory
 import org.fife.ui.rtextarea.RTextScrollPane
 
 class ScriptEditorPanel(
@@ -31,6 +33,19 @@ class ScriptEditorPanel(
     private val onModelReady: (List<VertexHolder>) -> Unit,
     initialScript: String = "",
 ) : JPanel(BorderLayout()) {
+
+    companion object {
+        init {
+            // Register the custom token maker BEFORE any RSyntaxTextArea is created,
+            // otherwise the default factory is cached and our maker is ignored.
+            TokenMakerFactory.setDefaultInstance(object : AbstractTokenMakerFactory() {
+                override fun initTokenMakerMap() {
+                    putMapping(SyntaxConstants.SYNTAX_STYLE_KOTLIN, KotlinHighlightTokenMaker::class.java.name)
+                    putMapping("text/x-kotlin-hl", KotlinHighlightTokenMaker::class.java.name)
+                }
+            })
+        }
+    }
 
     private val scriptText = RSyntaxTextArea(20, 60)
     private val statusLabel = JLabel("Готово")
@@ -44,7 +59,8 @@ class ScriptEditorPanel(
     init {
         border = BorderFactory.createTitledBorder("Script Editor")
 
-        // Setup syntax-highlighted text area (Kotlin)
+        // Setup syntax-highlighted text area (custom Kotlin highlighter that
+        // colors class / interface / function names distinctly).
         scriptText.syntaxEditingStyle = SyntaxConstants.SYNTAX_STYLE_KOTLIN
         scriptText.isCodeFoldingEnabled = true
         scriptText.margin = java.awt.Insets(5, 5, 5, 5)
@@ -56,6 +72,34 @@ class ScriptEditorPanel(
         }
         // Font must be set AFTER the theme, otherwise the theme resets it.
         scriptText.font = Font("Monospaced", Font.PLAIN, 16)
+        // Custom colors for class / interface / function names (over the dark theme).
+        // getSyntaxScheme() returns a copy, so we must set it back after editing.
+        val scheme = scriptText.syntaxScheme
+        scheme.setStyle(
+            org.fife.ui.rsyntaxtextarea.TokenTypes.DATA_TYPE,
+            org.fife.ui.rsyntaxtextarea.Style(AwtColor(90, 170, 255)) // classes - blue
+        )
+        scheme.setStyle(
+            org.fife.ui.rsyntaxtextarea.TokenTypes.RESERVED_WORD_2,
+            org.fife.ui.rsyntaxtextarea.Style(AwtColor(120, 220, 140)) // interfaces - light green
+        )
+        scheme.setStyle(
+            org.fife.ui.rsyntaxtextarea.TokenTypes.FUNCTION,
+            org.fife.ui.rsyntaxtextarea.Style(AwtColor(255, 165, 60)) // method/function calls - orange
+        )
+        scheme.setStyle(
+            org.fife.ui.rsyntaxtextarea.TokenTypes.IDENTIFIER,
+            org.fife.ui.rsyntaxtextarea.Style(AwtColor(255, 215, 90)) // variables - yellow
+        )
+        scheme.setStyle(
+            org.fife.ui.rsyntaxtextarea.TokenTypes.LITERAL_NUMBER_DECIMAL_INT,
+            org.fife.ui.rsyntaxtextarea.Style(AwtColor(200, 170, 255)) // numbers - light purple
+        )
+        scheme.setStyle(
+            org.fife.ui.rsyntaxtextarea.TokenTypes.LITERAL_NUMBER_FLOAT,
+            org.fife.ui.rsyntaxtextarea.Style(AwtColor(200, 170, 255)) // numbers - light purple
+        )
+        scriptText.syntaxScheme = scheme
         scriptText.text = if (initialScript.isNotEmpty()) initialScript else """// Script editor — F5 to run
  // Available: bindings, Abstract3dModel, V3d
 
@@ -77,6 +121,7 @@ class ScriptEditorPanel(
 
         val scrollPane = RTextScrollPane(scriptText)
         scrollPane.preferredSize = Dimension(520, 280)
+        scrollPane.maximumSize = Dimension(520, 280)
 
         // Control panel
         val controlPanel = JPanel(FlowLayout(FlowLayout.LEFT))
@@ -99,6 +144,7 @@ class ScriptEditorPanel(
         errorArea.text = ""
         val errorScroll = JScrollPane(errorArea)
         errorScroll.preferredSize = Dimension(520, 150)
+        errorScroll.maximumSize = Dimension(520, 150)
         errorScroll.border = TitledBorder("Ошибки / вывод")
 
         // Main layout: code (center), errors (south), controls (north)
@@ -199,9 +245,8 @@ class ScriptEditorPanel(
         try {
             file.writeText(scriptText.text)
             isModified = false
-            statusLabel.text = "Сохранено: ${file.absolutePath}"
+            statusLabel.text = "Сохранено: ${file.name}"
             statusLabel.foreground = AwtColor.GREEN
-            setOutput("Сохранено: ${file.absolutePath}")
         } catch (e: Exception) {
             statusLabel.text = "Ошибка сохранения"
             statusLabel.foreground = AwtColor.RED
