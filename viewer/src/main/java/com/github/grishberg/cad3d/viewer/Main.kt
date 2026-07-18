@@ -118,9 +118,19 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         pluginManager.start()
     }
 
+    private fun findMatrixRightDir(): java.io.File? {
+        val candidates = listOf(
+            java.io.File("scripting/examples/matrix_right"),
+            java.io.File("../scripting/examples/matrix_right"),
+            java.io.File("viewer/../scripting/examples/matrix_right"),
+            java.io.File(System.getProperty("user.dir")).resolve("../scripting/examples/matrix_right"),
+        )
+        return candidates.firstOrNull { it.exists() && it.isDirectory }
+    }
+
     private fun loadMatrixRightText(): String {
-        val scriptDir = java.io.File("../scripting/examples/matrix_right")
-        if (scriptDir.exists() && scriptDir.isDirectory) {
+        val scriptDir = findMatrixRightDir()
+        if (scriptDir != null) {
             val files = scriptDir.listFiles { f -> f.name.endsWith(".kt") }
             return files
                 ?.sortedBy { f -> f.name }
@@ -215,8 +225,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         isVisible = true
         requestRender()
         // Автозапуск matrix_right: загружаем текст проекта и компилируем как директорию
-        val scriptDir = java.io.File("../scripting/examples/matrix_right")
-        if (scriptDir.exists() && scriptDir.isDirectory) {
+        val scriptDir = findMatrixRightDir()
+        if (scriptDir != null) {
             scriptEditorPanel = createScriptEditorPanel()
             contentPane.add(scriptEditorPanel, BorderLayout.EAST)
             contentPane.revalidate()
@@ -321,8 +331,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
                 contentPane.repaint()
             }
             // Загружаем и запускаем проект matrix_right как директорию
-            val scriptDir = java.io.File("../scripting/examples/matrix_right")
-            if (scriptDir.exists() && scriptDir.isDirectory) {
+            val scriptDir = findMatrixRightDir()
+            if (scriptDir != null) {
                 runScriptProject(scriptDir.absolutePath)
             }
         }
