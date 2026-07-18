@@ -306,18 +306,29 @@ var bindings = ScriptBindings()
         val expressions = rawExpressions
 
         val declBlock = if (declarations.isNotEmpty()) "\n    ${declarations.joinToString("\n    ")}" else ""
-        val modelExpressions = expressions
+        // Split top-level lines into declarations (val/var/fun/...) which are
+        // emitted as-is, and model expressions which are collected into __models.
+        val cleaned = expressions
             .map { it.replace("\n", " ").trim() }
             .filter { it.isNotEmpty() && !it.startsWith("//") }
-        val scriptBody = if (modelExpressions.isEmpty()) {
-            "            emptyList<Abstract3dModel>()"
-        } else {
-            // Every top-level model expression is rendered separately (with its own color).
-            // Non-model expressions (e.g. val/deg) are ignored via safe cast.
-            val adds = modelExpressions.joinToString("\n") { "            ;($it as? Abstract3dModel)?.let { __models.add(it) }" }
-            """            val __models = mutableListOf<Abstract3dModel>()
-            $adds
-            __models"""
+        val (declLines, modelExpressions) = cleaned.partition { line ->
+            line.startsWith("val ") || line.startsWith("var ") ||
+                    line.startsWith("fun ") || line.startsWith("class ") ||
+                    line.startsWith("interface ") || line.startsWith("object ")
+        }
+        val scriptBody = buildString {
+            if (declLines.isNotEmpty()) {
+                declLines.forEach { appendLine("            $it") }
+            }
+            if (modelExpressions.isEmpty()) {
+                appendLine("            emptyList<Abstract3dModel>()")
+            } else {
+                appendLine("            val __models = mutableListOf<Abstract3dModel>()")
+                modelExpressions.forEach { e ->
+                    appendLine("            ;(run { $e } as? Abstract3dModel)?.let { __models.add(it) }")
+                }
+                appendLine("            __models")
+            }
         }
 
         return """$fileImports
@@ -326,12 +337,30 @@ infix fun Abstract3dModel.minus(other: Abstract3dModel) = this.subtractModel(oth
 
 var bindings = ScriptBindings()
 
+// Global DSL shortcuts so both top-level calls and user-defined functions
+// (e.g. fun test() { cube(...) }) can use them without the bindings. prefix.
+fun cube(size: Number) = bindings.cube(size)
+fun cube(x: Number, y: Number, z: Number) = bindings.cube(x, y, z)
+fun cylinder(length: Number, radius: Number) = bindings.cylinder(length, radius)
+fun cylinder(length: Number, bottomR: Number, topR: Number) = bindings.cylinder(length, bottomR, topR)
+fun sphere(radius: Number) = bindings.sphere(radius)
+fun prism(length: Number, radius: Number, sides: Int) = bindings.prism(length, radius, sides)
+fun prism(length: Number, r1: Number, r2: Number, sides: Int) = bindings.prism(length, r1, r2, sides)
+fun emptyModel() = bindings.emptyModel()
+fun hull(vararg models: Abstract3dModel) = bindings.hull(*models)
+fun hull(models: List<Abstract3dModel>) = bindings.hull(models)
+fun union(vararg models: Abstract3dModel) = bindings.union(*models)
+fun union(models: List<Abstract3dModel>) = bindings.union(models)
+fun v3(x: Number, y: Number, z: Number) = bindings.v3(x, y, z)
+fun v3(x: Number, y: Number) = bindings.v3(x, y)
+fun angles(x: Number = 0.0, y: Number = 0.0, z: Number = 0.0) = bindings.angles(x, y, z)
+fun repeat(count: Int, block: (Int) -> Abstract3dModel) = bindings.repeat(count, block)
+fun deg(degrees: Number) = bindings.deg(degrees)
+
 class DslScript {$declBlock
 
     fun execute(): List<Abstract3dModel> = scriptRun {
-        bindings.run {
 $scriptBody
-        }
     }
     
     private fun scriptRun(block: DslScript.() -> List<Abstract3dModel>): List<Abstract3dModel> = block()
