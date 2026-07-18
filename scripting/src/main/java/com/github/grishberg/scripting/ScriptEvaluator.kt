@@ -305,35 +305,39 @@ var bindings = ScriptBindings()
 
         val expressions = rawExpressions
 
-        val declBlock = if (declarations.isNotEmpty()) "\n    ${declarations.joinToString("\n    ")}" else ""
         // Split top-level lines into declarations (val/var/fun/...) which are
         // emitted as-is, and model expressions which are collected into __models.
         val cleaned = expressions
-            .map { it.replace("\n", " ").trim() }
+            .map { it.trim() }
             .filter { it.isNotEmpty() && !it.startsWith("//") }
         val (declLines, modelExpressions) = cleaned.partition { line ->
             line.startsWith("val ") || line.startsWith("var ") ||
                     line.startsWith("fun ") || line.startsWith("class ") ||
                     line.startsWith("interface ") || line.startsWith("object ")
         }
+        val (fieldLines, memberLines) = declLines.partition { line ->
+            line.startsWith("val ") || line.startsWith("var ")
+        }
         val scriptBody = buildString {
-            if (declLines.isNotEmpty()) {
-                declLines.forEach { appendLine("            $it") }
-            }
             if (modelExpressions.isEmpty()) {
                 appendLine("            emptyList<Abstract3dModel>()")
             } else {
                 appendLine("            val __models = mutableListOf<Abstract3dModel>()")
                 modelExpressions.forEach { e ->
-                    appendLine("            ;(run { $e } as? Abstract3dModel)?.let { __models.add(it) }")
+                    val indented = e.prependIndent("            ")
+                    appendLine("            ;(run {\n$indented\n            } as? Abstract3dModel)?.let { __models.add(it) }")
                 }
                 appendLine("            __models")
             }
         }
 
+        val fieldBlock = if (fieldLines.isNotEmpty()) "\n    ${fieldLines.joinToString("\n    ")}" else ""
+        val declBlock = if (declarations.isNotEmpty()) "\n    ${declarations.joinToString("\n    ")}" else ""
+        val memberBlock = "$declBlock" + if (memberLines.isNotEmpty()) "\n    ${memberLines.joinToString("\n    ")}" else ""
+
         return """$fileImports
-infix fun Abstract3dModel.union(other: Abstract3dModel) = this.addModel(other)
-infix fun Abstract3dModel.minus(other: Abstract3dModel) = this.subtractModel(other)
+infix fun Abstract3dModel?.union(other: Abstract3dModel?) = (this ?: emptyModel()).addModel(other ?: emptyModel())
+infix fun Abstract3dModel?.minus(other: Abstract3dModel?) = (this ?: emptyModel()).subtractModel(other ?: emptyModel())
 
 var bindings = ScriptBindings()
 
@@ -358,7 +362,7 @@ fun repeat(count: Int, block: (Int) -> Abstract3dModel) = bindings.repeat(count,
 fun deg(degrees: Number) = bindings.deg(degrees)
 fun importStl(path: String, color: String? = null) = bindings.importStl(path, color)
 
-class DslScript {$declBlock
+class DslScript {$fieldBlock$memberBlock
 
     fun execute(): List<Abstract3dModel> = scriptRun {
 $scriptBody
