@@ -83,7 +83,7 @@ bindings.cube(50.0) // fallback if matrix_right not found
         errorArea.isEditable = false
         errorArea.background = AwtColor(40, 40, 40)
         errorArea.foreground = AwtColor(255, 140, 140)
-        errorArea.text = "Здесь будут ошибки компиляции и запуска."
+        errorArea.text = ""
         val errorScroll = JScrollPane(errorArea)
         errorScroll.preferredSize = Dimension(520, 150)
         errorScroll.border = TitledBorder("Ошибки / вывод")

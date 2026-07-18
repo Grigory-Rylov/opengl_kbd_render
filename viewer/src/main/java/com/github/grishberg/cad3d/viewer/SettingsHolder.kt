@@ -12,7 +12,6 @@ import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterSettings
 import com.github.grishberg.cad3d.plugin.cfg.TrackballMode
 import com.github.grishberg.cad3d.plugin.cfg.ViewerSettings
 import java.io.File
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.coroutines.CoroutineScope
@@ -223,15 +222,14 @@ class SettingsHolder(
     }
 
     private val scriptPanelStateFile: File
-        get() = File(filePath).parentFile?.resolve("script_panel_state.json")
-            ?: File("script_panel_state.json")
+        get() = File(filePath).parentFile?.resolve("script_panel_state.txt")
+            ?: File("script_panel_state.txt")
 
     fun loadScriptPanelState() {
         try {
             val f = scriptPanelStateFile
             if (f.exists()) {
-                val obj = json.decodeFromString<ScriptPanelState>(f.readText())
-                showScriptPanel = obj.showScriptPanel
+                showScriptPanel = f.readText().trim() == "true"
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -242,7 +240,7 @@ class SettingsHolder(
         try {
             val f = scriptPanelStateFile
             f.parentFile?.mkdirs()
-            f.writeText(json.encodeToString(ScriptPanelState(showScriptPanel)))
+            f.writeText(if (showScriptPanel) "true" else "false")
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -273,5 +271,3 @@ class SettingsHolder(
     }
 }
 
-@kotlinx.serialization.Serializable
-private data class ScriptPanelState(val showScriptPanel: Boolean)
