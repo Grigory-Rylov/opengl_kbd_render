@@ -12,6 +12,7 @@ import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterSettings
 import com.github.grishberg.cad3d.plugin.cfg.TrackballMode
 import com.github.grishberg.cad3d.plugin.cfg.ViewerSettings
 import java.io.File
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +31,8 @@ class SettingsHolder(
     var translateX: Float = 0.0f
     var translateY: Float = 0.0f
     var translateZ: Float = -300.0f
+
+    var showScriptPanel: Boolean = false
 
     var settings: SettingsContainer = createDefaultSettings()
         private set
@@ -219,6 +222,32 @@ class SettingsHolder(
         }
     }
 
+    private val scriptPanelStateFile: File
+        get() = File(filePath).parentFile?.resolve("script_panel_state.json")
+            ?: File("script_panel_state.json")
+
+    fun loadScriptPanelState() {
+        try {
+            val f = scriptPanelStateFile
+            if (f.exists()) {
+                val obj = json.decodeFromString<ScriptPanelState>(f.readText())
+                showScriptPanel = obj.showScriptPanel
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun saveScriptPanelState() {
+        try {
+            val f = scriptPanelStateFile
+            f.parentFile?.mkdirs()
+            f.writeText(json.encodeToString(ScriptPanelState(showScriptPanel)))
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     fun loadSettings() {
         val file = File(filePath)
         try {
@@ -243,3 +272,6 @@ class SettingsHolder(
         private const val STANDART_KEYCAP_HEIGHT = 12.7
     }
 }
+
+@kotlinx.serialization.Serializable
+private data class ScriptPanelState(val showScriptPanel: Boolean)

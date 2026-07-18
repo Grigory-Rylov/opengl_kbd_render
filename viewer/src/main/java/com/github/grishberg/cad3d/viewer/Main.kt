@@ -77,6 +77,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private lateinit var debugInfoLabel: JLabel
     private lateinit var helpLabel: JLabel
     private lateinit var statusLabel: JLabel
+    private lateinit var scriptEditorButton: JButton
     private lateinit var prevDebugButton: JButton
     private lateinit var nextDebugButton: JButton
     private val pluginManager: PluginManager
@@ -224,14 +225,46 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         setSize(1200, 800)
         isVisible = true
         requestRender()
-        // Автозапуск matrix_right: загружаем текст проекта и компилируем как директорию
-        val scriptDir = findMatrixRightDir()
-        if (scriptDir != null) {
+        // При старте восстанавливаем состояние панели скриптов из настроек
+        settingsHolder.loadScriptPanelState()
+        if (settingsHolder.showScriptPanel) {
+            showScriptPanel()
+        }
+    }
+
+    private fun showScriptPanel() {
+        if (!::scriptEditorPanel.isInitialized) {
             scriptEditorPanel = createScriptEditorPanel()
+        }
+        if (scriptEditorPanel.parent == null) {
             contentPane.add(scriptEditorPanel, BorderLayout.EAST)
             contentPane.revalidate()
+            contentPane.repaint()
+        }
+        settingsHolder.showScriptPanel = true
+        scriptEditorButton.text = "Скрипты ✓"
+        settingsHolder.saveScriptPanelState()
+        // Загружаем и запускаем проект matrix_right как директорию
+        val scriptDir = findMatrixRightDir()
+        if (scriptDir != null) {
             runScriptProject(scriptDir.absolutePath)
         }
+    }
+
+    private fun hideScriptPanel() {
+        if (::scriptEditorPanel.isInitialized && scriptEditorPanel.parent != null) {
+            contentPane.remove(scriptEditorPanel)
+            contentPane.revalidate()
+            contentPane.repaint()
+        }
+        settingsHolder.showScriptPanel = false
+        scriptEditorButton.text = "Скрипты"
+        settingsHolder.saveScriptPanelState()
+    }
+
+    private fun toggleScriptPanel() {
+        val visible = ::scriptEditorPanel.isInitialized && scriptEditorPanel.parent != null
+        if (visible) hideScriptPanel() else showScriptPanel()
     }
 
     private fun createControlPanel(): JPanel {
@@ -322,19 +355,9 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             dialog.isVisible = true
         }
 
-        val scriptEditorButton = JButton("Скрипты")
+        scriptEditorButton = JButton("Скрипты")
         scriptEditorButton.addActionListener {
-            if (!::scriptEditorPanel.isInitialized) {
-                scriptEditorPanel = createScriptEditorPanel()
-                contentPane.add(scriptEditorPanel, BorderLayout.EAST)
-                contentPane.revalidate()
-                contentPane.repaint()
-            }
-            // Загружаем и запускаем проект matrix_right как директорию
-            val scriptDir = findMatrixRightDir()
-            if (scriptDir != null) {
-                runScriptProject(scriptDir.absolutePath)
-            }
+            toggleScriptPanel()
         }
 
         // --- Распределяем кнопки по строкам ---
