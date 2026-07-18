@@ -143,28 +143,13 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         return java.io.File("../cad3d/build/libs")
     }
 
-    private fun findMatrixRightDir(): java.io.File? {
-        var dir = java.io.File(System.getProperty("user.dir"))
-        repeat(6) {
-            val candidate = dir.resolve("scripting/examples/matrix_right")
-            if (candidate.exists() && candidate.isDirectory) {
-                return candidate
-            }
-            dir = dir.parentFile ?: return null
-        }
-        return null
-    }
+    private fun scriptTemplate(): String = """// DSL script — F5 to run
+// Available: bindings.cube/shell/cylinder/sphere, v3(), union/minus, color()
 
-    private fun loadMatrixRightText(): String {
-        val scriptDir = findMatrixRightDir()
-        if (scriptDir != null) {
-            val files = scriptDir.listFiles { f -> f.name.endsWith(".kt") }
-            return files
-                ?.sortedBy { f -> f.name }
-                ?.joinToString("\n\n") { f -> "// === ${f.name} ===\n\n" + f.readText() } ?: ""
-        }
-        return ""
-    }
+bindings.cube(50.0)
+"""
+
+    private fun loadMatrixRightText(): String = scriptTemplate()
 
     private fun createScriptEditorPanel(initialScript: String = loadMatrixRightText()): ScriptEditorPanel {
         val classPaths = filterScriptClasspath()
@@ -175,40 +160,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             requestRender()
         }, initialScript)
     }
-
-    private fun runScriptProject(scriptDir: String) {
-        Thread {
-            try {
-                Manifold3dEngine.initialize()
-            } catch (e: Exception) {
-                // already initialized
-            }
-            val result = scriptEvaluator.evaluateScriptDir(scriptDir)
-            val err = result.error
-            val mdl = result.model
-            javax.swing.SwingUtilities.invokeLater {
-                if (err != null) {
-                    scriptEditorPanel.setStatus("Ошибка компиляции проекта", false)
-                    scriptEditorPanel.setError(err)
-                } else if (mdl != null) {
-                    try {
-                        val vertexHolder = fromModelNative(mdl, JavascadColor.GRAY, 20)
-                        vertexHolderList.clear()
-                        vertexHolderList.add(vertexHolder)
-                        requestRender()
-                        scriptEditorPanel.setStatus("OK (${result.compilationTimeMs}ms, ${vertexHolder.verticesCount} вершин)", true)
-                    } catch (e: Exception) {
-                        scriptEditorPanel.setStatus("Ошибка конвертации", false)
-                        scriptEditorPanel.setError(e.message ?: e.toString())
-                    }
-                } else {
-                    scriptEditorPanel.setStatus("Null model", false)
-                    scriptEditorPanel.setError("Модель не построена (null). ${result.compilationTimeMs}ms")
-                }
-            }
-        }.start()
-    }
-
 
     fun setup() {
         layout = BorderLayout()
@@ -270,11 +221,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         settingsHolder.showScriptPanel = true
         scriptEditorButton.text = "Скрипты ✓"
         settingsHolder.saveScriptPanelState()
-        // Загружаем и запускаем проект matrix_right как директорию
-        val scriptDir = findMatrixRightDir()
-        if (scriptDir != null) {
-            runScriptProject(scriptDir.absolutePath)
-        }
+        // Компилируем текст редактора при открытии панели
+        scriptEditorPanel.runScript()
     }
 
     private fun hideScriptPanel() {
@@ -286,6 +234,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         settingsHolder.showScriptPanel = false
         scriptEditorButton.text = "Скрипты"
         settingsHolder.saveScriptPanelState()
+        // Script panel closed: render the keyboard from the plugin.
+        rebuildConfigAndRequestRendering(plugins, emptySet())
     }
 
     private fun toggleScriptPanel() {
@@ -505,6 +455,9 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         configDialog.isVisible = true
     }
 
+    private fun isScriptPanelVisible(): Boolean =
+        ::scriptEditorPanel.isInitialized && scriptEditorPanel.parent != null
+
     private fun rebuildConfigAndRequestRendering(plugins: List<Cad3dPlugin>, modifiedKeyboardParts: Set<KeyboardPart>) {
         plugins.forEach {
             println("Request from ${it.name} , ver ${it.version}")
@@ -513,12 +466,16 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             it.requestModels(
                 settingsHolder.settings, modifiedKeyboardParts, object : ResultListener {
                     override fun onReady(result: List<VertexHolder>, complete: Boolean) {
-                        vertexHolderList.clear()
-                        vertexHolderList.addAll(result)
-                        if (complete) {
-                            setRenderingStatus(false)
+                        // Plugin (keyboard) model is shown only when the script panel is hidden.
+                        // When the script panel is open, the script has rendering priority.
+                        if (!isScriptPanelVisible()) {
+                            vertexHolderList.clear()
+                            vertexHolderList.addAll(result)
+                            if (complete) {
+                                setRenderingStatus(false)
+                            }
+                            requestRender()
                         }
-                        requestRender()
                     }
                 })
         }

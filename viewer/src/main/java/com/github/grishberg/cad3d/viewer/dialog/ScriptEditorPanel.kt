@@ -47,7 +47,6 @@ class ScriptEditorPanel(
         // Setup syntax-highlighted text area (Kotlin)
         scriptText.syntaxEditingStyle = SyntaxConstants.SYNTAX_STYLE_KOTLIN
         scriptText.isCodeFoldingEnabled = true
-        scriptText.font = Font("Monospaced", Font.PLAIN, 16)
         scriptText.margin = java.awt.Insets(5, 5, 5, 5)
         try {
             Theme.load(javaClass.getResourceAsStream("/org/fife/ui/rsyntaxtextarea/themes/dark.xml"))
@@ -55,6 +54,8 @@ class ScriptEditorPanel(
         } catch (e: Exception) {
             // keep default theme if resource missing
         }
+        // Font must be set AFTER the theme, otherwise the theme resets it.
+        scriptText.font = Font("Monospaced", Font.PLAIN, 16)
         scriptText.text = if (initialScript.isNotEmpty()) initialScript else """// Script editor — F5 to run
  // Available: bindings, Abstract3dModel, V3d
 
@@ -87,7 +88,7 @@ class ScriptEditorPanel(
         controlPanel.add(statusLabel)
 
         // Error/output panel (under the code)
-        errorArea.font = Font("Monospaced", Font.PLAIN, 12)
+        errorArea.font = Font("Monospaced", Font.PLAIN, 16)
         errorArea.lineWrap = true
         errorArea.wrapStyleWord = true
         errorArea.isEditable = false
@@ -125,7 +126,7 @@ class ScriptEditorPanel(
         errorArea.text = text
     }
 
-    private fun runScript() {
+    fun runScript() {
         runButton.isEnabled = false
         statusLabel.text = "Рендеринг..."
         statusLabel.foreground = AwtColor.ORANGE
