@@ -90,15 +90,20 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     }
 
     private fun filterScriptClasspath(): List<String> {
+        val full = System.getProperty("java.class.path")
+            .split(java.io.File.pathSeparator)
+            .map { p -> java.io.File(p) }
+            .filter { f -> f.exists() }
+            .map { f -> f.absolutePath }
         val keep = listOf(
             "scripting", "cad3d", "plugin", "kbd_core", "javascad", "common",
             "kotlin-stdlib", "kotlin-script-runtime",
         )
-        return System.getProperty("java.class.path")
-            .split(java.io.File.pathSeparator)
-            .map { p -> java.io.File(p) }
-            .filter { f -> f.exists() && keep.any { name -> f.absolutePath.contains(name) } }
-            .map { f -> f.absolutePath }
+        val filtered = full.filter { p -> keep.any { name -> p.contains(name) } }
+        // Fallback: if filtering dropped essential libs, use the full classpath.
+        return if (filtered.any { it.contains("javascad") } &&
+            filtered.any { it.contains("kotlin-stdlib") }
+        ) filtered else full
     }
 
     init {
