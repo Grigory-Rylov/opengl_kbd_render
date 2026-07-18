@@ -22,6 +22,10 @@ import javax.swing.border.EmptyBorder as SwingEmptyBorder
 import javax.swing.border.TitledBorder
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants
+import org.fife.ui.rsyntaxtextarea.Theme
+import org.fife.ui.rtextarea.RTextScrollPane
 
 class ScriptEditorPanel(
     private val classPaths: List<String>,
@@ -29,7 +33,7 @@ class ScriptEditorPanel(
     initialScript: String = "",
 ) : JPanel(BorderLayout()) {
 
-    private val scriptText = JTextArea()
+    private val scriptText = RSyntaxTextArea(20, 60)
     private val statusLabel = JLabel("Готово")
     private val errorArea = JTextArea()
     private val runButton = JButton("▶ Run (F5)")
@@ -40,16 +44,22 @@ class ScriptEditorPanel(
     init {
         border = BorderFactory.createTitledBorder("Script Editor")
 
-        // Setup text area
+        // Setup syntax-highlighted text area (Kotlin)
+        scriptText.syntaxEditingStyle = SyntaxConstants.SYNTAX_STYLE_KOTLIN
+        scriptText.isCodeFoldingEnabled = true
         scriptText.font = Font("Monospaced", Font.PLAIN, 16)
-        scriptText.lineWrap = false
-        scriptText.wrapStyleWord = false
         scriptText.margin = java.awt.Insets(5, 5, 5, 5)
+        try {
+            Theme.load(javaClass.getResourceAsStream("/org/fife/ui/rsyntaxtextarea/themes/dark.xml"))
+                ?.apply(scriptText)
+        } catch (e: Exception) {
+            // keep default theme if resource missing
+        }
         scriptText.text = if (initialScript.isNotEmpty()) initialScript else """// Script editor — F5 to run
-// Available: bindings, Abstract3dModel, V3d
+ // Available: bindings, Abstract3dModel, V3d
 
-bindings.cube(50.0) // fallback if matrix_right not found
-"""
+ bindings.cube(50.0) // fallback if matrix_right not found
+ """
         scriptText.document.addDocumentListener(object : DocumentListener {
             override fun insertUpdate(e: DocumentEvent?) {
                 markModified()
@@ -64,7 +74,7 @@ bindings.cube(50.0) // fallback if matrix_right not found
             }
         })
 
-        val scrollPane = JScrollPane(scriptText)
+        val scrollPane = RTextScrollPane(scriptText)
         scrollPane.preferredSize = Dimension(520, 280)
 
         // Control panel
