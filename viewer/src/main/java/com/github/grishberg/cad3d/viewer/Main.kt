@@ -104,7 +104,10 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     init {
         settingsHolder.loadSettings()
 
-        val pluginsDir = File("../cad3d/build/libs")
+        val pluginsDir = findPluginsDir()
+        if (!pluginsDir.exists()) {
+            println("WARNING: plugins dir not found: ${pluginsDir.absolutePath}")
+        }
         setup()
 
 
@@ -112,6 +115,10 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         pluginManager.setOnPluginLoadedListener(object : PluginManager.OnPluginLoadedListener {
             override fun onPluginsLoaded(newPlugins: List<Cad3dPlugin>) {
                 plugins = newPlugins
+                println("LOADED plugins count=${newPlugins.size} from ${pluginsDir.absolutePath}")
+                if (newPlugins.isEmpty()) {
+                    println("WARNING: no plugins loaded! Check plugins path.")
+                }
                 rebuildConfigAndRequestRendering(plugins, emptySet())
             }
         })
@@ -119,14 +126,28 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         pluginManager.start()
     }
 
+    private fun findPluginsDir(): java.io.File {
+        var dir = java.io.File(System.getProperty("user.dir"))
+        repeat(6) {
+            val candidate = dir.resolve("cad3d/build/libs")
+            if (candidate.exists() && candidate.isDirectory) {
+                return candidate
+            }
+            dir = dir.parentFile ?: return java.io.File("../cad3d/build/libs")
+        }
+        return java.io.File("../cad3d/build/libs")
+    }
+
     private fun findMatrixRightDir(): java.io.File? {
-        val candidates = listOf(
-            java.io.File("scripting/examples/matrix_right"),
-            java.io.File("../scripting/examples/matrix_right"),
-            java.io.File("viewer/../scripting/examples/matrix_right"),
-            java.io.File(System.getProperty("user.dir")).resolve("../scripting/examples/matrix_right"),
-        )
-        return candidates.firstOrNull { it.exists() && it.isDirectory }
+        var dir = java.io.File(System.getProperty("user.dir"))
+        repeat(6) {
+            val candidate = dir.resolve("scripting/examples/matrix_right")
+            if (candidate.exists() && candidate.isDirectory) {
+                return candidate
+            }
+            dir = dir.parentFile ?: return null
+        }
+        return null
     }
 
     private fun loadMatrixRightText(): String {
