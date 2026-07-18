@@ -365,11 +365,11 @@ $scriptBody
         return buildString {
             var current: Throwable? = e
             while (current != null) {
-                appendLine("${current.javaClass.simpleName}: ${current.message?.take(500)}")
-                current.stackTrace.take(4).forEach { appendLine("\tat $it") }
+                appendLine("${current.javaClass.simpleName}:")
+                appendLine((current.message ?: "<no message>"))
                 val cause = current.cause
                 if (cause != null) {
-                    appendLine("  Caused by: ${cause.javaClass.simpleName}: ${cause.message?.take(500)}")
+                    appendLine("Caused by: ${cause.javaClass.simpleName}: ${cause.message}")
                 }
                 current = cause
             }

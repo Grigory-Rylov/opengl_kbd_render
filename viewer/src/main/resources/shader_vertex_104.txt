@@ -1,8 +1,12 @@
 #version 120
-attribute vec4 aColor;
 varying vec4 vColor;
+varying vec3 vNormal;
+varying vec3 vViewPos;
 
 void main() {
-    vColor = aColor;
+    vColor = gl_Color;
+    vNormal = gl_NormalMatrix * gl_Normal;
+    vec4 viewPos = gl_ModelViewMatrix * gl_Vertex;
+    vViewPos = viewPos.xyz;
     gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }

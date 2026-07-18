@@ -3,7 +3,6 @@ package com.github.grishberg.cad3d.viewer.dialog
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.util.fromModelNative
 import com.github.grishberg.scripting.ScriptEvaluator
-import com.github.grishberg.scripting.ScriptResult
 import eu.printingin3d.javascad.manifold.Manifold3dEngine
 import eu.printingin3d.javascad.utils.Color
 import java.awt.BorderLayout
@@ -11,28 +10,28 @@ import java.awt.Color as AwtColor
 import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.Font
-import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 import javax.swing.BorderFactory
 import javax.swing.JButton
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JScrollPane
-import javax.swing.JSplitPane
 import javax.swing.JTextArea
 import javax.swing.SwingUtilities
-import javax.swing.WindowConstants
 import javax.swing.border.EmptyBorder as SwingEmptyBorder
+import javax.swing.border.TitledBorder
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 
 class ScriptEditorPanel(
     private val classPaths: List<String>,
     private val onModelReady: (VertexHolder) -> Unit,
+    initialScript: String = "",
 ) : JPanel(BorderLayout()) {
 
     private val scriptText = JTextArea()
     private val statusLabel = JLabel("Готово")
+    private val errorArea = JTextArea()
     private val runButton = JButton("▶ Run (F5)")
     private val evaluator = ScriptEvaluator(classPaths)
 
@@ -42,23 +41,31 @@ class ScriptEditorPanel(
         border = BorderFactory.createTitledBorder("Script Editor")
 
         // Setup text area
-        scriptText.font = Font("Monospaced", Font.PLAIN, 12)
+        scriptText.font = Font("Monospaced", Font.PLAIN, 16)
         scriptText.lineWrap = false
         scriptText.wrapStyleWord = false
         scriptText.margin = java.awt.Insets(5, 5, 5, 5)
-        scriptText.text = """// Script editor — F5 to run
+        scriptText.text = if (initialScript.isNotEmpty()) initialScript else """// Script editor — F5 to run
 // Available: bindings, Abstract3dModel, V3d
 
-bindings.cube(50.0)
+bindings.cube(50.0) // fallback if matrix_right not found
 """
         scriptText.document.addDocumentListener(object : DocumentListener {
-            override fun insertUpdate(e: DocumentEvent?) { markModified() }
-            override fun removeUpdate(e: DocumentEvent?) { markModified() }
-            override fun changedUpdate(e: DocumentEvent?) { markModified() }
+            override fun insertUpdate(e: DocumentEvent?) {
+                markModified()
+            }
+
+            override fun removeUpdate(e: DocumentEvent?) {
+                markModified()
+            }
+
+            override fun changedUpdate(e: DocumentEvent?) {
+                markModified()
+            }
         })
 
         val scrollPane = JScrollPane(scriptText)
-        scrollPane.preferredSize = Dimension(400, 300)
+        scrollPane.preferredSize = Dimension(520, 280)
 
         // Control panel
         val controlPanel = JPanel(FlowLayout(FlowLayout.LEFT))
@@ -69,8 +76,21 @@ bindings.cube(50.0)
         statusLabel.foreground = AwtColor.GREEN
         controlPanel.add(statusLabel)
 
-        // Main layout
+        // Error/output panel (under the code)
+        errorArea.font = Font("Monospaced", Font.PLAIN, 12)
+        errorArea.lineWrap = true
+        errorArea.wrapStyleWord = true
+        errorArea.isEditable = false
+        errorArea.background = AwtColor(40, 40, 40)
+        errorArea.foreground = AwtColor(255, 140, 140)
+        errorArea.text = "Здесь будут ошибки компиляции и запуска."
+        val errorScroll = JScrollPane(errorArea)
+        errorScroll.preferredSize = Dimension(520, 150)
+        errorScroll.border = TitledBorder("Ошибки / вывод")
+
+        // Main layout: code (center), errors (south), controls (north)
         add(scrollPane, BorderLayout.CENTER)
+        add(errorScroll, BorderLayout.SOUTH)
         add(controlPanel, BorderLayout.NORTH)
 
         // F5 key binding
@@ -85,10 +105,22 @@ bindings.cube(50.0)
         isModified = true
     }
 
+    fun setError(text: String) {
+        errorArea.foreground = AwtColor(255, 140, 140)
+        errorArea.text = text
+    }
+
+    fun setOutput(text: String) {
+        errorArea.foreground = AwtColor(180, 220, 180)
+        errorArea.text = text
+    }
+
     private fun runScript() {
         runButton.isEnabled = false
         statusLabel.text = "Рендеринг..."
         statusLabel.foreground = AwtColor.ORANGE
+        errorArea.foreground = AwtColor(180, 220, 180)
+        errorArea.text = "Компиляция..."
 
         Thread {
             try {
@@ -105,22 +137,27 @@ bindings.cube(50.0)
             SwingUtilities.invokeLater {
                 runButton.isEnabled = true
                 if (err != null) {
-                    statusLabel.text = "Ошибка: ${err.lines().firstOrNull()?.take(100)}"
+                    statusLabel.text = "Ошибка компиляции"
                     statusLabel.foreground = AwtColor.RED
+                    setError(err)
                 } else if (mdl != null) {
                     try {
                         val vertexHolder = fromModelNative(mdl, Color.GRAY, 20)
                         onModelReady(vertexHolder)
                         statusLabel.text = "OK (${result.compilationTimeMs}ms, ${vertexHolder.verticesCount} вершин)"
                         statusLabel.foreground = AwtColor.GREEN
+                        setOutput("OK (${result.compilationTimeMs}ms, ${vertexHolder.verticesCount} вершин)")
                         isModified = false
                     } catch (e: Exception) {
-                        statusLabel.text = "Ошибка конвертации: ${e.message?.take(100)}"
+                        val msg = "Ошибка конвертации: ${e.message}"
+                        statusLabel.text = "Ошибка"
                         statusLabel.foreground = AwtColor.RED
+                        setError(msg)
                     }
                 } else {
-                    statusLabel.text = "Null model (${result.compilationTimeMs}ms)"
+                    statusLabel.text = "Null model"
                     statusLabel.foreground = AwtColor.ORANGE
+                    setOutput("Модель не построена (null). ${result.compilationTimeMs}ms")
                 }
             }
         }.start()
@@ -129,6 +166,12 @@ bindings.cube(50.0)
     fun loadScript(text: String) {
         scriptText.text = text
         isModified = false
+    }
+
+    fun setStatus(text: String, success: Boolean) {
+        statusLabel.text = text
+        statusLabel.foreground = if (success) AwtColor.GREEN else AwtColor.RED
+        if (success) setOutput(text) else setError(text)
     }
 
     fun getScript(): String = scriptText.text

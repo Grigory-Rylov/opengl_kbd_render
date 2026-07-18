@@ -11,7 +11,11 @@ import com.github.grishberg.cad3d.plugins.PluginManagerImpl
 import com.github.grishberg.cad3d.viewer.debug.DebugVisualizerImpl
 import com.github.grishberg.cad3d.viewer.dialog.ConfigEditor
 import com.github.grishberg.cad3d.viewer.dialog.StlExportDialog
+import com.github.grishberg.cad3d.util.fromModelNative
 import com.github.grishberg.cad3d.viewer.dialog.ScriptEditorPanel
+import com.github.grishberg.scripting.ScriptEvaluator
+import eu.printingin3d.javascad.manifold.Manifold3dEngine
+import eu.printingin3d.javascad.utils.Color as JavascadColor
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
 import com.jogamp.opengl.GLCapabilities
@@ -80,11 +84,26 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private var plugins: List<Cad3dPlugin> = emptyList()
     private lateinit var scriptEditorPanel: ScriptEditorPanel
     private var scriptModelEnabled = false
+    private val scriptEvaluator: ScriptEvaluator by lazy {
+        ScriptEvaluator(filterScriptClasspath())
+    }
+
+    private fun filterScriptClasspath(): List<String> {
+        val keep = listOf(
+            "scripting", "cad3d", "plugin", "kbd_core", "javascad", "common",
+            "kotlin-stdlib", "kotlin-script-runtime",
+        )
+        return System.getProperty("java.class.path")
+            .split(java.io.File.pathSeparator)
+            .map { p -> java.io.File(p) }
+            .filter { f -> f.exists() && keep.any { name -> f.absolutePath.contains(name) } }
+            .map { f -> f.absolutePath }
+    }
 
     init {
         settingsHolder.loadSettings()
 
-        val pluginsDir = File("cad3d/build/libs")
+        val pluginsDir = File("../cad3d/build/libs")
         setup()
 
 
@@ -99,19 +118,60 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         pluginManager.start()
     }
 
-    private fun createScriptEditorPanel(): ScriptEditorPanel {
-        val classPaths = System.getProperty("java.class.path")
-            .split(java.io.File.pathSeparator)
-            .map { p -> java.io.File(p) }
-            .filter { f -> f.exists() }
-            .map { f -> f.absolutePath }
+    private fun loadMatrixRightText(): String {
+        val scriptDir = java.io.File("../scripting/examples/matrix_right")
+        if (scriptDir.exists() && scriptDir.isDirectory) {
+            val files = scriptDir.listFiles { f -> f.name.endsWith(".kt") }
+            return files
+                ?.sortedBy { f -> f.name }
+                ?.joinToString("\n\n") { f -> "// === ${f.name} ===\n\n" + f.readText() } ?: ""
+        }
+        return ""
+    }
 
-        return ScriptEditorPanel(classPaths) { vh ->
+    private fun createScriptEditorPanel(initialScript: String = loadMatrixRightText()): ScriptEditorPanel {
+        val classPaths = filterScriptClasspath()
+
+        return ScriptEditorPanel(classPaths, { vh ->
             vertexHolderList.clear()
             vertexHolderList.add(vh)
             requestRender()
-        }
+        }, initialScript)
     }
+
+    private fun runScriptProject(scriptDir: String) {
+        Thread {
+            try {
+                Manifold3dEngine.initialize()
+            } catch (e: Exception) {
+                // already initialized
+            }
+            val result = scriptEvaluator.evaluateScriptDir(scriptDir)
+            val err = result.error
+            val mdl = result.model
+            javax.swing.SwingUtilities.invokeLater {
+                if (err != null) {
+                    scriptEditorPanel.setStatus("Ошибка компиляции проекта", false)
+                    scriptEditorPanel.setError(err)
+                } else if (mdl != null) {
+                    try {
+                        val vertexHolder = fromModelNative(mdl, JavascadColor.GRAY, 20)
+                        vertexHolderList.clear()
+                        vertexHolderList.add(vertexHolder)
+                        requestRender()
+                        scriptEditorPanel.setStatus("OK (${result.compilationTimeMs}ms, ${vertexHolder.verticesCount} вершин)", true)
+                    } catch (e: Exception) {
+                        scriptEditorPanel.setStatus("Ошибка конвертации", false)
+                        scriptEditorPanel.setError(e.message ?: e.toString())
+                    }
+                } else {
+                    scriptEditorPanel.setStatus("Null model", false)
+                    scriptEditorPanel.setError("Модель не построена (null). ${result.compilationTimeMs}ms")
+                }
+            }
+        }.start()
+    }
+
 
     fun setup() {
         layout = BorderLayout()
@@ -154,6 +214,14 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         setSize(1200, 800)
         isVisible = true
         requestRender()
+        // Автозапуск matrix_right: загружаем текст проекта и компилируем как директорию
+        val scriptDir = java.io.File("../scripting/examples/matrix_right")
+        if (scriptDir.exists() && scriptDir.isDirectory) {
+            scriptEditorPanel = createScriptEditorPanel()
+            contentPane.add(scriptEditorPanel, BorderLayout.EAST)
+            contentPane.revalidate()
+            runScriptProject(scriptDir.absolutePath)
+        }
     }
 
     private fun createControlPanel(): JPanel {
@@ -248,18 +316,15 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         scriptEditorButton.addActionListener {
             if (!::scriptEditorPanel.isInitialized) {
                 scriptEditorPanel = createScriptEditorPanel()
-                contentPane.add(scriptEditorPanel, BorderLayout.SOUTH)
+                contentPane.add(scriptEditorPanel, BorderLayout.EAST)
                 contentPane.revalidate()
                 contentPane.repaint()
             }
-            // Load default script from examples/matrix_right
-            val defaultScript = java.io.File("scripting/examples/matrix_right").let {
-                if (it.exists() && it.isDirectory) {
-                    it.listFiles { f -> f.name.endsWith(".kt") }?.sortedBy { f -> f.name }
-                        ?.joinToString("\n\n// === $it ===\n\n") { f -> f.readText() }
-                } else null
+            // Загружаем и запускаем проект matrix_right как директорию
+            val scriptDir = java.io.File("../scripting/examples/matrix_right")
+            if (scriptDir.exists() && scriptDir.isDirectory) {
+                runScriptProject(scriptDir.absolutePath)
             }
-            defaultScript?.let { scriptEditorPanel.loadScript(it) }
         }
 
         // --- Распределяем кнопки по строкам ---
