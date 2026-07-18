@@ -356,6 +356,7 @@ fun v3(x: Number, y: Number) = bindings.v3(x, y)
 fun angles(x: Number = 0.0, y: Number = 0.0, z: Number = 0.0) = bindings.angles(x, y, z)
 fun repeat(count: Int, block: (Int) -> Abstract3dModel) = bindings.repeat(count, block)
 fun deg(degrees: Number) = bindings.deg(degrees)
+fun importStl(path: String, color: String? = null) = bindings.importStl(path, color)
 
 class DslScript {$declBlock
 

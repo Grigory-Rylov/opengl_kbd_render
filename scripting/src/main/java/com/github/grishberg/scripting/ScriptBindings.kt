@@ -1,5 +1,6 @@
 package com.github.grishberg.scripting
 
+import com.github.grishberg.javascad.StlImporter
 import eu.printingin3d.javascad.coords.Angles3d
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
@@ -8,6 +9,7 @@ import eu.printingin3d.javascad.models.Cylinder
 import eu.printingin3d.javascad.models.Empty3dModel
 import eu.printingin3d.javascad.models.Prism
 import eu.printingin3d.javascad.models.Sphere
+import eu.printingin3d.javascad.models.StlModel
 import eu.printingin3d.javascad.utils.Color
 
 /**
@@ -30,6 +32,22 @@ class ScriptBindings {
     fun prism(length: Number, r1: Number, r2: Number, sides: Int): Abstract3dModel =
         Prism(length.toDouble(), r1.toDouble(), r2.toDouble(), sides)
     fun emptyModel(): Abstract3dModel = Empty3dModel()
+
+    /**
+     * Loads a binary STL file and returns it as an [Abstract3dModel].
+     * @param path file path; if not absolute, resolved relative to the project root
+     *             (user.dir and its parents).
+     * @param color optional color name ("red", "green", ...) or hex like "#rrggbb".
+     */
+    fun importStl(path: String, color: String? = null): Abstract3dModel {
+        val file = resolveFileLoop(path)
+        if (!file.exists()) {
+            throw IllegalArgumentException("STL file not found: ${file.absolutePath}")
+        }
+        val c = color?.let { parseColor(it) } ?: Color.GRAY
+        val polygons = StlImporter().loadBinarySTL(file.absolutePath, c)
+        return StlModel(polygons)
+    }
     fun hull(vararg models: Abstract3dModel): Abstract3dModel =
         eu.printingin3d.javascad.tranzitions.Hull(models.toList())
     fun hull(models: List<Abstract3dModel>): Abstract3dModel =
@@ -55,15 +73,41 @@ class ScriptBindings {
     fun Abstract3dModel.color(r: Int, g: Int, b: Int): Abstract3dModel =
         this.withColor(Color(r, g, b))
     fun Abstract3dModel.color(name: String): Abstract3dModel =
-        when (name.lowercase()) {
-            "red" -> this.withColor(Color.RED)
-            "green" -> this.withColor(Color.GREEN)
-            "blue" -> this.withColor(Color.BLUE)
-            "gray" -> this.withColor(Color.GRAY)
-            "white" -> this.withColor(Color.WHITE)
-            "black" -> this.withColor(Color.BLACK)
-            else -> this.withColor(Color.GRAY)
+        this.withColor(parseColor(name))
+
+    private fun parseColor(name: String): Color = when (name.lowercase()) {
+        "red" -> Color.RED
+        "green" -> Color.GREEN
+        "blue" -> Color.BLUE
+        "gray", "grey" -> Color.GRAY
+        "white" -> Color.WHITE
+        "black" -> Color.BLACK
+        "yellow" -> Color.YELLOW
+        "cyan" -> Color.CYAN
+        "magenta" -> Color.MAGENTA
+        "orange" -> Color.ORANGE
+        "pink" -> Color.PINK
+        else -> if (name.startsWith("#") && name.length == 7) {
+            val r = name.substring(1, 3).toInt(16)
+            val g = name.substring(3, 5).toInt(16)
+            val b = name.substring(5, 7).toInt(16)
+            Color(r, g, b)
+        } else Color.GRAY
+    }
+
+    private fun resolveFileLoop(path: String): java.io.File {
+        val f = java.io.File(path)
+        if (f.isAbsolute && f.exists()) return f
+        var dir = java.io.File(System.getProperty("user.dir"))
+        var result: java.io.File? = null
+        var remaining = 8
+        while (result == null && remaining-- > 0 && dir != null) {
+            val candidate = java.io.File(dir, path)
+            if (candidate.exists()) result = candidate
+            else dir = dir.parentFile
         }
+        return result ?: f
+    }
 
     // Повторение
     fun repeat(count: Int, block: (Int) -> Abstract3dModel): Abstract3dModel {

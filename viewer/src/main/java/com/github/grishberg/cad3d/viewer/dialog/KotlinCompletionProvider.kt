@@ -33,6 +33,7 @@ class KotlinCompletionProvider : DefaultCompletionProvider() {
         shapes += BasicCompletion(this, "hull", "hull(vararg models): Abstract3dModel")
         shapes += BasicCompletion(this, "union", "union(vararg models): Abstract3dModel")
         shapes += BasicCompletion(this, "emptyModel", "emptyModel(): Abstract3dModel")
+        shapes += BasicCompletion(this, "importStl", "importStl(path: String, color: String? = null): Abstract3dModel")
         shapes += BasicCompletion(this, "v3", "v3(x, y, z): V3d")
         shapes += BasicCompletion(this, "angles", "angles(x, y, z): V3d")
         shapes += BasicCompletion(this, "deg", "deg(degrees: Number): Double")
