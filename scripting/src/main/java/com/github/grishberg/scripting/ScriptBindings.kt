@@ -17,16 +17,18 @@ import eu.printingin3d.javascad.utils.Color
 class ScriptBindings {
 
     // Примитивы
-    fun cube(size: Double): Abstract3dModel = Cube(size)
-    fun cube(x: Double, y: Double, z: Double): Abstract3dModel = Cube(x, y, z)
-    fun cylinder(length: Double, radius: Double): Abstract3dModel = Cylinder(length, radius)
-    fun cylinder(length: Double, bottomR: Double, topR: Double): Abstract3dModel =
-        Cylinder(length, bottomR, topR)
-    fun sphere(radius: Double): Abstract3dModel = Sphere(radius)
-    fun prism(length: Double, radius: Double, sides: Int): Abstract3dModel =
-        Prism(length, radius, sides)
-    fun prism(length: Double, r1: Double, r2: Double, sides: Int): Abstract3dModel =
-        Prism(length, r1, r2, sides)
+    fun cube(size: Number): Abstract3dModel = Cube(size.toDouble())
+    fun cube(x: Number, y: Number, z: Number): Abstract3dModel =
+        Cube(x.toDouble(), y.toDouble(), z.toDouble())
+    fun cylinder(length: Number, radius: Number): Abstract3dModel =
+        Cylinder(length.toDouble(), radius.toDouble())
+    fun cylinder(length: Number, bottomR: Number, topR: Number): Abstract3dModel =
+        Cylinder(length.toDouble(), bottomR.toDouble(), topR.toDouble())
+    fun sphere(radius: Number): Abstract3dModel = Sphere(radius.toDouble())
+    fun prism(length: Number, radius: Number, sides: Int): Abstract3dModel =
+        Prism(length.toDouble(), radius.toDouble(), sides)
+    fun prism(length: Number, r1: Number, r2: Number, sides: Int): Abstract3dModel =
+        Prism(length.toDouble(), r1.toDouble(), r2.toDouble(), sides)
     fun emptyModel(): Abstract3dModel = Empty3dModel()
     fun hull(vararg models: Abstract3dModel): Abstract3dModel =
         eu.printingin3d.javascad.tranzitions.Hull(models.toList())
@@ -38,10 +40,10 @@ class ScriptBindings {
         eu.printingin3d.javascad.tranzitions.Union(models)
 
     // Координаты и углы
-    fun v3(x: Double, y: Double, z: Double): V3d = V3d(x, y, z)
-    fun v3(x: Double, y: Double): V3d = V3d(x, y, 0.0)
-    fun angles(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Angles3d =
-        Angles3d(x, y, z)
+    fun v3(x: Number, y: Number, z: Number): V3d = V3d(x.toDouble(), y.toDouble(), z.toDouble())
+    fun v3(x: Number, y: Number): V3d = V3d(x.toDouble(), y.toDouble(), 0.0)
+    fun angles(x: Number = 0.0, y: Number = 0.0, z: Number = 0.0): Angles3d =
+        Angles3d(x.toDouble(), y.toDouble(), z.toDouble())
 
     // CSG-операторы как infix-функции
     infix fun Abstract3dModel.union(other: Abstract3dModel): Abstract3dModel =
@@ -72,15 +74,16 @@ class ScriptBindings {
         return result
     }
 
-    fun Abstract3dModel.along(axis: Axis, step: Double, count: Int, block: (Int) -> Abstract3dModel): Abstract3dModel {
+    fun Abstract3dModel.along(axis: Axis, step: Number, count: Int, block: (Int) -> Abstract3dModel): Abstract3dModel {
+        val stepD = step.toDouble()
         var result: Abstract3dModel = this
         for (i in 0 until count) {
             val m = block(i)
             result = result.addModel(
                 when (axis) {
-                    Axis.X -> m.moveX(i * step)
-                    Axis.Y -> m.moveY(i * step)
-                    Axis.Z -> m.moveZ(i * step)
+                    Axis.X -> m.moveX(i * stepD)
+                    Axis.Y -> m.moveY(i * stepD)
+                    Axis.Z -> m.moveZ(i * stepD)
                 }
             )
         }
@@ -92,7 +95,7 @@ class ScriptBindings {
     // Математика
     val PI: Double = Math.PI
     val DEG_TO_RAD: Double = Math.PI / 180.0
-    fun deg(degrees: Double): Double = degrees * Math.PI / 180.0
+    fun deg(degrees: Number): Double = degrees.toDouble() * Math.PI / 180.0
 
     /**
      * Генерация модели matrix_right через cad3d.
@@ -114,14 +117,14 @@ class ScriptBindings {
         rows: Int = 3,
         centerCol: Int = 2,
         centerRow: Int = 1,
-        rowCurvature: Double = 2.0,
-        tentingAngle: Double = 3.0,
+        rowCurvature: Number = 2.0,
+        tentingAngle: Number = 3.0,
         thumbType: com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode =
             com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode.SingleColumn3Buttons,
-        thumbXOffset: Double = -10.0,
-        thumbYOffset: Double = -50.0,
-        thumbYRotation: Double = -30.0,
-        thumbZRotation: Double = 10.0,
+        thumbXOffset: Number = -10.0,
+        thumbYOffset: Number = -50.0,
+        thumbYRotation: Number = -30.0,
+        thumbZRotation: Number = 10.0,
         onStep: ((String) -> Unit)? = null,
     ): Abstract3dModel {
         val step = onStep ?: { _ -> }
@@ -135,11 +138,11 @@ class ScriptBindings {
             visibleKeyboardParts = setOf(com.github.grishberg.cad3d.plugin.cfg.KeyboardPart.KeyMatrix),
             modifiedKeyboardParts = emptySet(),
             thumbClusterSettings = com.github.grishberg.cad3d.plugin.cfg.ThumbClusterSettings(
-                xOffset = thumbXOffset,
-                yOffset = thumbYOffset,
+                xOffset = thumbXOffset.toDouble(),
+                yOffset = thumbYOffset.toDouble(),
                 zOffset = 37.0,
-                rotateY = thumbYRotation,
-                rotateZ = thumbZRotation,
+                rotateY = thumbYRotation.toDouble(),
+                rotateZ = thumbZRotation.toDouble(),
                 arcRadiusZ = 0.0,
                 arcRadiusY = 0.0,
                 spaceBetweenKey = 6.5,
@@ -159,8 +162,8 @@ class ScriptBindings {
             innerBatteryType = com.github.grishberg.cad3d.plugin.cfg.BatteryType.None,
             keyPlaceConfig = com.github.grishberg.cad3d.kbd.core.cfg.KeyPlaceConfig(
                 plateZOffset = 0.0,
-                rowCurvature = rowCurvature,
-                tentingAngle = tentingAngle,
+                rowCurvature = rowCurvature.toDouble(),
+                tentingAngle = tentingAngle.toDouble(),
                 columnCurvature = 0.0,
                 keyswitchHeight = 18.0,
                 keyswitchWidth = 18.0,

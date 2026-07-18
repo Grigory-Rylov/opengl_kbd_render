@@ -306,15 +306,18 @@ var bindings = ScriptBindings()
         val expressions = rawExpressions
 
         val declBlock = if (declarations.isNotEmpty()) "\n    ${declarations.joinToString("\n    ")}" else ""
-        val modelExpressions = expressions.map { it.trim() }.filter { it.isNotEmpty() }
+        val modelExpressions = expressions
+            .map { it.replace("\n", " ").trim() }
+            .filter { it.isNotEmpty() && !it.startsWith("//") }
         val scriptBody = if (modelExpressions.isEmpty()) {
             "            emptyList<Abstract3dModel>()"
         } else {
             // Every top-level model expression is rendered separately (with its own color).
-            val joined = modelExpressions.joinToString(",\n") { "            $it" }
-            """            listOf(
-$joined
-            )"""
+            // Non-model expressions (e.g. val/deg) are ignored via safe cast.
+            val adds = modelExpressions.joinToString("\n") { "            ;($it as? Abstract3dModel)?.let { __models.add(it) }" }
+            """            val __models = mutableListOf<Abstract3dModel>()
+            $adds
+            __models"""
         }
 
         return """$fileImports
@@ -370,6 +373,9 @@ $scriptBody
         val compilerOutput = String(baos.toByteArray())
 
         if (exitCode.getCode() != 0) {
+            println("===== SCRIPT COMPILE ERROR =====")
+            println(compilerOutput)
+            println("===== END SCRIPT COMPILE ERROR =====")
             throw ScriptCompilationException("Compilation failed with exit code ${exitCode.getCode()}\n${compilerOutput}")
         }
 
