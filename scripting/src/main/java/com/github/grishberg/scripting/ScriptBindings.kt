@@ -22,10 +22,16 @@ class ScriptBindings {
     fun cube(size: Number): Abstract3dModel = Cube(size.toDouble())
     fun cube(x: Number, y: Number, z: Number): Abstract3dModel =
         Cube(x.toDouble(), y.toDouble(), z.toDouble())
-    fun cylinder(length: Number, radius: Number): Abstract3dModel =
-        Cylinder(length.toDouble(), radius.toDouble())
-    fun cylinder(length: Number, bottomR: Number, topR: Number): Abstract3dModel =
-        Cylinder(length.toDouble(), bottomR.toDouble(), topR.toDouble())
+    fun cylinder(length: Number, radius: Number, fn: Int? = null): Abstract3dModel =
+        if (fn != null) Prism(length.toDouble(), radius.toDouble(), fn)
+        else Cylinder(length.toDouble(), radius.toDouble())
+    fun cylinder(length: Number, bottomR: Number, topR: Number, fn: Int? = null): Abstract3dModel =
+        if (fn != null) Prism(length.toDouble(), bottomR.toDouble(), topR.toDouble(), fn)
+        else Cylinder(length.toDouble(), bottomR.toDouble(), topR.toDouble())
+    fun cylinderD(d: Number, h: Number, fn: Int? = null): Abstract3dModel =
+        cylinder(h, d.toDouble() / 2.0, fn)
+    fun cylinderR(r: Number, h: Number, fn: Int? = null): Abstract3dModel =
+        cylinder(h, r, fn)
     fun sphere(radius: Number): Abstract3dModel = Sphere(radius.toDouble())
     fun prism(length: Number, radius: Number, sides: Int): Abstract3dModel =
         Prism(length.toDouble(), radius.toDouble(), sides)

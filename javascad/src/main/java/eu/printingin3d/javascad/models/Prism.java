@@ -2,7 +2,9 @@ package eu.printingin3d.javascad.models;
 
 import eu.printingin3d.javascad.basic.Radius;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
+import eu.printingin3d.javascad.manifold.Manifold3dEngine;
 import eu.printingin3d.javascad.utils.AssertValue;
+import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 
 /**
  * Represents a prism or a pyramid.
@@ -77,5 +79,11 @@ public class Prism extends Cylinder {
 	@Override
 	protected Abstract3dModel innerCloneModel() {
 		return new Prism(length, bottomRadius, topRadius, numberOfSides);
+	}
+
+	@Override
+	protected long toInnerNativeMesh(FacetGenerationContext context) {
+		return Manifold3dEngine.INSTANCE.cylinderNative(
+				length, bottomRadius.getRadius(), topRadius.getRadius(), numberOfSides, 1);
 	}
 }

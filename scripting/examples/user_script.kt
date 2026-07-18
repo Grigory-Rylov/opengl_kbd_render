@@ -1,4 +1,6 @@
 // Available: cube/sphere/cylinder/prism/hull/union, importStl, v3(), move/rotate/withColor
+// cylinder(length, radius, fn?) | cylinder(length, bottomR, topR, fn?)
+// cylinderD(d, h, fn?) | cylinderR(r, h, fn?)  — fn = number of facets (like OpenSCAD $fn)
 
 // --- 5U+Vertical+Post (converted from OpenSCAD) ---
 val nutDiameter = 8.79
@@ -17,7 +19,7 @@ fun place(model: Abstract3dModel): Abstract3dModel {
 	val lst = mutableListOf<Abstract3dModel>()
 	return union(
 		ys.map{y -> model.move(0, y, 0)}
-	)
+	).move(22.8,0,0)
 }
 
 // Base body
@@ -36,7 +38,7 @@ val holes = repeat(ys.size) { i ->
 // Imported STL placed above the body
 val post = importStl("5U+Vertical+Post.stl")
 
-place(prism(4.0, nutDiameter / 2.0, 6)).move(0,0,2)
+place(prism(4.0, nutDiameter / 2.0, 6)).move(0,0,4).withColor(Color.RED)
 place(cylinder(2.0, holeDiameter / 2.0)).withColor(Color.YELLOW)
 
 post
