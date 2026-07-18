@@ -37,6 +37,7 @@ class ScriptEditorPanel(
     private val statusLabel = JLabel("Готово")
     private val errorArea = JTextArea()
     private val runButton = JButton("▶ Run (F5)")
+    private val saveButton = JButton("💾 Save")
     private val evaluator = ScriptEvaluator(classPaths)
 
     private var isModified = false
@@ -82,6 +83,8 @@ class ScriptEditorPanel(
         val controlPanel = JPanel(FlowLayout(FlowLayout.LEFT))
         controlPanel.add(runButton)
         runButton.addActionListener { runScript() }
+        controlPanel.add(saveButton)
+        saveButton.addActionListener { saveScript() }
 
         statusLabel.border = SwingEmptyBorder(0, 10, 0, 0)
         statusLabel.foreground = AwtColor.GREEN
@@ -177,6 +180,33 @@ class ScriptEditorPanel(
     fun loadScript(text: String) {
         scriptText.text = text
         isModified = false
+    }
+
+    private fun findSaveDir(): java.io.File {
+        var dir = java.io.File(System.getProperty("user.dir"))
+        repeat(6) {
+            val candidate = dir.resolve("scripting/examples")
+            if (candidate.exists() && candidate.isDirectory) {
+                return candidate
+            }
+            dir = dir.parentFile ?: return java.io.File(".")
+        }
+        return java.io.File(".")
+    }
+
+    private fun saveScript() {
+        val file = findSaveDir().resolve("user_script.kt")
+        try {
+            file.writeText(scriptText.text)
+            isModified = false
+            statusLabel.text = "Сохранено: ${file.absolutePath}"
+            statusLabel.foreground = AwtColor.GREEN
+            setOutput("Сохранено: ${file.absolutePath}")
+        } catch (e: Exception) {
+            statusLabel.text = "Ошибка сохранения"
+            statusLabel.foreground = AwtColor.RED
+            setError("Ошибка сохранения: ${e.message}")
+        }
     }
 
     fun setStatus(text: String, success: Boolean) {

@@ -149,7 +149,30 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 bindings.cube(50.0)
 """
 
-    private fun loadMatrixRightText(): String = scriptTemplate()
+    private fun findUserScriptFile(): java.io.File? {
+        var dir = java.io.File(System.getProperty("user.dir"))
+        repeat(6) {
+            val candidate = dir.resolve("scripting/examples/user_script.kt")
+            if (candidate.exists() && candidate.isFile) {
+                return candidate
+            }
+            dir = dir.parentFile ?: return null
+        }
+        return null
+    }
+
+    private fun loadMatrixRightText(): String {
+        val file = findUserScriptFile()
+        return if (file != null) {
+            try {
+                file.readText()
+            } catch (e: Exception) {
+                scriptTemplate()
+            }
+        } else {
+            scriptTemplate()
+        }
+    }
 
     private fun createScriptEditorPanel(initialScript: String = loadMatrixRightText()): ScriptEditorPanel {
         val classPaths = filterScriptClasspath()
