@@ -301,7 +301,9 @@ var bindings = ScriptBindings()
 class DslScript {$declBlock
 
     fun execute(): Abstract3dModel = scriptRun {
+        bindings.run {
 $scriptBody
+        }
     }
     
     private fun scriptRun(block: DslScript.() -> Abstract3dModel): Abstract3dModel = block()

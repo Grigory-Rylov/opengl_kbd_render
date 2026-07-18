@@ -4,7 +4,6 @@ import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.util.fromModelNative
 import com.github.grishberg.scripting.ScriptEvaluator
 import eu.printingin3d.javascad.manifold.Manifold3dEngine
-import eu.printingin3d.javascad.utils.Color
 import java.awt.BorderLayout
 import java.awt.Color as AwtColor
 import java.awt.Dimension
@@ -156,7 +155,7 @@ class ScriptEditorPanel(
                     setError(err)
                 } else if (mdl != null) {
                     try {
-                        val vertexHolder = fromModelNative(mdl, Color.GRAY, 20)
+                        val vertexHolder = fromModelNative(mdl, 20)
                         onModelReady(vertexHolder)
                         statusLabel.text = "OK (${result.compilationTimeMs}ms, ${vertexHolder.verticesCount} вершин)"
                         statusLabel.foreground = AwtColor.GREEN
