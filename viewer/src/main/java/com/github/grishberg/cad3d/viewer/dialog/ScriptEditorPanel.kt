@@ -21,6 +21,7 @@ import javax.swing.border.EmptyBorder as SwingEmptyBorder
 import javax.swing.border.TitledBorder
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
+import org.fife.ui.autocomplete.AutoCompletion
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants
 import org.fife.ui.rsyntaxtextarea.Theme
@@ -122,6 +123,10 @@ class ScriptEditorPanel(
         val scrollPane = RTextScrollPane(scriptText)
         scrollPane.preferredSize = Dimension(520, 280)
         scrollPane.maximumSize = Dimension(520, 280)
+
+        // Auto-completion
+        val autoCompletion = AutoCompletion(KotlinCompletionProvider())
+        autoCompletion.install(scriptText)
 
         // Control panel
         val controlPanel = JPanel(FlowLayout(FlowLayout.LEFT))
