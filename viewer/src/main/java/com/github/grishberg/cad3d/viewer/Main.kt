@@ -80,7 +80,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private lateinit var scriptEditorButton: JButton
     private lateinit var prevDebugButton: JButton
     private lateinit var nextDebugButton: JButton
-    private val pluginManager: PluginManager
+    private var pluginManager: PluginManager? = null
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var plugins: List<Cad3dPlugin> = emptyList()
     private lateinit var scriptEditorPanel: ScriptEditorPanel
@@ -117,7 +117,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
 
         pluginManager = PluginManagerImpl(pluginsDir)
-        pluginManager.setOnPluginLoadedListener(object : PluginManager.OnPluginLoadedListener {
+        pluginManager!!.setOnPluginLoadedListener(object : PluginManager.OnPluginLoadedListener {
             override fun onPluginsLoaded(newPlugins: List<Cad3dPlugin>) {
                 plugins = newPlugins
                 println("LOADED plugins count=${newPlugins.size} from ${pluginsDir.absolutePath}")
@@ -128,7 +128,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             }
         })
 
-        pluginManager.start()
+        pluginManager!!.start()
     }
 
     private fun findPluginsDir(): java.io.File {
@@ -240,7 +240,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         // Обработка закрытия окна
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
-                pluginManager.stop()
+                pluginManager?.stop()
                 settingsHolder.saveSettings()
                 if (animator.isAnimating) {
                     animator.stop()
