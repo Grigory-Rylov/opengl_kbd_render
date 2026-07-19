@@ -3,13 +3,13 @@ package com.github.grishberg.cad3d.keyboard.casebody.controllers
 import com.github.grishberg.cad3d.keyboard.ModelHolder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.util.fromModel
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.coords.Angles3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cube
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.models.Hull
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.javascad.basic.Radius
+import com.github.grishberg.javascad.coords.Angles3d
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Cube
+import com.github.grishberg.javascad.models.Cylinder
+import com.github.grishberg.javascad.models.Hull
+import com.github.grishberg.javascad.utils.Color
 
 class RP2040Pink(
     private val cfg: KeyboardConfig,

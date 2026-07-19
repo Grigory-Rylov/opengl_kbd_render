@@ -9,7 +9,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
-import eu.printingin3d.javascad.coords.V3d
+import com.github.grishberg.javascad.coords.V3d
 
 class BottomPoints(
     private val cfg: KeyboardConfig,

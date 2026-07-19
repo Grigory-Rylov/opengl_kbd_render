@@ -5,10 +5,10 @@ plugins {
 
 tasks.register<JavaExec>("runTestModel") {
     classpath = sourceSets["main"].runtimeClasspath
-    mainClass.set("eu.printingin3d.javascad.manifold.TestModel")
+    mainClass.set("com.github.grishberg.javascad.manifold.TestModel")
 }
 
-group = "eu.printingin3d.javascad"
+group = "com.github.grishberg.javascad"
 version = "1.0"
 
 dependencies {

@@ -14,8 +14,8 @@ import com.github.grishberg.cad3d.viewer.dialog.StlExportDialog
 import com.github.grishberg.cad3d.util.fromModelNative
 import com.github.grishberg.cad3d.viewer.dialog.ScriptEditorPanel
 import com.github.grishberg.scripting.ScriptEvaluator
-import eu.printingin3d.javascad.manifold.Manifold3dEngine
-import eu.printingin3d.javascad.utils.Color as JavascadColor
+import com.github.grishberg.javascad.manifold.Manifold3dEngine
+import com.github.grishberg.javascad.utils.Color as JavascadColor
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
 import com.jogamp.opengl.GLCapabilities

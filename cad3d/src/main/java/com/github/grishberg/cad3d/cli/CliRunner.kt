@@ -4,7 +4,7 @@ import com.github.grishberg.cad3d.KeyboardBuilder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig.Companion.getKeyboardConfig
 import com.github.grishberg.cad3d.plugin.StlExportListener
 import com.github.grishberg.cad3d.plugin.cfg.*
-import eu.printingin3d.javascad.manifold.Manifold3dEngine
+import com.github.grishberg.javascad.manifold.Manifold3dEngine
 import kotlinx.coroutines.*
 import java.io.File
 

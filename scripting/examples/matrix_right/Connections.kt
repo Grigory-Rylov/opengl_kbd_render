@@ -1,8 +1,8 @@
 package com.github.grishberg.scripting.matrix
 
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.tranzitions.Hull
-import eu.printingin3d.javascad.tranzitions.Union
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.tranzitions.Hull
+import com.github.grishberg.javascad.tranzitions.Union
 
 fun buildConnections(): Abstract3dModel {
     val models = mutableListOf<Abstract3dModel>()

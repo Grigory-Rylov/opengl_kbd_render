@@ -4,9 +4,9 @@ import com.github.grishberg.cad3d.keyboard.KeyPlace
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import eu.printingin3d.javascad.coords.Angles3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.tranzitions.Union
+import com.github.grishberg.javascad.coords.Angles3d
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.tranzitions.Union
 
 class ScrewKeyMatrixPlace(
     private val cfg: KeyboardConfig,

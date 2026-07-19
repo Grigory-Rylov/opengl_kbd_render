@@ -1,8 +1,8 @@
 package com.github.grishberg.javascad;
 
-import eu.printingin3d.javascad.models.Abstract3dModel;
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.basic.Angle;
+import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.coords.V3d;
+import com.github.grishberg.javascad.basic.Angle;
 
 import java.io.*;
 import java.lang.reflect.*;

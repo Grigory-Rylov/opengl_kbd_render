@@ -1,7 +1,7 @@
 package com.github.grishberg.scripting.matrix
 
-import eu.printingin3d.javascad.models.*
-import eu.printingin3d.javascad.tranzitions.*
+import com.github.grishberg.javascad.models.*
+import com.github.grishberg.javascad.tranzitions.*
 
 fun createPlaceholder(): Abstract3dModel {
     return Cube(PH.OUTER_W, PH.OUTER_H, PH.KEY_PLACE_TOP_THICKNESS)

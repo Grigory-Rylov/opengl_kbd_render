@@ -1,8 +1,8 @@
 package com.github.grishberg.cad3d;
 
-import eu.printingin3d.javascad.coords.Triangle3d;
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.vrl.Facet;
+import com.github.grishberg.javascad.coords.Triangle3d;
+import com.github.grishberg.javascad.coords.V3d;
+import com.github.grishberg.javascad.vrl.Facet;
 
 import java.io.*;
 import java.nio.ByteBuffer;

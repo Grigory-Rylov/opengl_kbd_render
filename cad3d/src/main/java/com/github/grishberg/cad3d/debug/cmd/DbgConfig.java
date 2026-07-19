@@ -1,6 +1,6 @@
 package com.github.grishberg.cad3d.debug.cmd;
 
-import eu.printingin3d.javascad.utils.Color;
+import com.github.grishberg.javascad.utils.Color;
 
 public class DbgConfig {
 

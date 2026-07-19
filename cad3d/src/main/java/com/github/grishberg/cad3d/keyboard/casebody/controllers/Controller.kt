@@ -1,7 +1,7 @@
 package com.github.grishberg.cad3d.keyboard.casebody.controllers
 
 import com.github.grishberg.cad3d.keyboard.ModelHolder
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Abstract3dModel
 
 interface Controller {
 

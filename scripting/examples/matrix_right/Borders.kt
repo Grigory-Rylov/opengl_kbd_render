@@ -1,10 +1,10 @@
 package com.github.grishberg.scripting.matrix
 
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cube
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.tranzitions.Hull
-import eu.printingin3d.javascad.tranzitions.Union
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Cube
+import com.github.grishberg.javascad.models.Cylinder
+import com.github.grishberg.javascad.tranzitions.Hull
+import com.github.grishberg.javascad.tranzitions.Union
 
 val borderThickness = 1.5
 val borderHeight = 2.5

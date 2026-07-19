@@ -3,7 +3,7 @@ package com.github.grishberg.cad3d.viewer.dialog
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.util.fromModelNative
 import com.github.grishberg.scripting.ScriptEvaluator
-import eu.printingin3d.javascad.manifold.Manifold3dEngine
+import com.github.grishberg.javascad.manifold.Manifold3dEngine
 import java.awt.BorderLayout
 import java.awt.Color as AwtColor
 import java.awt.Dimension

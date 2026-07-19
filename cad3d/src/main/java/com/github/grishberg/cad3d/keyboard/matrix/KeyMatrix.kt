@@ -17,10 +17,10 @@ import com.github.grishberg.cad3d.keyboard.screws.ScrewKeyMatrixPlace
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
 import com.github.grishberg.cad3d.util.fromModel
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.IModel
-import eu.printingin3d.javascad.tranzitions.Union
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.IModel
+import com.github.grishberg.javascad.tranzitions.Union
+import com.github.grishberg.javascad.utils.Color
 
 class KeyMatrix(
     private val cfg: KeyboardConfig, private val keyPlace: KeyPlace, private val thumbKeyPlace: ThumbKeyPlace

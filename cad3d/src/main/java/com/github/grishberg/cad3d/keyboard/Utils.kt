@@ -1,13 +1,13 @@
 package com.github.grishberg.cad3d.keyboard
 
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cube
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.models.Hull
-import eu.printingin3d.javascad.models.Sphere
-import eu.printingin3d.javascad.tranzitions.Union
+import com.github.grishberg.javascad.basic.Radius
+import com.github.grishberg.javascad.coords.V3d
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Cube
+import com.github.grishberg.javascad.models.Cylinder
+import com.github.grishberg.javascad.models.Hull
+import com.github.grishberg.javascad.models.Sphere
+import com.github.grishberg.javascad.tranzitions.Union
 
 object Utils {
 

@@ -1,16 +1,16 @@
 package com.github.grishberg.scripting
 
 import com.github.grishberg.javascad.StlImporter
-import eu.printingin3d.javascad.coords.Angles3d
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cube
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.models.Empty3dModel
-import eu.printingin3d.javascad.models.Prism
-import eu.printingin3d.javascad.models.Sphere
-import eu.printingin3d.javascad.models.StlModel
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.javascad.coords.Angles3d
+import com.github.grishberg.javascad.coords.V3d
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Cube
+import com.github.grishberg.javascad.models.Cylinder
+import com.github.grishberg.javascad.models.Empty3dModel
+import com.github.grishberg.javascad.models.Prism
+import com.github.grishberg.javascad.models.Sphere
+import com.github.grishberg.javascad.models.StlModel
+import com.github.grishberg.javascad.utils.Color
 
 /**
  * Контекст для DSL-скриптов.
@@ -55,13 +55,13 @@ class ScriptBindings {
         return StlModel(polygons)
     }
     fun hull(vararg models: Abstract3dModel): Abstract3dModel =
-        eu.printingin3d.javascad.tranzitions.Hull(models.toList())
+        com.github.grishberg.javascad.tranzitions.Hull(models.toList())
     fun hull(models: List<Abstract3dModel>): Abstract3dModel =
-        eu.printingin3d.javascad.tranzitions.Hull(models)
+        com.github.grishberg.javascad.tranzitions.Hull(models)
     fun union(vararg models: Abstract3dModel): Abstract3dModel =
-        eu.printingin3d.javascad.tranzitions.Union(models.toList())
+        com.github.grishberg.javascad.tranzitions.Union(models.toList())
     fun union(models: List<Abstract3dModel>): Abstract3dModel =
-        eu.printingin3d.javascad.tranzitions.Union(models)
+        com.github.grishberg.javascad.tranzitions.Union(models)
 
     // Координаты и углы
     fun v3(x: Number, y: Number, z: Number): V3d = V3d(x.toDouble(), y.toDouble(), z.toDouble())

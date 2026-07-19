@@ -1,6 +1,6 @@
 package com.github.grishberg.scripting.matrix
 
-import eu.printingin3d.javascad.tranzitions.Union
+import com.github.grishberg.javascad.tranzitions.Union
 
 fun scriptMain(): Abstract3dModel {
     val placeholder = createPlaceholder()

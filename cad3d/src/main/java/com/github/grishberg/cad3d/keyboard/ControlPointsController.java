@@ -2,7 +2,7 @@ package com.github.grishberg.cad3d.keyboard;
 
 import static com.github.grishberg.cad3d.keyboard.Utils.v3d;
 
-import eu.printingin3d.javascad.coords.V3d;
+import com.github.grishberg.javascad.coords.V3d;
 import java.util.ArrayList;
 import java.util.List;
 

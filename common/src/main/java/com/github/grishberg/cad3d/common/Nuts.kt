@@ -1,11 +1,11 @@
 package com.github.grishberg.cad3d.common
 
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.manifold.Manifold3dEngine
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.models.StlModel
-import eu.printingin3d.javascad.vrl.FacetGenerationContext
+import com.github.grishberg.javascad.basic.Radius
+import com.github.grishberg.javascad.manifold.Manifold3dEngine
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Cylinder
+import com.github.grishberg.javascad.models.StlModel
+import com.github.grishberg.javascad.vrl.FacetGenerationContext
 
 class Nuts {
     private val map = mapOf<MetricType, NutsParams>(

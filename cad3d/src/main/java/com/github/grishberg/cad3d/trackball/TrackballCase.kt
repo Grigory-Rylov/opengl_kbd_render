@@ -8,8 +8,8 @@ import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerPlace
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
 import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.utils.Color
 
 class TrackballCase(
     private val cfg: KeyboardConfig,

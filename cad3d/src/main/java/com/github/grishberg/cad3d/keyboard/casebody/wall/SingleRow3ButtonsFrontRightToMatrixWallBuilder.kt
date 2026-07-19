@@ -7,9 +7,9 @@ import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbPoints
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.javascad.coords.V3d
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.utils.Color
 
 class SingleRow3ButtonsFrontRightToMatrixWallBuilder(
     private val cfg: KeyboardConfig,

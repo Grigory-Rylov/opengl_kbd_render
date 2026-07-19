@@ -9,7 +9,7 @@ import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBack
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBackLeft
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBackRight
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Abstract3dModel
 
 class Connections(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
 

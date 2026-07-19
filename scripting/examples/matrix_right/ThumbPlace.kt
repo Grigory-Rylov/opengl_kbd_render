@@ -1,6 +1,6 @@
 package com.github.grishberg.scripting.matrix
 
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Abstract3dModel
 
 val thumbSpacing = ThumbCfg.spaceBetweenKey + KeyCfg.keyPlaceHolderWidth
 

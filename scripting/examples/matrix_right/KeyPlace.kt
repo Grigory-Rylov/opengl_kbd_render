@@ -1,6 +1,6 @@
 package com.github.grishberg.scripting.matrix
 
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Abstract3dModel
 
 fun placeKey(model: Abstract3dModel, column: Int, row: Int): Abstract3dModel {
     val kfc = KeyCfg

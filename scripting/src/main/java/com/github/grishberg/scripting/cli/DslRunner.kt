@@ -2,8 +2,8 @@ package com.github.grishberg.scripting.cli
 
 import com.github.grishberg.scripting.ScriptEvaluator
 import com.github.grishberg.scripting.ScriptResult
-import eu.printingin3d.javascad.manifold.Manifold3dEngine
-import eu.printingin3d.javascad.vrl.FacetGenerationContext
+import com.github.grishberg.javascad.manifold.Manifold3dEngine
+import com.github.grishberg.javascad.vrl.FacetGenerationContext
 import java.io.File
 
 fun main(args: Array<String>) {

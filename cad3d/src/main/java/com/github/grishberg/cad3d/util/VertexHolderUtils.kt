@@ -2,14 +2,14 @@ package com.github.grishberg.cad3d.util
 
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.javascad.Triangulator
-import eu.printingin3d.javascad.manifold.Manifold3dEngine
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.IModel
-import eu.printingin3d.javascad.utils.Color
-import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
-import eu.printingin3d.javascad.vrl.Facet
-import eu.printingin3d.javascad.vrl.FacetGenerationContext
-import eu.printingin3d.javascad.vrl.Polygon
+import com.github.grishberg.javascad.manifold.Manifold3dEngine
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.IModel
+import com.github.grishberg.javascad.utils.Color
+import com.github.grishberg.javascad.vrl.ColorFacetGenerationContext
+import com.github.grishberg.javascad.vrl.Facet
+import com.github.grishberg.javascad.vrl.FacetGenerationContext
+import com.github.grishberg.javascad.vrl.Polygon
 
 fun fromModel(model: IModel, color: Color, fn: Int): VertexHolder {
     return fromModelNative(model, color, fn)

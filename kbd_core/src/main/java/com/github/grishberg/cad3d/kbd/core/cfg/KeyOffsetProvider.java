@@ -1,6 +1,6 @@
 package com.github.grishberg.cad3d.kbd.core.cfg;
 
-import eu.printingin3d.javascad.coords.V3d;
+import com.github.grishberg.javascad.coords.V3d;
 
 public class KeyOffsetProvider {
    private static final double OFFSET = 2;

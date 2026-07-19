@@ -13,7 +13,7 @@ import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
 import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterSettings
 import com.github.grishberg.cad3d.plugin.cfg.TrackballConfig
 import com.github.grishberg.cad3d.plugin.cfg.TrackballMode
-import eu.printingin3d.javascad.coords.V3d
+import com.github.grishberg.javascad.coords.V3d
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
 

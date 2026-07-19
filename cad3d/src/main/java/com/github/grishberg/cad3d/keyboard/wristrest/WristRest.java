@@ -2,13 +2,13 @@ package com.github.grishberg.cad3d.keyboard.wristrest;
 
 import static com.github.grishberg.cad3d.keyboard.Utils.v3d;
 
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.models.Abstract3dModel;
-import eu.printingin3d.javascad.models.Cylinder;
-import eu.printingin3d.javascad.models.EdgeType;
-import eu.printingin3d.javascad.models.surfaces.BicubicInterpolator;
-import eu.printingin3d.javascad.models.surfaces.SmoothSurface;
-import eu.printingin3d.javascad.models.surfaces.bicubic.BicubicSurfaceSpline;
+import com.github.grishberg.javascad.coords.V3d;
+import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Cylinder;
+import com.github.grishberg.javascad.models.EdgeType;
+import com.github.grishberg.javascad.models.surfaces.BicubicInterpolator;
+import com.github.grishberg.javascad.models.surfaces.SmoothSurface;
+import com.github.grishberg.javascad.models.surfaces.bicubic.BicubicSurfaceSpline;
 
 public class WristRest {
 

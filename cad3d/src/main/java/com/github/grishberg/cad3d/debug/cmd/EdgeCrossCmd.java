@@ -6,9 +6,9 @@ import com.github.grishberg.cad3d.ui.DebugVisualizer;
 import java.util.ArrayList;
 import java.util.List;
 
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.utils.Color;
-import eu.printingin3d.javascad.vrl.VertexPosition;
+import com.github.grishberg.javascad.coords.V3d;
+import com.github.grishberg.javascad.utils.Color;
+import com.github.grishberg.javascad.vrl.VertexPosition;
 
 public class EdgeCrossCmd implements DebugCmd {
     private final V3d currentVertex;

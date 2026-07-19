@@ -3,9 +3,9 @@ package com.github.grishberg.cad3d.keyboard
 import com.github.grishberg.cad3d.keyboard.Utils.cube
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cylinder
+import com.github.grishberg.javascad.basic.Radius
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Cylinder
 
 object KeyPlaceholder {
 

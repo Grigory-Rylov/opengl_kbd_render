@@ -1,6 +1,6 @@
 package com.github.grishberg.scripting
 
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Abstract3dModel
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -57,12 +57,12 @@ class ScriptEvaluator(
     }
 
     private val baseImports = """
-import eu.printingin3d.javascad.models.*
-import eu.printingin3d.javascad.coords.*
-import eu.printingin3d.javascad.tranzitions.*
-import eu.printingin3d.javascad.utils.*
-import eu.printingin3d.javascad.manifold.*
-import eu.printingin3d.javascad.vrl.*
+import com.github.grishberg.javascad.models.*
+import com.github.grishberg.javascad.coords.*
+import com.github.grishberg.javascad.tranzitions.*
+import com.github.grishberg.javascad.utils.*
+import com.github.grishberg.javascad.manifold.*
+import com.github.grishberg.javascad.vrl.*
 import com.github.grishberg.scripting.ScriptBindings
 
 """

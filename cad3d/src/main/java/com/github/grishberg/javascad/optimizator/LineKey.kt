@@ -1,7 +1,7 @@
 package com.github.grishberg.javascad.optimizator
 
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.vrl.Const
+import com.github.grishberg.javascad.coords.V3d
+import com.github.grishberg.javascad.vrl.Const
 import java.util.Objects
 import kotlin.math.abs
 import kotlin.math.sqrt

@@ -2,9 +2,9 @@ package com.github.grishberg.cad3d.keyboard
 
 import com.github.grishberg.cad3d.kbd.core.cfg.KeyPlaceConfig
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import eu.printingin3d.javascad.coords.Angles3d
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.coords.Angles3d
+import com.github.grishberg.javascad.coords.V3d
+import com.github.grishberg.javascad.models.Abstract3dModel
 import kotlin.math.cos
 import kotlin.math.sin
 

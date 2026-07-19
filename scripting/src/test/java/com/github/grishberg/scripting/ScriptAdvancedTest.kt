@@ -1,6 +1,6 @@
 package com.github.grishberg.scripting
 
-import eu.printingin3d.javascad.manifold.Manifold3dEngine
+import com.github.grishberg.javascad.manifold.Manifold3dEngine
 import org.junit.BeforeClass
 import org.junit.Test
 import java.io.File
