@@ -26,14 +26,6 @@ import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.FlowLayout
-import java.awt.event.InputEvent
-import java.awt.event.KeyEvent
-import java.awt.event.KeyListener
-import java.awt.event.MouseEvent
-import java.awt.event.MouseListener
-import java.awt.event.MouseMotionListener
-import java.awt.event.MouseWheelEvent
-import java.awt.event.MouseWheelListener
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.BoxLayout
@@ -46,7 +38,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
-class Main(title: String?) : JFrame(title), GLEventListener {
+class Main(title: String?) : JFrame(title), GLEventListener, CanvasInteraction {
 
     //    protected GLWindow window;
     private val animator: Animator = Animator()
@@ -60,19 +52,13 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private val glu = GLU()
     private var viewportWidth = 1200
     private var viewportHeight = 800
-    private var prevMouseX = 0
-    private var prevMouseY = 0
     private val pointsController = ControlPointsController()
     private var glCanvas: GLCanvas? = null
     private var splitPane: javax.swing.JSplitPane? = null
     private val meshRenderer = com.github.grishberg.cad3d.viewer.render.MeshRenderer()
     private val axisGizmoRenderer = com.github.grishberg.cad3d.viewer.render.AxisGizmoRenderer()
 
-    //    private val sceneBuilder: SceneBuilder
-    private val debugVisualizer = DebugVisualizerImpl()
-    private val debugCommands = mutableListOf<DebugCmd>()
-
-    private var showDebugInfo = false
+    override var showDebugInfo = false
     private var currentDebugCommandIndex = 0
     private lateinit var debugNavigationPanel: JPanel
     private lateinit var debugInfoLabel: JLabel
@@ -89,6 +75,10 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private val scriptEvaluator: ScriptEvaluator by lazy {
         ScriptEvaluator(filterScriptClasspath())
     }
+
+    override val settings: SettingsHolder = settingsHolder
+    override val debugVisualizer = DebugVisualizerImpl()
+    override val debugCommands = mutableListOf<DebugCmd>()
 
     private fun filterScriptClasspath(): List<String> {
         val full = System.getProperty("java.class.path").split(java.io.File.pathSeparator).map { p -> java.io.File(p) }
@@ -226,11 +216,11 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
         // 2. Создание GLCanvas с явным конструктором
         glCanvas = GLCanvas(glCapabilities)
         glCanvas!!.addGLEventListener(this)
-        val mouseListener = GlCanvasMouseListener()
+        val mouseListener = GlCanvasMouseListener(this)
         glCanvas!!.addMouseListener(mouseListener)
         glCanvas!!.addMouseMotionListener(mouseListener)
         glCanvas!!.addMouseWheelListener(mouseListener)
-        glCanvas!!.addKeyListener(GlCanvasKeyListener())
+        glCanvas!!.addKeyListener(GlCanvasKeyListener(this))
         defaultCloseOperation = EXIT_ON_CLOSE
         animator.add(glCanvas)
         animator.start()
@@ -595,12 +585,38 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
         }
     }
 
-    private fun addDebugCommands() {
+    override fun addDebugCommands() {
         currentDebugCommandIndex = 0
         updateDebugNavigationState()
     }
 
-    private fun updateDebugNavigationState() {
+    override fun cycleDebugBackward() {
+        if (showDebugInfo && debugCommands.isNotEmpty()) {
+            currentDebugCommandIndex = (currentDebugCommandIndex - 1 + debugCommands.size) % debugCommands.size
+            updateDebugDisplay()
+        }
+    }
+
+    override fun cycleDebugForward() {
+        if (showDebugInfo && debugCommands.isNotEmpty()) {
+            currentDebugCommandIndex = (currentDebugCommandIndex + 1) % debugCommands.size
+            updateDebugDisplay()
+        }
+    }
+
+    override fun toggleDebug() {
+        showDebugInfo = !showDebugInfo
+        if (!showDebugInfo) {
+            debugVisualizer.clearVisualization()
+            //debugCommands.clear()
+        } else {
+            addDebugCommands()
+            updateDebugDisplay()
+        }
+        updateDebugNavigationState()
+    }
+
+    override fun updateDebugNavigationState() {
         prevDebugButton.isEnabled = showDebugInfo
         nextDebugButton.isEnabled = showDebugInfo
         debugInfoLabel.isVisible = showDebugInfo
@@ -628,7 +644,7 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
         statusLabel.background = if (isRendering) Color.ORANGE else Color.GREEN
     }
 
-    private fun updateDebugDisplay() {
+    override fun updateDebugDisplay() {
         debugVisualizer.clearVisualization()
 
         if (showDebugInfo && debugCommands.isNotEmpty()) {
@@ -642,7 +658,7 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
         updateDebugNavigationState()
     }
 
-    private fun requestRender() {
+    override fun requestRender() {
         glCanvas?.display()
     }
 
@@ -767,110 +783,9 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
         gl.glLoadIdentity()
     }
 
-    // ------------------------------------------------
-    private inner class GlCanvasMouseListener : MouseListener, MouseMotionListener, MouseWheelListener {
-
-        override fun mouseClicked(mouseEvent: MouseEvent) {}
-        override fun mouseEntered(mouseEvent: MouseEvent) {}
-        override fun mouseExited(mouseEvent: MouseEvent) {}
-        override fun mousePressed(mouseEvent: MouseEvent) {
-            prevMouseX = mouseEvent.x
-            prevMouseY = mouseEvent.y
-        }
-
-        override fun mouseReleased(mouseEvent: MouseEvent) {}
-
-        /// motion
-        override fun mouseDragged(e: MouseEvent) {
-            val currentMouseX = e.x
-            val currentMouseY = e.y
-            val deltaX = currentMouseX - prevMouseX
-            val deltaY = currentMouseY - prevMouseY
-            if (e.modifiersEx and InputEvent.CTRL_DOWN_MASK != 0) {
-                // Смещение объекта при зажатом Control
-                settingsHolder.translateX += deltaX * MOUSE_TRANSLATE_SENSITIVITY
-                settingsHolder.translateY -= deltaY * MOUSE_TRANSLATE_SENSITIVITY
-            } else {
-                settingsHolder.rotateX += deltaY.toFloat()
-                settingsHolder.rotateZ += deltaX.toFloat()
-            }
-            prevMouseX = currentMouseX
-            prevMouseY = currentMouseY
-            requestRender()
-        }
-
-        override fun mouseMoved(e: MouseEvent) {}
-        override fun mouseWheelMoved(e: MouseWheelEvent) {
-            val notches = e.wheelRotation
-
-            // Управление смещением с помощью Ctrl
-            if (e.modifiersEx and InputEvent.CTRL_DOWN_MASK != 0) {
-                // При зажатом Ctrl - изменение масштаба
-            } else {
-                // Без Ctrl - перемещение по осям
-                settingsHolder.translateZ -= notches * ZOOM_SENSITIVITY
-            }
-
-            // Ограничиваем диапазон значений (опционально)
-            settingsHolder.translateZ = Math.max(ZOOM_MIN_OFFSET, Math.min(settingsHolder.translateZ, ZOOM_MAX_OFFSET))
-            requestRender()
-        }
-    }
-
-    private inner class GlCanvasKeyListener : KeyListener {
-
-        override fun keyTyped(e: KeyEvent) {}
-        override fun keyPressed(e: KeyEvent) {
-            val keyCode = e.keyCode
-            when (keyCode) {
-                KeyEvent.VK_A, KeyEvent.VK_LEFT -> settingsHolder.translateX -= TRANSLATE_STEP
-                KeyEvent.VK_D, KeyEvent.VK_RIGHT -> settingsHolder.translateX += TRANSLATE_STEP
-                KeyEvent.VK_W, KeyEvent.VK_UP -> settingsHolder.translateY += TRANSLATE_STEP
-                KeyEvent.VK_S, KeyEvent.VK_DOWN -> settingsHolder.translateY -= TRANSLATE_STEP
-
-                // Горячие клавиши для debug навигации
-                KeyEvent.VK_Q -> {
-                    if (showDebugInfo && debugCommands.isNotEmpty()) {
-                        currentDebugCommandIndex =
-                            (currentDebugCommandIndex - 1 + debugCommands.size) % debugCommands.size
-                        updateDebugDisplay()
-                    }
-                }
-
-                KeyEvent.VK_E -> {
-                    if (showDebugInfo && debugCommands.isNotEmpty()) {
-                        currentDebugCommandIndex = (currentDebugCommandIndex + 1) % debugCommands.size
-                        updateDebugDisplay()
-                    }
-                }
-
-                KeyEvent.VK_R -> {
-                    // Переключение debug режима
-                    showDebugInfo = !showDebugInfo
-                    if (!showDebugInfo) {
-                        debugVisualizer.clearVisualization()
-                        //debugCommands.clear()
-                    } else {
-                        addDebugCommands()
-                        updateDebugDisplay()
-                    }
-                    updateDebugNavigationState()
-                }
-            }
-            requestRender()
-        }
-
-        override fun keyReleased(e: KeyEvent) {}
-    }
-
     companion object {
 
-        private const val ZOOM_SENSITIVITY = 5.0f
-        private const val ZOOM_MIN_OFFSET = -1200.0f
-        private const val ZOOM_MAX_OFFSET = 0.0f
         private const val SETTINGS_FILE = "settings.json"
-        private const val MOUSE_TRANSLATE_SENSITIVITY = 0.5f // Чувствительность смещения
-        private const val TRANSLATE_STEP = 5.0f // Шаг смещения
 
         @JvmStatic
         fun main(args: Array<String>) {
