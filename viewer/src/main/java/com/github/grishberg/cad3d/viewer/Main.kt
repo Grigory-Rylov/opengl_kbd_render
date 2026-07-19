@@ -62,6 +62,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
     private val vertexHolderList: MutableList<VertexHolder> = ArrayList()
     private val glu = GLU()
+    private var viewportWidth = 1200
+    private var viewportHeight = 800
     private var prevMouseX = 0
     private var prevMouseY = 0
     private val pointsController = ControlPointsController()
@@ -703,7 +705,123 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
 
         gl.glPopMatrix() // Возвращаемся к исходной матрице
 
+        renderAxisGizmo(gl)
+
         gl.glFlush()
+    }
+
+    private fun renderAxisGizmo(gl: GL2) {
+        val size = 270
+        val margin = 10
+        // Левый нижний угол (в GL Y растёт вверх)
+        val vpX = margin
+        val vpY = margin
+
+        // Сохраняем текущие атрибуты/матрицы
+        val savedLighting = gl.glIsEnabled(GLLightingFunc.GL_LIGHTING)
+        val savedColorMaterial = gl.glIsEnabled(GL2.GL_COLOR_MATERIAL)
+        val currentProgram = IntArray(1)
+        gl.glGetIntegerv(GL2.GL_CURRENT_PROGRAM, currentProgram, 0)
+        // Отключаем шейдерную программу (иначе её освещение затемняет gizmo)
+        gl.glUseProgram(0)
+        // Отключаем свет и color-material, чтобы gizmo был всегда ярким
+        gl.glDisable(GLLightingFunc.GL_LIGHTING)
+        gl.glDisable(GL2.GL_COLOR_MATERIAL)
+        gl.glDisable(GL2.GL_DEPTH_TEST)
+
+        gl.glViewport(vpX, vpY, size, size)
+
+        gl.glMatrixMode(GL2.GL_PROJECTION)
+        gl.glPushMatrix()
+        gl.glLoadIdentity()
+        val range = 1.6
+        gl.glOrtho(-range, range, -range, range, -10.0, 10.0)
+
+        gl.glMatrixMode(GL2.GL_MODELVIEW)
+        gl.glPushMatrix()
+        gl.glLoadIdentity()
+
+        // Те же вращения, что и у модели (без переноса)
+        gl.glRotatef(settingsHolder.rotateX, 1.0f, 0.0f, 0.0f)
+        gl.glRotatef(settingsHolder.rotateY, 0.0f, 1.0f, 0.0f)
+        gl.glRotatef(settingsHolder.rotateZ, 0.0f, 0.0f, 1.0f)
+
+        val red = floatArrayOf(1.0f, 0.3f, 0.3f)
+        val green = floatArrayOf(0.35f, 1.0f, 0.35f)
+        val blue = floatArrayOf(0.45f, 0.6f, 1.0f)
+
+        gl.glLineWidth(3.0f)
+        gl.glBegin(GL2.GL_LINES)
+        // X - красный
+        gl.glColor3f(red[0], red[1], red[2])
+        gl.glVertex3f(0f, 0f, 0f)
+        gl.glVertex3f(1f, 0f, 0f)
+        // Y - зелёный
+        gl.glColor3f(green[0], green[1], green[2])
+        gl.glVertex3f(0f, 0f, 0f)
+        gl.glVertex3f(0f, 1f, 0f)
+        // Z - синий
+        gl.glColor3f(blue[0], blue[1], blue[2])
+        gl.glVertex3f(0f, 0f, 0f)
+        gl.glVertex3f(0f, 0f, 1f)
+        gl.glEnd()
+
+        // Подписи осей (буквы отрисованы отрезками у конца каждой оси)
+        gl.glLineWidth(2.5f)
+        drawAxisLabel(gl, 'X', 1.18f, 0f, 0f, red)
+        drawAxisLabel(gl, 'Y', 0f, 1.18f, 0f, green)
+        drawAxisLabel(gl, 'Z', 0f, 0f, 1.18f, blue)
+        gl.glLineWidth(1.0f)
+
+        // Восстанавливаем матрицы и viewport
+        gl.glPopMatrix()
+        gl.glMatrixMode(GL2.GL_PROJECTION)
+        gl.glPopMatrix()
+        gl.glMatrixMode(GL2.GL_MODELVIEW)
+
+        gl.glViewport(0, 0, viewportWidth, viewportHeight)
+        gl.glEnable(GL2.GL_DEPTH_TEST)
+        if (savedLighting) {
+            gl.glEnable(GLLightingFunc.GL_LIGHTING)
+        }
+        if (savedColorMaterial) {
+            gl.glEnable(GL2.GL_COLOR_MATERIAL)
+        }
+        // Восстанавливаем шейдерную программу
+        gl.glUseProgram(currentProgram[0])
+    }
+
+    // Рисует букву-подпись оси, всегда развёрнутую к экрану (billboard),
+    // компенсируя вращение сцены обратным поворотом.
+    private fun drawAxisLabel(gl: GL2, letter: Char, x: Float, y: Float, z: Float, color: FloatArray) {
+        gl.glColor3f(color[0], color[1], color[2])
+        gl.glPushMatrix()
+        gl.glTranslatef(x, y, z)
+        // Разворот к экрану: обратный порядок и знак вращений сцены
+        gl.glRotatef(-settingsHolder.rotateZ, 0.0f, 0.0f, 1.0f)
+        gl.glRotatef(-settingsHolder.rotateY, 0.0f, 1.0f, 0.0f)
+        gl.glRotatef(-settingsHolder.rotateX, 1.0f, 0.0f, 0.0f)
+        val s = 0.16f
+        gl.glScalef(s, s, s)
+        gl.glBegin(GL2.GL_LINES)
+        when (letter) {
+            'X' -> {
+                gl.glVertex3f(-0.6f, 1f, 0f); gl.glVertex3f(0.6f, -1f, 0f)
+                gl.glVertex3f(0.6f, 1f, 0f); gl.glVertex3f(-0.6f, -1f, 0f)
+            }
+            'Y' -> {
+                gl.glVertex3f(-0.6f, 1f, 0f); gl.glVertex3f(0f, 0f, 0f)
+                gl.glVertex3f(0.6f, 1f, 0f); gl.glVertex3f(0f, 0f, 0f)
+                gl.glVertex3f(0f, 0f, 0f); gl.glVertex3f(0f, -1f, 0f)
+            }
+            'Z' -> {
+                gl.glVertex3f(-0.6f, 1f, 0f); gl.glVertex3f(0.6f, 1f, 0f)
+                gl.glVertex3f(0.6f, 1f, 0f); gl.glVertex3f(-0.6f, -1f, 0f)
+                gl.glVertex3f(-0.6f, -1f, 0f); gl.glVertex3f(0.6f, -1f, 0f)
+            }
+        }
+        gl.glEnd()
+        gl.glPopMatrix()
     }
 
     override fun dispose(drawable: GLAutoDrawable) {
@@ -730,7 +848,7 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
     protected fun init(gl: GL2) {
         println("init gl2")
         gl.glShadeModel(GL2.GL_SMOOTH)
-        gl.glClearColor(0f, 0f, 0f, 0f)
+        gl.glClearColor(0.2f, 0.2f, 0.2f, 1.0f)
         gl.glClearDepth(1.0)
         gl.glEnable(GL2.GL_DEPTH_TEST)
         gl.glDepthFunc(GL2.GL_LEQUAL)
@@ -758,6 +876,8 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
             height = 1
         }
         val h = width.toFloat() / height.toFloat()
+        viewportWidth = width
+        viewportHeight = height
         gl.glViewport(0, 0, width, height)
         gl.glMatrixMode(GL2.GL_PROJECTION)
         gl.glLoadIdentity()
