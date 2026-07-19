@@ -10,12 +10,9 @@ import com.github.grishberg.cad3d.plugins.PluginManager
 import com.github.grishberg.cad3d.plugins.PluginManagerImpl
 import com.github.grishberg.cad3d.viewer.debug.DebugVisualizerImpl
 import com.github.grishberg.cad3d.viewer.dialog.ConfigEditor
-import com.github.grishberg.cad3d.viewer.dialog.StlExportDialog
-import com.github.grishberg.cad3d.util.fromModelNative
 import com.github.grishberg.cad3d.viewer.dialog.ScriptEditorPanel
+import com.github.grishberg.cad3d.viewer.dialog.StlExportDialog
 import com.github.grishberg.scripting.ScriptEvaluator
-import com.github.grishberg.javascad.manifold.Manifold3dEngine
-import com.github.grishberg.javascad.utils.Color as JavascadColor
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
 import com.jogamp.opengl.GLCapabilities
@@ -39,7 +36,6 @@ import java.awt.event.MouseWheelEvent
 import java.awt.event.MouseWheelListener
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import java.io.File
 import javax.swing.BoxLayout
 import javax.swing.JButton
 import javax.swing.JCheckBox
@@ -69,6 +65,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private val pointsController = ControlPointsController()
     private var glCanvas: GLCanvas? = null
     private var splitPane: javax.swing.JSplitPane? = null
+    private val meshRenderer = com.github.grishberg.cad3d.viewer.render.MeshRenderer()
+    private val axisGizmoRenderer = com.github.grishberg.cad3d.viewer.render.AxisGizmoRenderer()
 
     //    private val sceneBuilder: SceneBuilder
     private val debugVisualizer = DebugVisualizerImpl()
@@ -93,20 +91,15 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     }
 
     private fun filterScriptClasspath(): List<String> {
-        val full = System.getProperty("java.class.path")
-            .split(java.io.File.pathSeparator)
-            .map { p -> java.io.File(p) }
-            .filter { f -> f.exists() }
-            .map { f -> f.absolutePath }
+        val full = System.getProperty("java.class.path").split(java.io.File.pathSeparator).map { p -> java.io.File(p) }
+            .filter { f -> f.exists() }.map { f -> f.absolutePath }
         val keep = listOf(
             "scripting", "cad3d", "plugin", "kbd_core", "javascad", "common",
             "kotlin-stdlib", "kotlin-script-runtime",
         )
         val filtered = full.filter { p -> keep.any { name -> p.contains(name) } }
         // Fallback: if filtering dropped essential libs, use the full classpath.
-        return if (filtered.any { it.contains("javascad") } &&
-            filtered.any { it.contains("kotlin-stdlib") }
-        ) filtered else full
+        return if (filtered.any { it.contains("javascad") } && filtered.any { it.contains("kotlin-stdlib") }) filtered else full
     }
 
     init {
@@ -294,7 +287,8 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
     private fun openScript() {
         val chooser = javax.swing.JFileChooser()
         chooser.dialogTitle = "Открыть скрипт"
-        chooser.fileFilter = javax.swing.filechooser.FileNameExtensionFilter("Kotlin scripts (*.kt, *.kts)", "kt", "kts")
+        chooser.fileFilter =
+            javax.swing.filechooser.FileNameExtensionFilter("Kotlin scripts (*.kt, *.kts)", "kt", "kts")
         if (chooser.showOpenDialog(this) != javax.swing.JFileChooser.APPROVE_OPTION) {
             return
         }
@@ -311,10 +305,7 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
             showScriptPanel()
         } catch (e: Exception) {
             javax.swing.JOptionPane.showMessageDialog(
-                this,
-                "Не удалось открыть файл: ${e.message}",
-                "Ошибка",
-                javax.swing.JOptionPane.ERROR_MESSAGE
+                this, "Не удалось открыть файл: ${e.message}", "Ошибка", javax.swing.JOptionPane.ERROR_MESSAGE
             )
         }
     }
@@ -326,52 +317,22 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
         if (splitPane == null) {
             // Переносим GLCanvas из CENTER в сплиттер вместе с панелью кода
             contentPane.remove(glCanvas)
-
-            val split = javax.swing.JSplitPane(
-                javax.swing.JSplitPane.HORIZONTAL_SPLIT,
-                glCanvas,
-                scriptEditorPanel,
+            val split = com.github.grishberg.cad3d.viewer.render.ResizableSidePanel(
+                left = glCanvas!!,
+                right = scriptEditorPanel,
+                widthProvider = { settingsHolder.scriptPanelWidth },
+                onWidthChanged = { settingsHolder.scriptPanelWidth = it },
             )
-            split.isContinuousLayout = true
-            split.resizeWeight = 1.0 // при ресайзе окна растёт левая часть, правая держит ширину
-            split.dividerSize = 8
-            glCanvas!!.minimumSize = Dimension(100, 100)
-            scriptEditorPanel.minimumSize = Dimension(150, 100)
-            // Ставим позицию разделителя так, чтобы правая панель имела сохранённую ширину
-            split.addComponentListener(object : java.awt.event.ComponentAdapter() {
-                override fun componentResized(e: java.awt.event.ComponentEvent?) {
-                    applyScriptPanelWidth(split)
-                    split.removeComponentListener(this)
-                }
-            })
-            // Сохраняем ширину правой панели при перетаскивании разделителя
-            split.addPropertyChangeListener(javax.swing.JSplitPane.DIVIDER_LOCATION_PROPERTY) {
-                val total = split.width
-                if (total > 0) {
-                    val rightWidth = total - split.dividerLocation - split.dividerSize
-                    if (rightWidth > 0) {
-                        settingsHolder.scriptPanelWidth = rightWidth
-                    }
-                }
-            }
             splitPane = split
             contentPane.add(split, BorderLayout.CENTER)
             contentPane.revalidate()
             contentPane.repaint()
-            javax.swing.SwingUtilities.invokeLater { applyScriptPanelWidth(split) }
         }
         settingsHolder.showScriptPanel = true
         scriptEditorButton.text = "Скрипты ✓"
         settingsHolder.saveScriptPanelState()
         // Компилируем текст редактора при открытии панели
         scriptEditorPanel.runScript()
-    }
-
-    private fun applyScriptPanelWidth(split: javax.swing.JSplitPane) {
-        val total = split.width
-        if (total <= 0) return
-        val width = settingsHolder.scriptPanelWidth.coerceIn(150, (total - 100).coerceAtLeast(150))
-        split.dividerLocation = total - width - split.dividerSize
     }
 
     private fun hideScriptPanel() {
@@ -455,10 +416,11 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
             settingsHolder.showTrackballCase = it
             rebuildConfigAndRequestRendering(plugins, emptySet())
         }
-        val showTrackballCasePlateButton = createToggleButton("trackball case plate", settingsHolder.showTrackballCasePlate) {
-            settingsHolder.showTrackballCasePlate = it
-            rebuildConfigAndRequestRendering(plugins, emptySet())
-        }
+        val showTrackballCasePlateButton =
+            createToggleButton("trackball case plate", settingsHolder.showTrackballCasePlate) {
+                settingsHolder.showTrackballCasePlate = it
+                rebuildConfigAndRequestRendering(plugins, emptySet())
+            }
         val debugButton = createToggleButton("Debug", showDebugInfo) {
             showDebugInfo = it
             if (!it) {
@@ -608,8 +570,7 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
         configDialog.isVisible = true
     }
 
-    private fun isScriptPanelVisible(): Boolean =
-        ::scriptEditorPanel.isInitialized && scriptEditorPanel.parent != null
+    private fun isScriptPanelVisible(): Boolean = ::scriptEditorPanel.isInitialized && scriptEditorPanel.parent != null
 
     private fun rebuildConfigAndRequestRendering(plugins: List<Cad3dPlugin>, modifiedKeyboardParts: Set<KeyboardPart>) {
         plugins.forEach {
@@ -718,29 +679,8 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
         gl.glRotatef(settingsHolder.rotateX, 1.0f, 0.0f, 0.0f)
         gl.glRotatef(settingsHolder.rotateY, 0.0f, 1.0f, 0.0f)
         gl.glRotatef(settingsHolder.rotateZ, 0.0f, 0.0f, 1.0f)
-        for (vertexHolder in vertexHolderList) {
-            gl.glBegin(GL2.GL_TRIANGLES)
-            var normalArrayIndex = 0
-            var vertexArrayIndex = 0
-            val vert = vertexHolder.vertex
-            val normals = vertexHolder.normals
-            for (i in 0 until vertexHolder.verticesCount) {
-                val x = vert[vertexArrayIndex++]
-                val y = vert[vertexArrayIndex++]
-                val z = vert[vertexArrayIndex++]
-                gl.glColor4f(
-                    vert[vertexArrayIndex++],
-                    vert[vertexArrayIndex++],
-                    vert[vertexArrayIndex++],
-                    vert[vertexArrayIndex++]
-                )
-                gl.glNormal3f(
-                    normals[normalArrayIndex++], normals[normalArrayIndex++], normals[normalArrayIndex++]
-                )
-                gl.glVertex3f(x, y, z)
-            }
-            gl.glEnd()
-        }
+
+        meshRenderer.render(gl, vertexHolderList)
 
         // Рендерим debug объекты если они включены (ВНУТРИ трансформаций)
         if (showDebugInfo) {
@@ -749,123 +689,16 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
 
         gl.glPopMatrix() // Возвращаемся к исходной матрице
 
-        renderAxisGizmo(gl)
+        axisGizmoRenderer.render(
+            gl,
+            settingsHolder.rotateX,
+            settingsHolder.rotateY,
+            settingsHolder.rotateZ,
+            viewportWidth,
+            viewportHeight,
+        )
 
         gl.glFlush()
-    }
-
-    private fun renderAxisGizmo(gl: GL2) {
-        val size = 270
-        val margin = 10
-        // Левый нижний угол (в GL Y растёт вверх)
-        val vpX = margin
-        val vpY = margin
-
-        // Сохраняем текущие атрибуты/матрицы
-        val savedLighting = gl.glIsEnabled(GLLightingFunc.GL_LIGHTING)
-        val savedColorMaterial = gl.glIsEnabled(GL2.GL_COLOR_MATERIAL)
-        val currentProgram = IntArray(1)
-        gl.glGetIntegerv(GL2.GL_CURRENT_PROGRAM, currentProgram, 0)
-        // Отключаем шейдерную программу (иначе её освещение затемняет gizmo)
-        gl.glUseProgram(0)
-        // Отключаем свет и color-material, чтобы gizmo был всегда ярким
-        gl.glDisable(GLLightingFunc.GL_LIGHTING)
-        gl.glDisable(GL2.GL_COLOR_MATERIAL)
-        gl.glDisable(GL2.GL_DEPTH_TEST)
-
-        gl.glViewport(vpX, vpY, size, size)
-
-        gl.glMatrixMode(GL2.GL_PROJECTION)
-        gl.glPushMatrix()
-        gl.glLoadIdentity()
-        val range = 1.6
-        gl.glOrtho(-range, range, -range, range, -10.0, 10.0)
-
-        gl.glMatrixMode(GL2.GL_MODELVIEW)
-        gl.glPushMatrix()
-        gl.glLoadIdentity()
-
-        // Те же вращения, что и у модели (без переноса)
-        gl.glRotatef(settingsHolder.rotateX, 1.0f, 0.0f, 0.0f)
-        gl.glRotatef(settingsHolder.rotateY, 0.0f, 1.0f, 0.0f)
-        gl.glRotatef(settingsHolder.rotateZ, 0.0f, 0.0f, 1.0f)
-
-        val red = floatArrayOf(1.0f, 0.3f, 0.3f)
-        val green = floatArrayOf(0.35f, 1.0f, 0.35f)
-        val blue = floatArrayOf(0.45f, 0.6f, 1.0f)
-
-        gl.glLineWidth(3.0f)
-        gl.glBegin(GL2.GL_LINES)
-        // X - красный
-        gl.glColor3f(red[0], red[1], red[2])
-        gl.glVertex3f(0f, 0f, 0f)
-        gl.glVertex3f(1f, 0f, 0f)
-        // Y - зелёный
-        gl.glColor3f(green[0], green[1], green[2])
-        gl.glVertex3f(0f, 0f, 0f)
-        gl.glVertex3f(0f, 1f, 0f)
-        // Z - синий
-        gl.glColor3f(blue[0], blue[1], blue[2])
-        gl.glVertex3f(0f, 0f, 0f)
-        gl.glVertex3f(0f, 0f, 1f)
-        gl.glEnd()
-
-        // Подписи осей (буквы отрисованы отрезками у конца каждой оси)
-        gl.glLineWidth(2.5f)
-        drawAxisLabel(gl, 'X', 1.18f, 0f, 0f, red)
-        drawAxisLabel(gl, 'Y', 0f, 1.18f, 0f, green)
-        drawAxisLabel(gl, 'Z', 0f, 0f, 1.18f, blue)
-        gl.glLineWidth(1.0f)
-
-        // Восстанавливаем матрицы и viewport
-        gl.glPopMatrix()
-        gl.glMatrixMode(GL2.GL_PROJECTION)
-        gl.glPopMatrix()
-        gl.glMatrixMode(GL2.GL_MODELVIEW)
-
-        gl.glViewport(0, 0, viewportWidth, viewportHeight)
-        gl.glEnable(GL2.GL_DEPTH_TEST)
-        if (savedLighting) {
-            gl.glEnable(GLLightingFunc.GL_LIGHTING)
-        }
-        if (savedColorMaterial) {
-            gl.glEnable(GL2.GL_COLOR_MATERIAL)
-        }
-        // Восстанавливаем шейдерную программу
-        gl.glUseProgram(currentProgram[0])
-    }
-
-    // Рисует букву-подпись оси, всегда развёрнутую к экрану (billboard),
-    // компенсируя вращение сцены обратным поворотом.
-    private fun drawAxisLabel(gl: GL2, letter: Char, x: Float, y: Float, z: Float, color: FloatArray) {
-        gl.glColor3f(color[0], color[1], color[2])
-        gl.glPushMatrix()
-        gl.glTranslatef(x, y, z)
-        // Разворот к экрану: обратный порядок и знак вращений сцены
-        gl.glRotatef(-settingsHolder.rotateZ, 0.0f, 0.0f, 1.0f)
-        gl.glRotatef(-settingsHolder.rotateY, 0.0f, 1.0f, 0.0f)
-        gl.glRotatef(-settingsHolder.rotateX, 1.0f, 0.0f, 0.0f)
-        val s = 0.16f
-        gl.glScalef(s, s, s)
-        gl.glBegin(GL2.GL_LINES)
-        when (letter) {
-            'X' -> {
-                gl.glVertex3f(-0.6f, 1f, 0f); gl.glVertex3f(0.6f, -1f, 0f)
-                gl.glVertex3f(0.6f, 1f, 0f); gl.glVertex3f(-0.6f, -1f, 0f)
-            }
-            'Y' -> {
-                gl.glVertex3f(-0.6f, 1f, 0f); gl.glVertex3f(0f, 0f, 0f)
-                gl.glVertex3f(0.6f, 1f, 0f); gl.glVertex3f(0f, 0f, 0f)
-                gl.glVertex3f(0f, 0f, 0f); gl.glVertex3f(0f, -1f, 0f)
-            }
-            'Z' -> {
-                gl.glVertex3f(-0.6f, 1f, 0f); gl.glVertex3f(0.6f, 1f, 0f)
-                gl.glVertex3f(0.6f, 1f, 0f); gl.glVertex3f(-0.6f, -1f, 0f)
-                gl.glVertex3f(-0.6f, -1f, 0f); gl.glVertex3f(0.6f, -1f, 0f)
-            }
-        }
-        gl.glEnd()
-        gl.glPopMatrix()
     }
 
     override fun dispose(drawable: GLAutoDrawable) {
