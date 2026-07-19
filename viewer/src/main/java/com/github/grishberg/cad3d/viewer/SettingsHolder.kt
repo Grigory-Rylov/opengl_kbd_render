@@ -33,6 +33,7 @@ class SettingsHolder(
 
     var showScriptPanel: Boolean = false
     var lastScriptFile: String = ""
+    var scriptPanelWidth: Int = 520
 
     var settings: SettingsContainer = createDefaultSettings()
         private set
@@ -171,6 +172,7 @@ class SettingsHolder(
             translateZ = translateZ,
             showScriptPanel = showScriptPanel,
             lastScriptFile = lastScriptFile,
+            scriptPanelWidth = scriptPanelWidth,
         )
     }
 
@@ -203,7 +205,7 @@ class SettingsHolder(
         settings = settings.copy(
             viewerSettings = ViewerSettings(
                 rotateX, rotateY, rotateZ, translateX, translateY, translateZ,
-                showScriptPanel, lastScriptFile
+                showScriptPanel, lastScriptFile, scriptPanelWidth
             )
         )
         val file = File(filePath)
@@ -227,6 +229,7 @@ class SettingsHolder(
     fun loadScriptPanelState() {
         showScriptPanel = settings.viewerSettings.showScriptPanel
         lastScriptFile = settings.viewerSettings.lastScriptFile
+        scriptPanelWidth = settings.viewerSettings.scriptPanelWidth
     }
 
     fun saveScriptPanelState() {
@@ -248,6 +251,7 @@ class SettingsHolder(
             translateZ = settings.viewerSettings.translateZ
             showScriptPanel = settings.viewerSettings.showScriptPanel
             lastScriptFile = settings.viewerSettings.lastScriptFile
+            scriptPanelWidth = settings.viewerSettings.scriptPanelWidth
         } catch (e: Exception) {
             e.printStackTrace()
         }

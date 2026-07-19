@@ -12,6 +12,7 @@ data class ViewerSettings(
     val translateZ: Float,
     val showScriptPanel: Boolean = false,
     val lastScriptFile: String = "",
+    val scriptPanelWidth: Int = 520,
 )
 
 @Serializable

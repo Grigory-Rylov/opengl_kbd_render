@@ -68,6 +68,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private var prevMouseY = 0
     private val pointsController = ControlPointsController()
     private var glCanvas: GLCanvas? = null
+    private var splitPane: javax.swing.JSplitPane? = null
 
     //    private val sceneBuilder: SceneBuilder
     private val debugVisualizer = DebugVisualizerImpl()
@@ -322,10 +323,42 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
         if (!::scriptEditorPanel.isInitialized) {
             scriptEditorPanel = createScriptEditorPanel()
         }
-        if (scriptEditorPanel.parent == null) {
-            contentPane.add(scriptEditorPanel, BorderLayout.EAST)
+        if (splitPane == null) {
+            // Переносим GLCanvas из CENTER в сплиттер вместе с панелью кода
+            contentPane.remove(glCanvas)
+
+            val split = javax.swing.JSplitPane(
+                javax.swing.JSplitPane.HORIZONTAL_SPLIT,
+                glCanvas,
+                scriptEditorPanel,
+            )
+            split.isContinuousLayout = true
+            split.resizeWeight = 1.0 // при ресайзе окна растёт левая часть, правая держит ширину
+            split.dividerSize = 8
+            glCanvas!!.minimumSize = Dimension(100, 100)
+            scriptEditorPanel.minimumSize = Dimension(150, 100)
+            // Ставим позицию разделителя так, чтобы правая панель имела сохранённую ширину
+            split.addComponentListener(object : java.awt.event.ComponentAdapter() {
+                override fun componentResized(e: java.awt.event.ComponentEvent?) {
+                    applyScriptPanelWidth(split)
+                    split.removeComponentListener(this)
+                }
+            })
+            // Сохраняем ширину правой панели при перетаскивании разделителя
+            split.addPropertyChangeListener(javax.swing.JSplitPane.DIVIDER_LOCATION_PROPERTY) {
+                val total = split.width
+                if (total > 0) {
+                    val rightWidth = total - split.dividerLocation - split.dividerSize
+                    if (rightWidth > 0) {
+                        settingsHolder.scriptPanelWidth = rightWidth
+                    }
+                }
+            }
+            splitPane = split
+            contentPane.add(split, BorderLayout.CENTER)
             contentPane.revalidate()
             contentPane.repaint()
+            javax.swing.SwingUtilities.invokeLater { applyScriptPanelWidth(split) }
         }
         settingsHolder.showScriptPanel = true
         scriptEditorButton.text = "Скрипты ✓"
@@ -334,9 +367,20 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
         scriptEditorPanel.runScript()
     }
 
+    private fun applyScriptPanelWidth(split: javax.swing.JSplitPane) {
+        val total = split.width
+        if (total <= 0) return
+        val width = settingsHolder.scriptPanelWidth.coerceIn(150, (total - 100).coerceAtLeast(150))
+        split.dividerLocation = total - width - split.dividerSize
+    }
+
     private fun hideScriptPanel() {
-        if (::scriptEditorPanel.isInitialized && scriptEditorPanel.parent != null) {
-            contentPane.remove(scriptEditorPanel)
+        splitPane?.let { split ->
+            // Возвращаем GLCanvas обратно в CENTER
+            split.remove(glCanvas)
+            contentPane.remove(split)
+            splitPane = null
+            contentPane.add(glCanvas, BorderLayout.CENTER)
             contentPane.revalidate()
             contentPane.repaint()
         }
@@ -348,7 +392,7 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
     }
 
     private fun toggleScriptPanel() {
-        val visible = ::scriptEditorPanel.isInitialized && scriptEditorPanel.parent != null
+        val visible = splitPane != null
         if (visible) hideScriptPanel() else showScriptPanel()
     }
 
