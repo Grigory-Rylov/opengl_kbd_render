@@ -1,6 +1,6 @@
 package com.github.grishberg.javascad.optimizator
 
-import eu.printingin3d.javascad.vrl.Polygon
+import com.github.grishberg.javascad.vrl.Polygon
 
 class NewPointsFinderSimple(private val progressObserver: ProgressObserver) : NewPointsFinder {
 

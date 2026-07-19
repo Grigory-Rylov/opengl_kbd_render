@@ -1,7 +1,7 @@
 package com.github.grishberg.javascad.optimizator
 
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.vrl.Polygon
+import com.github.grishberg.javascad.coords.V3d
+import com.github.grishberg.javascad.vrl.Polygon
 import java.util.Objects
 
 class PolygonEdge(val polygon: Polygon, val p0: V3d, val p1: V3d, val firstPointIndex: Int) {

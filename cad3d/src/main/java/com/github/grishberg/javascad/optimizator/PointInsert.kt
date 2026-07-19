@@ -1,6 +1,6 @@
 package com.github.grishberg.javascad.optimizator
 
-import eu.printingin3d.javascad.coords.V3d
+import com.github.grishberg.javascad.coords.V3d
 import java.util.Objects
 
 class PointInsert(val point: V3d, val position: Int) : Comparable<PointInsert> {

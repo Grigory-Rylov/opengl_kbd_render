@@ -7,8 +7,8 @@ import static com.github.grishberg.cad3d.keyboard.Utils.sphere;
 import static com.github.grishberg.cad3d.keyboard.Utils.union;
 
 import com.github.grishberg.cad3d.kbd.core.cfg.KeyPlaceConfig;
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.coords.V3d;
+import com.github.grishberg.javascad.models.Abstract3dModel;
 import java.util.ArrayList;
 import java.util.List;
 

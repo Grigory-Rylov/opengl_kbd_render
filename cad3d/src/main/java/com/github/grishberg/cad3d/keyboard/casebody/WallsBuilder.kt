@@ -1,6 +1,6 @@
 package com.github.grishberg.cad3d.keyboard.casebody
 
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Abstract3dModel
 
 interface WallsBuilder {
 

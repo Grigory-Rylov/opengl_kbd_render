@@ -6,13 +6,13 @@ import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
 import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
 import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
 import com.github.grishberg.cad3d.util.fromModel
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.models.Hull
-import eu.printingin3d.javascad.tranzitions.Union
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.javascad.basic.Radius
+import com.github.grishberg.javascad.coords.V3d
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Cylinder
+import com.github.grishberg.javascad.models.Hull
+import com.github.grishberg.javascad.tranzitions.Union
+import com.github.grishberg.javascad.utils.Color
 
 class SingleRow3ThumbsPlate(
     private val cfg: KeyboardConfig,

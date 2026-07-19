@@ -10,8 +10,8 @@ import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.WallsBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.wall.FrontRightToMatrixWallBuilder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.utils.Color
 
 class TwoRows5ButtonsThumbWalls(
     private val cfg: KeyboardConfig,

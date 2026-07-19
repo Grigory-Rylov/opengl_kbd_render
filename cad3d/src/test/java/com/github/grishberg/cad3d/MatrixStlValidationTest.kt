@@ -19,8 +19,8 @@ import com.github.grishberg.javascad.StlExporter
 import com.github.grishberg.javascad.StlValidator
 import com.github.grishberg.javascad.ScadExporter
 import com.github.grishberg.cad3d.plugin.cfg.*
-import eu.printingin3d.javascad.utils.Color
-import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
+import com.github.grishberg.javascad.utils.Color
+import com.github.grishberg.javascad.vrl.ColorFacetGenerationContext
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout

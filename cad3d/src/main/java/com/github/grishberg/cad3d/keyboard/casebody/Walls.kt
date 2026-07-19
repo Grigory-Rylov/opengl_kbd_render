@@ -16,9 +16,9 @@ import com.github.grishberg.cad3d.keyboard.casebody.wall.OuterCornersWallBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.wall.OuterWallsBuilder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.utils.Color
+import com.github.grishberg.javascad.coords.V3d
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.utils.Color
 
 class Walls(
     private val cfg: KeyboardConfig,

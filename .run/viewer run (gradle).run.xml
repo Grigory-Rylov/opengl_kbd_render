@@ -1,0 +1,24 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="viewer run (gradle)" type="GradleRunConfiguration" factoryName="Gradle">
+    <option name="tasks" value=":viewer:run" />
+    <option name="arguments" value="" />
+    <option name="gradle-project-path" value="" />
+    <option name="working-directory" value="$PROJECT_DIR$" />
+    <option name="java-sdk" value="17" />
+    <option name="pass-parent-env-vars" value="true" />
+    <option name="vm-options" value="--add-exports=java.desktop/sun.awt=ALL-UNNAMED --add-opens=java.desktop/sun.awt=ALL-UNNAMED" />
+    <option name="script-parameters" value="" />
+    <option name="show-console-on-stdout" value="false" />
+    <option name="show-console-on-stderr" value="true" />
+    <ExternalSystemSettings>
+      <option name="execution-name" value="" />
+      <option name="external-system-id" value="GRADLE" />
+      <option name="env" value="" />
+      <option name="pass-parent-env-vars" value="true" />
+      <option name="vm-options" value="--add-exports=java.desktop/sun.awt=ALL-UNNAMED --add-opens=java.desktop/sun.awt=ALL-UNNAMED" />
+    </ExternalSystemSettings>
+    <method v="2">
+      <option name="Gradle.Before.Run" enabled="true" tasks=":viewer:classes" />
+    </method>
+  </configuration>
+</component>

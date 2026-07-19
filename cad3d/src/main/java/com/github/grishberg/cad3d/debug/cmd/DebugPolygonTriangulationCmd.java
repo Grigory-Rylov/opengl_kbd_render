@@ -5,10 +5,10 @@ import com.github.grishberg.cad3d.ui.DebugVisualizer;
 
 import java.util.List;
 
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.utils.Color;
-import eu.printingin3d.javascad.vrl.Facet;
-import eu.printingin3d.javascad.vrl.Polygon;
+import com.github.grishberg.javascad.coords.V3d;
+import com.github.grishberg.javascad.utils.Color;
+import com.github.grishberg.javascad.vrl.Facet;
+import com.github.grishberg.javascad.vrl.Polygon;
 
 public class DebugPolygonTriangulationCmd implements DebugCmd {
     private final Color[] colors = {

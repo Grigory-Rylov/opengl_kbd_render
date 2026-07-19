@@ -1,10 +1,10 @@
 package com.github.grishberg.cad3d.debug;
 
-import eu.printingin3d.javascad.coords.V3d;
+import com.github.grishberg.javascad.coords.V3d;
 import com.github.grishberg.javascad.optimizator.PolygonValidator;
-import eu.printingin3d.javascad.vrl.Facet;
-import eu.printingin3d.javascad.vrl.Polygon;
-import eu.printingin3d.javascad.vrl.VertexPosition;
+import com.github.grishberg.javascad.vrl.Facet;
+import com.github.grishberg.javascad.vrl.Polygon;
+import com.github.grishberg.javascad.vrl.VertexPosition;
 import java.util.List;
 
 /**

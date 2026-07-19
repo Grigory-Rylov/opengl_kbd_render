@@ -1,13 +1,13 @@
 package com.github.grishberg.javascad;
 
-import static eu.printingin3d.javascad.vrl.Const.EPSILON;
+import static com.github.grishberg.javascad.vrl.Const.EPSILON;
 
 import com.github.grishberg.javascad.optimizator.CrossEdgeValidator;
-import eu.printingin3d.javascad.coords.EarClippingMod;
-import eu.printingin3d.javascad.coords.Triangle3d;
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.vrl.Facet;
-import eu.printingin3d.javascad.vrl.Polygon;
+import com.github.grishberg.javascad.coords.EarClippingMod;
+import com.github.grishberg.javascad.coords.Triangle3d;
+import com.github.grishberg.javascad.coords.V3d;
+import com.github.grishberg.javascad.vrl.Facet;
+import com.github.grishberg.javascad.vrl.Polygon;
 import java.util.ArrayList;
 import java.util.List;
 

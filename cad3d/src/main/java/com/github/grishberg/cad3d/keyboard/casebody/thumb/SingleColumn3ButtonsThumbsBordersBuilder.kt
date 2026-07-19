@@ -3,7 +3,7 @@ package com.github.grishberg.cad3d.keyboard.casebody.thumb
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.casebody.CornerWallBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.WallsBuilder
-import eu.printingin3d.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Abstract3dModel
 
 class SingleColumn3ButtonsThumbsBordersBuilder(
     private val thumbKeyPlace: ThumbKeyPlace,

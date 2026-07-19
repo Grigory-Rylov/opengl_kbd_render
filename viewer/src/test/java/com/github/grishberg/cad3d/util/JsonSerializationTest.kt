@@ -1,10 +1,10 @@
 package com.github.grishberg.cad3d.util
 
-import eu.printingin3d.javascad.coords.Triangle3d
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.utils.Color
-import eu.printingin3d.javascad.vrl.Facet
-import eu.printingin3d.javascad.vrl.Polygon
+import com.github.grishberg.javascad.coords.Triangle3d
+import com.github.grishberg.javascad.coords.V3d
+import com.github.grishberg.javascad.utils.Color
+import com.github.grishberg.javascad.vrl.Facet
+import com.github.grishberg.javascad.vrl.Polygon
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 

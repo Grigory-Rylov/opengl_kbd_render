@@ -11,6 +11,11 @@ import com.github.grishberg.cad3d.plugins.PluginManagerImpl
 import com.github.grishberg.cad3d.viewer.debug.DebugVisualizerImpl
 import com.github.grishberg.cad3d.viewer.dialog.ConfigEditor
 import com.github.grishberg.cad3d.viewer.dialog.StlExportDialog
+import com.github.grishberg.cad3d.util.fromModelNative
+import com.github.grishberg.cad3d.viewer.dialog.ScriptEditorPanel
+import com.github.grishberg.scripting.ScriptEvaluator
+import com.github.grishberg.javascad.manifold.Manifold3dEngine
+import com.github.grishberg.javascad.utils.Color as JavascadColor
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
 import com.jogamp.opengl.GLCapabilities
@@ -57,6 +62,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
     private val vertexHolderList: MutableList<VertexHolder> = ArrayList()
     private val glu = GLU()
+    private var viewportWidth = 1200
+    private var viewportHeight = 800
     private var prevMouseX = 0
     private var prevMouseY = 0
     private val pointsController = ControlPointsController()
@@ -72,32 +79,146 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private lateinit var debugInfoLabel: JLabel
     private lateinit var helpLabel: JLabel
     private lateinit var statusLabel: JLabel
+    private lateinit var scriptEditorButton: JButton
     private lateinit var prevDebugButton: JButton
     private lateinit var nextDebugButton: JButton
-    private val pluginManager: PluginManager
+    private var pluginManager: PluginManager? = null
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var plugins: List<Cad3dPlugin> = emptyList()
+    private lateinit var scriptEditorPanel: ScriptEditorPanel
+    private var scriptModelEnabled = false
+    private val scriptEvaluator: ScriptEvaluator by lazy {
+        ScriptEvaluator(filterScriptClasspath())
+    }
+
+    private fun filterScriptClasspath(): List<String> {
+        val full = System.getProperty("java.class.path")
+            .split(java.io.File.pathSeparator)
+            .map { p -> java.io.File(p) }
+            .filter { f -> f.exists() }
+            .map { f -> f.absolutePath }
+        val keep = listOf(
+            "scripting", "cad3d", "plugin", "kbd_core", "javascad", "common",
+            "kotlin-stdlib", "kotlin-script-runtime",
+        )
+        val filtered = full.filter { p -> keep.any { name -> p.contains(name) } }
+        // Fallback: if filtering dropped essential libs, use the full classpath.
+        return if (filtered.any { it.contains("javascad") } &&
+            filtered.any { it.contains("kotlin-stdlib") }
+        ) filtered else full
+    }
 
     init {
         settingsHolder.loadSettings()
 
-        val pluginsDir = File("cad3d/build/libs")
+        val pluginsDir = findPluginsDir()
+        if (!pluginsDir.exists()) {
+            println("WARNING: plugins dir not found: ${pluginsDir.absolutePath}")
+        }
         setup()
 
 
         pluginManager = PluginManagerImpl(pluginsDir)
-        pluginManager.setOnPluginLoadedListener(object : PluginManager.OnPluginLoadedListener {
+        pluginManager!!.setOnPluginLoadedListener(object : PluginManager.OnPluginLoadedListener {
             override fun onPluginsLoaded(newPlugins: List<Cad3dPlugin>) {
                 plugins = newPlugins
+                println("LOADED plugins count=${newPlugins.size} from ${pluginsDir.absolutePath}")
+                if (newPlugins.isEmpty()) {
+                    println("WARNING: no plugins loaded! Check plugins path.")
+                }
                 rebuildConfigAndRequestRendering(plugins, emptySet())
             }
         })
 
-        pluginManager.start()
+        pluginManager!!.start()
+    }
+
+    private fun findPluginsDir(): java.io.File {
+        var dir = java.io.File(System.getProperty("user.dir"))
+        repeat(6) {
+            val candidate = dir.resolve("cad3d/build/libs")
+            if (candidate.exists() && candidate.isDirectory) {
+                return candidate
+            }
+            dir = dir.parentFile ?: return java.io.File("../cad3d/build/libs")
+        }
+        return java.io.File("../cad3d/build/libs")
+    }
+
+    private fun scriptTemplate(): String = """// DSL script — F5 to run
+// Available: cube/sphere/cylinder/prism/hull/union, importStl, v3(), move/rotate/withColor
+
+// --- 5U+Vertical+Post (converted from OpenSCAD) ---
+val nutDiameter = 8.79
+val holeDiameter = 7.56 * 0.75776
+val w = 20.0
+val l = 222.0
+val h = 6.0
+
+// Y positions of the screw holes (offset_y + accumulated large/small steps)
+val ys = doubleArrayOf(
+    6.34, 22.22, 38.10, 50.77, 66.65, 82.53, 95.20, 111.08,
+    126.96, 139.63, 155.51, 171.39, 184.06, 199.94, 215.82, 228.49
+)
+
+// Base body
+val body = cube(w, l, h).move(10.0, 0.0, 0.0).withColor(Color.RED)
+
+// Hex nuts (prism with 6 sides) placed at every screw position, to subtract
+val nuts = repeat(ys.size) { i ->
+    prism(4.0, nutDiameter / 2.0, 6).move(22.9, ys[i], 2.0).withColor(Color.YELLOW)
+}
+
+// Round holes placed at every screw position, to subtract
+val holes = repeat(ys.size) { i ->
+    cylinder(2.0, holeDiameter / 2.0).move(22.9, ys[i], 0.0).withColor(Color.GREEN)
+}
+
+// Imported STL placed above the body
+val post = importStl("5U+Vertical+Post.stl").withColor(Color.CYAN).move(0.0, 0.0, 100.0)
+
+body.subtractModel(nuts).subtractModel(holes).addModel(post)
+"""
+
+    private fun findUserScriptFile(): java.io.File? {
+        var dir = java.io.File(System.getProperty("user.dir"))
+        repeat(6) {
+            val candidate = dir.resolve("scripting/examples/user_script.kt")
+            if (candidate.exists() && candidate.isFile) {
+                return candidate
+            }
+            dir = dir.parentFile ?: return null
+        }
+        return null
+    }
+
+    private fun loadMatrixRightText(): String {
+        val file = findUserScriptFile()
+        return if (file != null) {
+            try {
+                file.readText()
+            } catch (e: Exception) {
+                scriptTemplate()
+            }
+        } else {
+            scriptTemplate()
+        }
+    }
+
+    private fun createScriptEditorPanel(initialScript: String = loadMatrixRightText()): ScriptEditorPanel {
+        val classPaths = filterScriptClasspath()
+
+        return ScriptEditorPanel(classPaths, { holders ->
+            vertexHolderList.clear()
+            vertexHolderList.addAll(holders)
+            requestRender()
+        }, initialScript)
     }
 
     fun setup() {
         layout = BorderLayout()
+        // Создаем меню
+        jMenuBar = createMenuBar()
         // Создаем панель управления
         val controlPanel = createControlPanel()
 
@@ -126,7 +247,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         // Обработка закрытия окна
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
-                pluginManager.stop()
+                pluginManager?.stop()
                 settingsHolder.saveSettings()
                 if (animator.isAnimating) {
                     animator.stop()
@@ -137,6 +258,98 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         setSize(1200, 800)
         isVisible = true
         requestRender()
+        // При старте восстанавливаем состояние панели скриптов из настроек
+        settingsHolder.loadScriptPanelState()
+        val lastScript = settingsHolder.lastScriptFile
+        if (lastScript.isNotEmpty()) {
+            val f = java.io.File(lastScript)
+            if (f.exists()) {
+                try {
+                    scriptEditorPanel = createScriptEditorPanel(f.readText())
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+        if (settingsHolder.showScriptPanel) {
+            showScriptPanel()
+        }
+    }
+
+    private fun createMenuBar(): javax.swing.JMenuBar {
+        val menuBar = javax.swing.JMenuBar()
+        val fileMenu = javax.swing.JMenu("Файл")
+
+        val openItem = javax.swing.JMenuItem("Открыть скрипт...")
+        val shortcutMask = java.awt.Toolkit.getDefaultToolkit().menuShortcutKeyMaskEx
+        openItem.accelerator = javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, shortcutMask)
+        openItem.addActionListener { openScript() }
+        fileMenu.add(openItem)
+
+        menuBar.add(fileMenu)
+        return menuBar
+    }
+
+    private fun openScript() {
+        val chooser = javax.swing.JFileChooser()
+        chooser.dialogTitle = "Открыть скрипт"
+        chooser.fileFilter = javax.swing.filechooser.FileNameExtensionFilter("Kotlin scripts (*.kt, *.kts)", "kt", "kts")
+        if (chooser.showOpenDialog(this) != javax.swing.JFileChooser.APPROVE_OPTION) {
+            return
+        }
+        val file = chooser.selectedFile
+        try {
+            val text = file.readText()
+            if (!::scriptEditorPanel.isInitialized) {
+                scriptEditorPanel = createScriptEditorPanel(text)
+            } else {
+                scriptEditorPanel.loadScript(text)
+            }
+            settingsHolder.lastScriptFile = file.absolutePath
+            settingsHolder.saveSettings()
+            showScriptPanel()
+        } catch (e: Exception) {
+            javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "Не удалось открыть файл: ${e.message}",
+                "Ошибка",
+                javax.swing.JOptionPane.ERROR_MESSAGE
+            )
+        }
+    }
+
+    private fun showScriptPanel() {
+        if (!::scriptEditorPanel.isInitialized) {
+            scriptEditorPanel = createScriptEditorPanel()
+        }
+        if (scriptEditorPanel.parent == null) {
+            contentPane.add(scriptEditorPanel, BorderLayout.EAST)
+            contentPane.revalidate()
+            contentPane.repaint()
+        }
+        settingsHolder.showScriptPanel = true
+        scriptEditorButton.text = "Скрипты ✓"
+        settingsHolder.saveScriptPanelState()
+        // Компилируем текст редактора при открытии панели
+        scriptEditorPanel.runScript()
+    }
+
+    private fun hideScriptPanel() {
+        if (::scriptEditorPanel.isInitialized && scriptEditorPanel.parent != null) {
+            contentPane.remove(scriptEditorPanel)
+            contentPane.revalidate()
+            contentPane.repaint()
+        }
+        settingsHolder.showScriptPanel = false
+        scriptEditorButton.text = "Скрипты"
+        settingsHolder.saveScriptPanelState()
+        // Script panel closed: render the keyboard from the plugin.
+        rebuildConfigAndRequestRendering(plugins, emptySet())
+    }
+
+    private fun toggleScriptPanel() {
+        val visible = ::scriptEditorPanel.isInitialized && scriptEditorPanel.parent != null
+        if (visible) hideScriptPanel() else showScriptPanel()
     }
 
     private fun createControlPanel(): JPanel {
@@ -227,6 +440,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             dialog.isVisible = true
         }
 
+        scriptEditorButton = JButton("Скрипты")
+        scriptEditorButton.addActionListener {
+            toggleScriptPanel()
+        }
+
         // --- Распределяем кнопки по строкам ---
         // Вы можете изменить это распределение в зависимости от того, какие кнопки вам
         // нужны чаще и должны быть на верхнем ряду.
@@ -234,6 +452,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         // Верхний ряд (row1)
         row1.add(configButton)
         row1.add(exportStlButton)
+        row1.add(scriptEditorButton)
         row1.add(keysButton)
         row1.add(caseButton)
         row1.add(matrixButton)
@@ -345,6 +564,9 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         configDialog.isVisible = true
     }
 
+    private fun isScriptPanelVisible(): Boolean =
+        ::scriptEditorPanel.isInitialized && scriptEditorPanel.parent != null
+
     private fun rebuildConfigAndRequestRendering(plugins: List<Cad3dPlugin>, modifiedKeyboardParts: Set<KeyboardPart>) {
         plugins.forEach {
             println("Request from ${it.name} , ver ${it.version}")
@@ -353,12 +575,16 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             it.requestModels(
                 settingsHolder.settings, modifiedKeyboardParts, object : ResultListener {
                     override fun onReady(result: List<VertexHolder>, complete: Boolean) {
-                        vertexHolderList.clear()
-                        vertexHolderList.addAll(result)
-                        if (complete) {
-                            setRenderingStatus(false)
+                        // Plugin (keyboard) model is shown only when the script panel is hidden.
+                        // When the script panel is open, the script has rendering priority.
+                        if (!isScriptPanelVisible()) {
+                            vertexHolderList.clear()
+                            vertexHolderList.addAll(result)
+                            if (complete) {
+                                setRenderingStatus(false)
+                            }
+                            requestRender()
                         }
-                        requestRender()
                     }
                 })
         }
@@ -479,7 +705,123 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
         gl.glPopMatrix() // Возвращаемся к исходной матрице
 
+        renderAxisGizmo(gl)
+
         gl.glFlush()
+    }
+
+    private fun renderAxisGizmo(gl: GL2) {
+        val size = 270
+        val margin = 10
+        // Левый нижний угол (в GL Y растёт вверх)
+        val vpX = margin
+        val vpY = margin
+
+        // Сохраняем текущие атрибуты/матрицы
+        val savedLighting = gl.glIsEnabled(GLLightingFunc.GL_LIGHTING)
+        val savedColorMaterial = gl.glIsEnabled(GL2.GL_COLOR_MATERIAL)
+        val currentProgram = IntArray(1)
+        gl.glGetIntegerv(GL2.GL_CURRENT_PROGRAM, currentProgram, 0)
+        // Отключаем шейдерную программу (иначе её освещение затемняет gizmo)
+        gl.glUseProgram(0)
+        // Отключаем свет и color-material, чтобы gizmo был всегда ярким
+        gl.glDisable(GLLightingFunc.GL_LIGHTING)
+        gl.glDisable(GL2.GL_COLOR_MATERIAL)
+        gl.glDisable(GL2.GL_DEPTH_TEST)
+
+        gl.glViewport(vpX, vpY, size, size)
+
+        gl.glMatrixMode(GL2.GL_PROJECTION)
+        gl.glPushMatrix()
+        gl.glLoadIdentity()
+        val range = 1.6
+        gl.glOrtho(-range, range, -range, range, -10.0, 10.0)
+
+        gl.glMatrixMode(GL2.GL_MODELVIEW)
+        gl.glPushMatrix()
+        gl.glLoadIdentity()
+
+        // Те же вращения, что и у модели (без переноса)
+        gl.glRotatef(settingsHolder.rotateX, 1.0f, 0.0f, 0.0f)
+        gl.glRotatef(settingsHolder.rotateY, 0.0f, 1.0f, 0.0f)
+        gl.glRotatef(settingsHolder.rotateZ, 0.0f, 0.0f, 1.0f)
+
+        val red = floatArrayOf(1.0f, 0.3f, 0.3f)
+        val green = floatArrayOf(0.35f, 1.0f, 0.35f)
+        val blue = floatArrayOf(0.45f, 0.6f, 1.0f)
+
+        gl.glLineWidth(3.0f)
+        gl.glBegin(GL2.GL_LINES)
+        // X - красный
+        gl.glColor3f(red[0], red[1], red[2])
+        gl.glVertex3f(0f, 0f, 0f)
+        gl.glVertex3f(1f, 0f, 0f)
+        // Y - зелёный
+        gl.glColor3f(green[0], green[1], green[2])
+        gl.glVertex3f(0f, 0f, 0f)
+        gl.glVertex3f(0f, 1f, 0f)
+        // Z - синий
+        gl.glColor3f(blue[0], blue[1], blue[2])
+        gl.glVertex3f(0f, 0f, 0f)
+        gl.glVertex3f(0f, 0f, 1f)
+        gl.glEnd()
+
+        // Подписи осей (буквы отрисованы отрезками у конца каждой оси)
+        gl.glLineWidth(2.5f)
+        drawAxisLabel(gl, 'X', 1.18f, 0f, 0f, red)
+        drawAxisLabel(gl, 'Y', 0f, 1.18f, 0f, green)
+        drawAxisLabel(gl, 'Z', 0f, 0f, 1.18f, blue)
+        gl.glLineWidth(1.0f)
+
+        // Восстанавливаем матрицы и viewport
+        gl.glPopMatrix()
+        gl.glMatrixMode(GL2.GL_PROJECTION)
+        gl.glPopMatrix()
+        gl.glMatrixMode(GL2.GL_MODELVIEW)
+
+        gl.glViewport(0, 0, viewportWidth, viewportHeight)
+        gl.glEnable(GL2.GL_DEPTH_TEST)
+        if (savedLighting) {
+            gl.glEnable(GLLightingFunc.GL_LIGHTING)
+        }
+        if (savedColorMaterial) {
+            gl.glEnable(GL2.GL_COLOR_MATERIAL)
+        }
+        // Восстанавливаем шейдерную программу
+        gl.glUseProgram(currentProgram[0])
+    }
+
+    // Рисует букву-подпись оси, всегда развёрнутую к экрану (billboard),
+    // компенсируя вращение сцены обратным поворотом.
+    private fun drawAxisLabel(gl: GL2, letter: Char, x: Float, y: Float, z: Float, color: FloatArray) {
+        gl.glColor3f(color[0], color[1], color[2])
+        gl.glPushMatrix()
+        gl.glTranslatef(x, y, z)
+        // Разворот к экрану: обратный порядок и знак вращений сцены
+        gl.glRotatef(-settingsHolder.rotateZ, 0.0f, 0.0f, 1.0f)
+        gl.glRotatef(-settingsHolder.rotateY, 0.0f, 1.0f, 0.0f)
+        gl.glRotatef(-settingsHolder.rotateX, 1.0f, 0.0f, 0.0f)
+        val s = 0.16f
+        gl.glScalef(s, s, s)
+        gl.glBegin(GL2.GL_LINES)
+        when (letter) {
+            'X' -> {
+                gl.glVertex3f(-0.6f, 1f, 0f); gl.glVertex3f(0.6f, -1f, 0f)
+                gl.glVertex3f(0.6f, 1f, 0f); gl.glVertex3f(-0.6f, -1f, 0f)
+            }
+            'Y' -> {
+                gl.glVertex3f(-0.6f, 1f, 0f); gl.glVertex3f(0f, 0f, 0f)
+                gl.glVertex3f(0.6f, 1f, 0f); gl.glVertex3f(0f, 0f, 0f)
+                gl.glVertex3f(0f, 0f, 0f); gl.glVertex3f(0f, -1f, 0f)
+            }
+            'Z' -> {
+                gl.glVertex3f(-0.6f, 1f, 0f); gl.glVertex3f(0.6f, 1f, 0f)
+                gl.glVertex3f(0.6f, 1f, 0f); gl.glVertex3f(-0.6f, -1f, 0f)
+                gl.glVertex3f(-0.6f, -1f, 0f); gl.glVertex3f(0.6f, -1f, 0f)
+            }
+        }
+        gl.glEnd()
+        gl.glPopMatrix()
     }
 
     override fun dispose(drawable: GLAutoDrawable) {
@@ -506,7 +848,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     protected fun init(gl: GL2) {
         println("init gl2")
         gl.glShadeModel(GL2.GL_SMOOTH)
-        gl.glClearColor(0f, 0f, 0f, 0f)
+        gl.glClearColor(0.2f, 0.2f, 0.2f, 1.0f)
         gl.glClearDepth(1.0)
         gl.glEnable(GL2.GL_DEPTH_TEST)
         gl.glDepthFunc(GL2.GL_LEQUAL)
@@ -534,6 +876,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             height = 1
         }
         val h = width.toFloat() / height.toFloat()
+        viewportWidth = width
+        viewportHeight = height
         gl.glViewport(0, 0, width, height)
         gl.glMatrixMode(GL2.GL_PROJECTION)
         gl.glLoadIdentity()

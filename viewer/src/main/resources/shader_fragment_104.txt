@@ -1,6 +1,20 @@
 #version 120
 varying vec4 vColor;
+varying vec3 vNormal;
+varying vec3 vViewPos;
 
 void main() {
-    gl_FragColor = vColor;
+    vec3 N = normalize(vNormal);
+    vec3 L = normalize(vec3(0.0, 1.0, 0.5));
+    vec3 V = normalize(-vViewPos);
+    vec3 H = normalize(L + V);
+
+    float diff = max(dot(N, L), 0.0);
+    float spec = pow(max(dot(N, H), 0.0), 32.0);
+
+    vec3 ambient = 0.25 * vColor.rgb;
+    vec3 diffuse = diff * vColor.rgb;
+    vec3 specular = vec3(0.6) * spec;
+
+    gl_FragColor = vec4(ambient + diffuse + specular, vColor.a);
 }

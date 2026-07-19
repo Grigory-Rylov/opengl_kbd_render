@@ -31,6 +31,9 @@ class SettingsHolder(
     var translateY: Float = 0.0f
     var translateZ: Float = -300.0f
 
+    var showScriptPanel: Boolean = false
+    var lastScriptFile: String = ""
+
     var settings: SettingsContainer = createDefaultSettings()
         private set
 
@@ -166,8 +169,9 @@ class SettingsHolder(
             translateX = translateX,
             translateY = translateY,
             translateZ = translateZ,
-
-            )
+            showScriptPanel = showScriptPanel,
+            lastScriptFile = lastScriptFile,
+        )
     }
 
     fun updateSettings(
@@ -198,7 +202,8 @@ class SettingsHolder(
     fun saveSettings() {
         settings = settings.copy(
             viewerSettings = ViewerSettings(
-                rotateX, rotateY, rotateZ, translateX, translateY, translateZ
+                rotateX, rotateY, rotateZ, translateX, translateY, translateZ,
+                showScriptPanel, lastScriptFile
             )
         )
         val file = File(filePath)
@@ -219,6 +224,15 @@ class SettingsHolder(
         }
     }
 
+    fun loadScriptPanelState() {
+        showScriptPanel = settings.viewerSettings.showScriptPanel
+        lastScriptFile = settings.viewerSettings.lastScriptFile
+    }
+
+    fun saveScriptPanelState() {
+        saveSettings()
+    }
+
     fun loadSettings() {
         val file = File(filePath)
         try {
@@ -232,6 +246,8 @@ class SettingsHolder(
             translateX = settings.viewerSettings.translateX
             translateY = settings.viewerSettings.translateY
             translateZ = settings.viewerSettings.translateZ
+            showScriptPanel = settings.viewerSettings.showScriptPanel
+            lastScriptFile = settings.viewerSettings.lastScriptFile
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -243,3 +259,4 @@ class SettingsHolder(
         private const val STANDART_KEYCAP_HEIGHT = 12.7
     }
 }
+

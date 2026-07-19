@@ -7,11 +7,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import eu.printingin3d.javascad.coords.Triangle3d;
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.vrl.Const;
-import eu.printingin3d.javascad.vrl.Facet;
-import eu.printingin3d.javascad.vrl.Polygon;
+import com.github.grishberg.javascad.coords.Triangle3d;
+import com.github.grishberg.javascad.coords.V3d;
+import com.github.grishberg.javascad.vrl.Const;
+import com.github.grishberg.javascad.vrl.Facet;
+import com.github.grishberg.javascad.vrl.Polygon;
 
 public class StlValidator {
 
@@ -37,7 +37,7 @@ public class StlValidator {
             buf.position(buf.position() + 2);
             V3d n = new V3d(nx, ny, nz);
             Triangle3d t = new Triangle3d(new V3d(v0x,v0y,v0z), new V3d(v1x,v1y,v1z), new V3d(v2x,v2y,v2z));
-            facets.add(new Facet(t, n, new eu.printingin3d.javascad.utils.Color(128,128,128)));
+            facets.add(new Facet(t, n, new com.github.grishberg.javascad.utils.Color(128,128,128)));
         }
         return facets;
     }
@@ -357,7 +357,7 @@ public class StlValidator {
                     V3d p2 = new V3d(vc[0], vc[1], vc[2]);
                     V3d normal = computeFaceNormal(Arrays.asList(p0, p1, p2));
                     if (normal != null) {
-                        newFacets.add(new Facet(new Triangle3d(p0, p1, p2), normal, eu.printingin3d.javascad.utils.Color.GRAY));
+                        newFacets.add(new Facet(new Triangle3d(p0, p1, p2), normal, com.github.grishberg.javascad.utils.Color.GRAY));
                     }
                 }
             }

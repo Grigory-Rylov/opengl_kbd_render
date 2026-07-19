@@ -2,11 +2,11 @@ package com.github.grishberg.javascad
 
 import com.github.grishberg.javascad.optimizator.PolygonValidatorMultithreading
 import com.github.grishberg.javascad.optimizator.ProgressObserver
-import eu.printingin3d.javascad.coords.Triangle3d
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.manifold.Manifold3dEngine
-import eu.printingin3d.javascad.vrl.Facet
-import eu.printingin3d.javascad.vrl.Polygon
+import com.github.grishberg.javascad.coords.Triangle3d
+import com.github.grishberg.javascad.coords.V3d
+import com.github.grishberg.javascad.manifold.Manifold3dEngine
+import com.github.grishberg.javascad.vrl.Facet
+import com.github.grishberg.javascad.vrl.Polygon
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException

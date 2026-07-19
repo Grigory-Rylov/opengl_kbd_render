@@ -2,11 +2,11 @@ package com.github.grishberg.cad3d.keyboard.casebody.controllers
 
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.plugin.cfg.ControllerType
-import eu.printingin3d.javascad.basic.Radius
-import eu.printingin3d.javascad.coords.Angles3d
-import eu.printingin3d.javascad.models.Abstract3dModel
-import eu.printingin3d.javascad.models.Cylinder
-import eu.printingin3d.javascad.models.Hull
+import com.github.grishberg.javascad.basic.Radius
+import com.github.grishberg.javascad.coords.Angles3d
+import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Cylinder
+import com.github.grishberg.javascad.models.Hull
 
 class ControllerFactory(private val cfg: KeyboardConfig) {
 

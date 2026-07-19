@@ -1,7 +1,7 @@
 package com.github.grishberg.cad3d.viewer.debug;
 
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.utils.Color;
+import com.github.grishberg.javascad.coords.V3d;
+import com.github.grishberg.javascad.utils.Color;
 import java.util.List;
 
 /**
