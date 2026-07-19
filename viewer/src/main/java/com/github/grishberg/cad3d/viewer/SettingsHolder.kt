@@ -32,6 +32,7 @@ class SettingsHolder(
     var translateZ: Float = -300.0f
 
     var showScriptPanel: Boolean = false
+    var lastScriptFile: String = ""
 
     var settings: SettingsContainer = createDefaultSettings()
         private set
@@ -168,8 +169,9 @@ class SettingsHolder(
             translateX = translateX,
             translateY = translateY,
             translateZ = translateZ,
-
-            )
+            showScriptPanel = showScriptPanel,
+            lastScriptFile = lastScriptFile,
+        )
     }
 
     fun updateSettings(
@@ -200,7 +202,8 @@ class SettingsHolder(
     fun saveSettings() {
         settings = settings.copy(
             viewerSettings = ViewerSettings(
-                rotateX, rotateY, rotateZ, translateX, translateY, translateZ
+                rotateX, rotateY, rotateZ, translateX, translateY, translateZ,
+                showScriptPanel, lastScriptFile
             )
         )
         val file = File(filePath)
@@ -221,29 +224,13 @@ class SettingsHolder(
         }
     }
 
-    private val scriptPanelStateFile: File
-        get() = File(filePath).parentFile?.resolve("script_panel_state.txt")
-            ?: File("script_panel_state.txt")
-
     fun loadScriptPanelState() {
-        try {
-            val f = scriptPanelStateFile
-            if (f.exists()) {
-                showScriptPanel = f.readText().trim() == "true"
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        showScriptPanel = settings.viewerSettings.showScriptPanel
+        lastScriptFile = settings.viewerSettings.lastScriptFile
     }
 
     fun saveScriptPanelState() {
-        try {
-            val f = scriptPanelStateFile
-            f.parentFile?.mkdirs()
-            f.writeText(if (showScriptPanel) "true" else "false")
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        saveSettings()
     }
 
     fun loadSettings() {
@@ -259,6 +246,8 @@ class SettingsHolder(
             translateX = settings.viewerSettings.translateX
             translateY = settings.viewerSettings.translateY
             translateZ = settings.viewerSettings.translateZ
+            showScriptPanel = settings.viewerSettings.showScriptPanel
+            lastScriptFile = settings.viewerSettings.lastScriptFile
         } catch (e: Exception) {
             e.printStackTrace()
         }

@@ -53,9 +53,11 @@ class ScriptEditorPanel(
     private val errorArea = JTextArea()
     private val runButton = JButton("▶ Run (F5)")
     private val saveButton = JButton("💾 Save")
+    private val exportButton = JButton("⤓ Export STL (F7)")
     private val evaluator = ScriptEvaluator(classPaths)
 
     private var isModified = false
+    private var lastHolders: List<VertexHolder> = emptyList()
 
     init {
         border = BorderFactory.createTitledBorder("Script Editor")
@@ -101,7 +103,7 @@ class ScriptEditorPanel(
             org.fife.ui.rsyntaxtextarea.Style(AwtColor(200, 170, 255)) // numbers - light purple
         )
         scriptText.syntaxScheme = scheme
-        scriptText.text = if (initialScript.isNotEmpty()) initialScript else """// Script editor — F5 to run
+        scriptText.text = if (initialScript.isNotEmpty()) initialScript else """// Script editor — F5 to run, F7 to export STL
  // Available: bindings, Abstract3dModel, V3d
 
  bindings.cube(50.0) // fallback if matrix_right not found
@@ -134,6 +136,8 @@ class ScriptEditorPanel(
         runButton.addActionListener { runScript() }
         controlPanel.add(saveButton)
         saveButton.addActionListener { saveScript() }
+        controlPanel.add(exportButton)
+        exportButton.addActionListener { exportStl() }
 
         statusLabel.border = SwingEmptyBorder(0, 10, 0, 0)
         statusLabel.foreground = AwtColor.GREEN
@@ -161,6 +165,13 @@ class ScriptEditorPanel(
         scriptText.registerKeyboardAction(
             ActionListener { runScript() },
             javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F5, 0),
+            javax.swing.JComponent.WHEN_FOCUSED
+        )
+
+        // F7 key binding - export to STL
+        scriptText.registerKeyboardAction(
+            ActionListener { exportStl() },
+            javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F7, 0),
             javax.swing.JComponent.WHEN_FOCUSED
         )
     }
@@ -207,6 +218,7 @@ class ScriptEditorPanel(
                 } else if (models.isNotEmpty()) {
                     try {
                         val holders = models.map { fromModelNative(it, 20) }
+                        lastHolders = holders
                         val totalVerts = holders.sumOf { it.verticesCount }
                         onModelReady(holders)
                         statusLabel.text = "OK (${result.compilationTimeMs}ms, $totalVerts вершин, ${holders.size} фигур)"
@@ -257,6 +269,84 @@ class ScriptEditorPanel(
             statusLabel.foreground = AwtColor.RED
             setError("Ошибка сохранения: ${e.message}")
         }
+    }
+
+    private fun exportStl() {
+        val holders = lastHolders
+        if (holders.isEmpty()) {
+            statusLabel.text = "Нет фигур для экспорта"
+            statusLabel.foreground = AwtColor.ORANGE
+            setError("Сначала запустите скрипт (F5), чтобы построить фигуры.")
+            return
+        }
+
+        val chooser = javax.swing.JFileChooser(findSaveDir())
+        chooser.dialogTitle = "Экспорт в STL"
+        chooser.selectedFile = java.io.File("export.stl")
+        chooser.fileFilter = javax.swing.filechooser.FileNameExtensionFilter("STL files (*.stl)", "stl")
+        if (chooser.showSaveDialog(this) != javax.swing.JFileChooser.APPROVE_OPTION) {
+            return
+        }
+        var file = chooser.selectedFile
+        if (!file.name.lowercase().endsWith(".stl")) {
+            file = java.io.File(file.parentFile, file.name + ".stl")
+        }
+
+        try {
+            val triangleCount = writeBinaryStl(holders, file)
+            statusLabel.text = "STL сохранён: ${file.name}"
+            statusLabel.foreground = AwtColor.GREEN
+            setOutput("Экспортировано ${holders.size} фигур ($triangleCount треугольников) в ${file.absolutePath}")
+        } catch (e: Exception) {
+            statusLabel.text = "Ошибка экспорта STL"
+            statusLabel.foreground = AwtColor.RED
+            setError("Ошибка экспорта STL: ${e.message}")
+        }
+    }
+
+    private fun writeBinaryStl(holders: List<VertexHolder>, file: java.io.File): Int {
+        var triangleCount = 0
+        for (holder in holders) {
+            triangleCount += holder.verticesCount / 3
+        }
+
+        val buffer = java.nio.ByteBuffer.allocate(84 + triangleCount * 50)
+        buffer.order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        buffer.put(ByteArray(80))
+        buffer.putInt(triangleCount)
+
+        for (holder in holders) {
+            val vert = holder.vertex
+            val normals = holder.normals
+            var vi = 0
+            var ni = 0
+            val triangles = holder.verticesCount / 3
+            for (t in 0 until triangles) {
+                var nx = 0f
+                var ny = 0f
+                var nz = 0f
+                val positions = FloatArray(9)
+                for (v in 0 until 3) {
+                    positions[v * 3] = vert[vi++]
+                    positions[v * 3 + 1] = vert[vi++]
+                    positions[v * 3 + 2] = vert[vi++]
+                    vi += 4 // skip r,g,b,a
+                    nx += normals[ni++]
+                    ny += normals[ni++]
+                    nz += normals[ni++]
+                }
+                buffer.putFloat(nx / 3f)
+                buffer.putFloat(ny / 3f)
+                buffer.putFloat(nz / 3f)
+                for (f in positions) {
+                    buffer.putFloat(f)
+                }
+                buffer.putShort(0)
+            }
+        }
+
+        file.outputStream().use { it.write(buffer.array()) }
+        return triangleCount
     }
 
     fun setStatus(text: String, success: Boolean) {

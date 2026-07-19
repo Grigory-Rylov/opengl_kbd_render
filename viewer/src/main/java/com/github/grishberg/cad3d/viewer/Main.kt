@@ -215,6 +215,8 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
 
     fun setup() {
         layout = BorderLayout()
+        // Создаем меню
+        jMenuBar = createMenuBar()
         // Создаем панель управления
         val controlPanel = createControlPanel()
 
@@ -256,8 +258,61 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
         requestRender()
         // При старте восстанавливаем состояние панели скриптов из настроек
         settingsHolder.loadScriptPanelState()
+        val lastScript = settingsHolder.lastScriptFile
+        if (lastScript.isNotEmpty()) {
+            val f = java.io.File(lastScript)
+            if (f.exists()) {
+                try {
+                    scriptEditorPanel = createScriptEditorPanel(f.readText())
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
         if (settingsHolder.showScriptPanel) {
             showScriptPanel()
+        }
+    }
+
+    private fun createMenuBar(): javax.swing.JMenuBar {
+        val menuBar = javax.swing.JMenuBar()
+        val fileMenu = javax.swing.JMenu("Файл")
+
+        val openItem = javax.swing.JMenuItem("Открыть скрипт...")
+        val shortcutMask = java.awt.Toolkit.getDefaultToolkit().menuShortcutKeyMaskEx
+        openItem.accelerator = javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, shortcutMask)
+        openItem.addActionListener { openScript() }
+        fileMenu.add(openItem)
+
+        menuBar.add(fileMenu)
+        return menuBar
+    }
+
+    private fun openScript() {
+        val chooser = javax.swing.JFileChooser()
+        chooser.dialogTitle = "Открыть скрипт"
+        chooser.fileFilter = javax.swing.filechooser.FileNameExtensionFilter("Kotlin scripts (*.kt, *.kts)", "kt", "kts")
+        if (chooser.showOpenDialog(this) != javax.swing.JFileChooser.APPROVE_OPTION) {
+            return
+        }
+        val file = chooser.selectedFile
+        try {
+            val text = file.readText()
+            if (!::scriptEditorPanel.isInitialized) {
+                scriptEditorPanel = createScriptEditorPanel(text)
+            } else {
+                scriptEditorPanel.loadScript(text)
+            }
+            settingsHolder.lastScriptFile = file.absolutePath
+            settingsHolder.saveSettings()
+            showScriptPanel()
+        } catch (e: Exception) {
+            javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "Не удалось открыть файл: ${e.message}",
+                "Ошибка",
+                javax.swing.JOptionPane.ERROR_MESSAGE
+            )
         }
     }
 

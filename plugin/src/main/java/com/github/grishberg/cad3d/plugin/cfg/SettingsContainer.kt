@@ -10,6 +10,8 @@ data class ViewerSettings(
     val translateX: Float,
     val translateY: Float,
     val translateZ: Float,
+    val showScriptPanel: Boolean = false,
+    val lastScriptFile: String = "",
 )
 
 @Serializable
