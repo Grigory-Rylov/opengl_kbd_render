@@ -75,11 +75,7 @@ class ScriptBindings {
     infix fun Model.minus(other: Model): Model =
         this.subtractModel(other)
 
-    // Цвета
-    fun Model.color(r: Int, g: Int, b: Int): Model =
-        this.withColor(Color(r, g, b))
-    fun Model.color(name: String): Model =
-        this.withColor(parseColor(name))
+    // Цвета (перенесены на top-level для доступности в мультифайловых скриптах)
 
     private fun parseColor(name: String): Color = when (name.lowercase()) {
         "red" -> Color.RED
@@ -305,4 +301,30 @@ class ScriptBindings {
         step("Union")
         return placeholders.model.addModel(connections.model.addModel(borders.model))
     }
+}
+
+// Top-level extension functions для цветов — доступны через ScriptBindings.*
+fun Model.color(r: Int, g: Int, b: Int): Model =
+    this.withColor(Color(r, g, b))
+fun Model.color(name: String): Model =
+    this.withColor(parseColorTop(name))
+
+private fun parseColorTop(name: String): Color = when (name.lowercase()) {
+    "red" -> Color.RED
+    "green" -> Color.GREEN
+    "blue" -> Color.BLUE
+    "gray", "grey" -> Color.GRAY
+    "white" -> Color.WHITE
+    "black" -> Color.BLACK
+    "yellow" -> Color.YELLOW
+    "cyan" -> Color.CYAN
+    "magenta" -> Color.MAGENTA
+    "orange" -> Color.ORANGE
+    "pink" -> Color.PINK
+    else -> if (name.startsWith("#") && name.length == 7) {
+        val rr = name.substring(1, 3).toInt(16)
+        val gg = name.substring(3, 5).toInt(16)
+        val bb = name.substring(5, 7).toInt(16)
+        Color(rr, gg, bb)
+    } else Color.GRAY
 }

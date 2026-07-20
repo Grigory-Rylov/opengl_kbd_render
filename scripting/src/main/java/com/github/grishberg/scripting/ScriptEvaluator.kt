@@ -64,6 +64,7 @@ import com.github.grishberg.javascad.utils.*
 import com.github.grishberg.javascad.manifold.*
 import com.github.grishberg.javascad.vrl.*
 import com.github.grishberg.scripting.ScriptBindings
+import com.github.grishberg.scripting.ScriptBindings.*
 
 """
 
@@ -103,6 +104,16 @@ import com.github.grishberg.javascad.*
     private val globalDecls = """
 infix fun Model.union(other: Model) = this.addModel(other)
 infix fun Model.minus(other: Model) = this.subtractModel(other)
+
+fun Model.color(r: Int, g: Int, b: Int): Model = this.withColor(Color(r, g, b))
+fun Model.color(name: String): Model = this.withColor(colorFromString(name))
+fun colorFromString(n: String): Color = when (n.lowercase()) {
+    "red" -> Color.RED; "green" -> Color.GREEN; "blue" -> Color.BLUE
+    "gray", "grey" -> Color.GRAY; "white" -> Color.WHITE; "black" -> Color.BLACK
+    "yellow" -> Color.YELLOW; "cyan" -> Color.CYAN; "magenta" -> Color.MAGENTA
+    "orange" -> Color.ORANGE; "pink" -> Color.PINK
+    else -> if (n.startsWith("#") && n.length == 7) Color(n.substring(1, 3).toInt(16), n.substring(3, 5).toInt(16), n.substring(5, 7).toInt(16)) else Color.GRAY
+}
 
 var bindings = ScriptBindings()
 
@@ -357,6 +368,15 @@ fun hull(vararg models: Model) = bindings.hull(*models)
 fun hull(models: List<Model>) = bindings.hull(models)
 fun union(vararg models: Model) = bindings.union(*models)
 fun union(models: List<Model>) = bindings.union(models)
+fun Model.color(r: Int, g: Int, b: Int): Model = this.withColor(Color(r, g, b))
+fun Model.color(name: String): Model = this.withColor(colorFromString(name))
+fun colorFromString(n: String): Color = when (n.lowercase()) {
+    "red" -> Color.RED; "green" -> Color.GREEN; "blue" -> Color.BLUE
+    "gray", "grey" -> Color.GRAY; "white" -> Color.WHITE; "black" -> Color.BLACK
+    "yellow" -> Color.YELLOW; "cyan" -> Color.CYAN; "magenta" -> Color.MAGENTA
+    "orange" -> Color.ORANGE; "pink" -> Color.PINK
+    else -> if (n.startsWith("#") && n.length == 7) Color(n.substring(1, 3).toInt(16), n.substring(3, 5).toInt(16), n.substring(5, 7).toInt(16)) else Color.GRAY
+}
 fun v3(x: Number, y: Number, z: Number) = bindings.v3(x, y, z)
 fun v3(x: Number, y: Number) = bindings.v3(x, y)
 fun angles(x: Number = 0.0, y: Number = 0.0, z: Number = 0.0) = bindings.angles(x, y, z)
