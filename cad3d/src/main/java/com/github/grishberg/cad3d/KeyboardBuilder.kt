@@ -40,7 +40,7 @@ import com.github.grishberg.cad3d.util.fromModelNative
 import com.github.grishberg.javascad.StlExporter
 import com.github.grishberg.javascad.StlImporter
 import com.github.grishberg.javascad.manifold.Manifold3dEngine
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Cube
 import com.github.grishberg.javascad.models.Cylinder
 import com.github.grishberg.javascad.models.IModel
@@ -71,7 +71,7 @@ class KeyboardBuilder(
 
     private var resolution = 15 // Количество промежуточных точек между заданными точками
     private val cache = ConcurrentHashMap<KeyboardPart, List<VertexHolder>>()
-    private val stlModelsCache = ConcurrentHashMap<KeyboardPart, Map<String, Abstract3dModel>>()
+    private val stlModelsCache = ConcurrentHashMap<KeyboardPart, Map<String, Model>>()
     private val currentResults = mutableListOf<VertexHolder>()
 
     fun rebuildModels(cfg: KeyboardConfig, listener: ResultListener) {
@@ -314,7 +314,7 @@ class KeyboardBuilder(
 
         val startTime = System.currentTimeMillis()
 
-        var tbHolder: Abstract3dModel? = null
+        var tbHolder: Model? = null
         val caseWalls = createCaseModel(
             cfg = cfg,
             keyPlace = keyPlace,
@@ -362,8 +362,8 @@ class KeyboardBuilder(
         return result
     }
 
-    private fun amoebaHoles(cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Abstract3dModel {
-        val models = mutableListOf<Abstract3dModel>()
+    private fun amoebaHoles(cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Model {
+        val models = mutableListOf<Model>()
         val amoeba = Amoeba(cfg)
         val hole = amoeba.createHoles(height = 7.0, diameter = 0.7).addModel(amoeba.createSimple())
 
@@ -533,7 +533,7 @@ class KeyboardBuilder(
     private var isExportMode: Boolean = false
     private var exportLatch: CountDownLatch? = null
 
-    private fun saveModel(cfg: KeyboardConfig, name: String, model: Abstract3dModel, needCheck: Boolean = false) {
+    private fun saveModel(cfg: KeyboardConfig, name: String, model: Model, needCheck: Boolean = false) {
         if (!isExportMode) {
             return
         }
@@ -718,13 +718,13 @@ class KeyboardBuilder(
     }
 
     private fun createThumbKeyPlaceModel(
-        cfg: KeyboardConfig, model: Abstract3dModel, thumbKeyPlace: ThumbKeyPlace, color: Color
+        cfg: KeyboardConfig, model: Model, thumbKeyPlace: ThumbKeyPlace, color: Color
     ): ModelHolder {
         val placedModel = thumbKeyPlace.thumbPlace(model)
         return ModelHolder(placedModel, createVertexHolder(cfg, placedModel, color))
     }
 
-    private fun wristRestMount(): Abstract3dModel {
+    private fun wristRestMount(): Model {
         // left back
         return Cylinder(42.0, 6.0).move(-56.0, -88.0, -2.0).addModel( // left front
             Cylinder(56.0, 6.0).move(-53.0, -142.0, -4.0)
@@ -735,14 +735,14 @@ class KeyboardBuilder(
         )
     }
 
-    private fun keyPlaceBottomWalls(cfg: KeyboardConfig, keyPlace: KeyPlace): Abstract3dModel {
+    private fun keyPlaceBottomWalls(cfg: KeyboardConfig, keyPlace: KeyPlace): Model {
         return KeyHolderBottomWalls(cfg.keyPlaceConfig, keyPlace).build()
     }
 
     private fun createKeycapsModel(
-        cfg: KeyboardConfig, model: Abstract3dModel, keyPlace: KeyPlace, color: Color
+        cfg: KeyboardConfig, model: Model, keyPlace: KeyPlace, color: Color
     ): ModelHolder {
-        val models = mutableListOf<Abstract3dModel>()
+        val models = mutableListOf<Model>()
         for (column in 0 until cfg.keyPlaceConfig.columnsCount) {
             for (row in 0 until cfg.keyPlaceConfig.rowsCount) {
                 models.add(keyPlace.place(column, row, model))
@@ -843,9 +843,9 @@ class KeyboardBuilder(
     }
 
     private fun placeWallScrews(
-        screwHolder: Abstract3dModel,
+        screwHolder: Model,
         screwWallPlaces: ScrewWallPlaces,
-    ): Abstract3dModel {
+    ): Model {
 
         val holderHeight = 2.2
         val screwWallHolderBack = Cube(6.0, 4.0, holderHeight).move(0.0, 4.0, holderHeight / 2)

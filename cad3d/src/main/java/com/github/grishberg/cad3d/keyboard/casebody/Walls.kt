@@ -17,7 +17,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.wall.OuterWallsBuilder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.utils.Color
 
 class Walls(
@@ -32,11 +32,11 @@ class Walls(
     private val thumbWalls: ThumbWalls,
 ) {
 
-    private val models = ArrayList<Abstract3dModel>()
+    private val models = ArrayList<Model>()
     val thumbRightOffset = 4.0
     val thumbOuterRightOffset = 7.0
 
-    fun createBorders(borderThickness: Double = 1.5, borderHeight: Double): List<Abstract3dModel> {
+    fun createBorders(borderThickness: Double = 1.5, borderHeight: Double): List<Model> {
         models.clear()
 
         val borderOffset = 2.0
@@ -73,7 +73,7 @@ class Walls(
 
     fun createWalls(
         bottomBorderHeight: Double,
-    ): List<Abstract3dModel> {
+    ): List<Model> {
         models.clear()
 
         val bottomEdgePatcher = CircleBottomEdgePatcher(
@@ -450,11 +450,11 @@ class Walls(
         )
     }
 
-    private fun border(p: V3d, borderThickness: Double, borderHeight: Double): Abstract3dModel {
+    private fun border(p: V3d, borderThickness: Double, borderHeight: Double): Model {
         return borderObject(borderThickness, borderHeight).move(p)
     }
 
-    private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
+    private fun borderObject(thickness: Double, height: Double): Model {
         return Utils.cylinder(thickness, height)
     }
 }

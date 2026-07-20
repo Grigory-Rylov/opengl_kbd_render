@@ -5,7 +5,7 @@ import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.javascad.coords.Angles3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.tranzitions.Union
 
 class ScrewKeyMatrixPlace(
@@ -17,13 +17,13 @@ class ScrewKeyMatrixPlace(
     private val rightOffset: Double = 8.0,
 ) {
 
-    fun place(o: Abstract3dModel): Abstract3dModel {
+    fun place(o: Model): Model {
 
         val screwHorizontalOffset = (cfg.screwHolderWallhickness * 2 + cfg.screwNutHoleDiameter) / 2
         val screwLeftOffset = leftOffset + screwHorizontalOffset - 1
         val screwRightOffset = rightOffset - screwHorizontalOffset + 1
 
-        val models = mutableListOf<Abstract3dModel>()
+        val models = mutableListOf<Model>()
         models.add(
             keyPlace.place(
                 0, 0, KeyPlaceholder.placeHolderLeft(o)

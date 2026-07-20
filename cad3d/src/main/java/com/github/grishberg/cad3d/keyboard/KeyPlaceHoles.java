@@ -10,7 +10,7 @@ import static com.github.grishberg.cad3d.keyboard.Utils.union;
 import com.github.grishberg.cad3d.kbd.core.cfg.KeyPlaceConfig;
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig;
 import com.github.grishberg.javascad.coords.V3d;
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 import com.github.grishberg.javascad.models.Minkowski;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,12 +28,12 @@ public class KeyPlaceHoles {
         this.keyPlace = keyPlace;
     }
 
-    public Abstract3dModel build() {
+    public Model build() {
         return build(0);
     }
 
-    public Abstract3dModel build(double bottomZOffset) {
-        final List<Abstract3dModel> models = new ArrayList<>();
+    public Model build(double bottomZOffset) {
+        final List<Model> models = new ArrayList<>();
 
         final double offsetZ = OFFSET_Z + bottomZOffset;
         final V3d offset = new V3d(0, 0, offsetZ);
@@ -118,14 +118,14 @@ public class KeyPlaceHoles {
         return union(models);
     }
 
-    private static Abstract3dModel singleHole() {
+    private static Model singleHole() {
         return new Minkowski(
             cube(HOLE_SIZE, HOLE_SIZE, 18),
             sphere(HOLE_RADIUS)
         );
     }
 
-    private static Abstract3dModel cornerModel() {
+    private static Model cornerModel() {
         return hull(
             cylinder(HOLE_RADIUS, 1).move(0, 0, 15),
             sphere(HOLE_RADIUS).move(0, 0, -4)

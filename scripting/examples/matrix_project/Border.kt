@@ -21,7 +21,7 @@ class BorderBuilder(private val cfg: MatrixConfig) {
     private val totalWidth = (cfg.columns - 1) * cfg.spacingX + cfg.keyConfig.width
     private val totalHeight = (cfg.rows - 1) * cfg.spacingY + cfg.keyConfig.height
 
-    fun buildOuterBorder(): Abstract3dModel {
+    fun buildOuterBorder(): Model {
         val segments = listOf<BorderSegment>(
             // Top
             BorderSegment(
@@ -64,7 +64,7 @@ class BorderBuilder(private val cfg: MatrixConfig) {
         }.merge()
     }
 
-    fun buildCornerScrews(): Abstract3dModel {
+    fun buildCornerScrews(): Model {
         val screwRadius = 2.0
         val screwLength = cfg.keyConfig.wallHeight + 1.0
 

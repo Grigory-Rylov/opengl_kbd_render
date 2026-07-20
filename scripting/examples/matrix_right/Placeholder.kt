@@ -3,7 +3,7 @@ package com.github.grishberg.scripting.matrix
 import com.github.grishberg.javascad.models.*
 import com.github.grishberg.javascad.tranzitions.*
 
-fun createPlaceholder(): Abstract3dModel {
+fun createPlaceholder(): Model {
     return Cube(PH.OUTER_W, PH.OUTER_H, PH.KEY_PLACE_TOP_THICKNESS)
         .move(0.0, 0.0, PH.BASE_TOP_OFFSET)
         .subtractModel(Cube(PH.KEY_HOLE_INNER_W, PH.KEY_HOLE_H, 10.0))
@@ -23,38 +23,38 @@ fun createPlaceholder(): Abstract3dModel {
 }
 
 // Boundary blocks для hull-соединений
-fun placeHolderFront(): Abstract3dModel =
+fun placeHolderFront(): Model =
     Cube(PH.OUTER_W, 1.5, PH.TOP_THICKNESS).move(0.0, -PH.CORNER_OFFSET - 1.5, PH.BASE_TOP_OFFSET)
 
-fun placeHolderBack(): Abstract3dModel =
+fun placeHolderBack(): Model =
     Cube(PH.OUTER_W, 1.5, PH.TOP_THICKNESS).move(0.0, PH.CORNER_OFFSET + 1.5, PH.BASE_TOP_OFFSET)
 
-fun placeHolderLeft(): Abstract3dModel =
+fun placeHolderLeft(): Model =
     Cube(1.5, PH.OUTER_H, PH.TOP_THICKNESS).move(-PH.CORNER_OFFSET - 1.5, 0.0, PH.BASE_TOP_OFFSET)
 
-fun placeHolderRight(): Abstract3dModel =
+fun placeHolderRight(): Model =
     Cube(1.5, PH.OUTER_H, PH.TOP_THICKNESS).move(PH.CORNER_OFFSET + 1.5, 0.0, PH.BASE_TOP_OFFSET)
 
-fun placeHolderFrontLeft(): Abstract3dModel =
+fun placeHolderFrontLeft(): Model =
     Cube(1.5, 1.5, PH.TOP_THICKNESS).move(-PH.CORNER_OFFSET - 1.5, -PH.CORNER_OFFSET - 1.5, PH.BASE_TOP_OFFSET)
 
-fun placeHolderFrontRight(): Abstract3dModel =
+fun placeHolderFrontRight(): Model =
     Cube(1.5, 1.5, PH.TOP_THICKNESS).move(PH.CORNER_OFFSET + 1.5, -PH.CORNER_OFFSET - 1.5, PH.BASE_TOP_OFFSET)
 
-fun placeHolderBackLeft(): Abstract3dModel =
+fun placeHolderBackLeft(): Model =
     Cube(1.5, 1.5, PH.TOP_THICKNESS).move(-PH.CORNER_OFFSET - 1.5, PH.CORNER_OFFSET + 1.5, PH.BASE_TOP_OFFSET)
 
-fun placeHolderBackRight(): Abstract3dModel =
+fun placeHolderBackRight(): Model =
     Cube(1.5, 1.5, PH.TOP_THICKNESS).move(PH.CORNER_OFFSET + 1.5, PH.CORNER_OFFSET + 1.5, PH.BASE_TOP_OFFSET)
 
-fun placeHolderTopLeft(): Abstract3dModel =
+fun placeHolderTopLeft(): Model =
     Cube(1.5, 1.5, PH.TOP_THICKNESS).move(-PH.CORNER_OFFSET - 1.5, -PH.CORNER_OFFSET - 1.5, PH.BASE_TOP_OFFSET + PH.TOP_THICKNESS)
 
-fun placeHolderTopRight(): Abstract3dModel =
+fun placeHolderTopRight(): Model =
     Cube(1.5, 1.5, PH.TOP_THICKNESS).move(PH.CORNER_OFFSET + 1.5, -PH.CORNER_OFFSET - 1.5, PH.BASE_TOP_OFFSET + PH.TOP_THICKNESS)
 
-fun placeHolderBottomLeft(): Abstract3dModel =
+fun placeHolderBottomLeft(): Model =
     Cube(1.5, 1.5, PH.TOP_THICKNESS).move(-PH.CORNER_OFFSET - 1.5, PH.CORNER_OFFSET + 1.5, PH.BASE_TOP_OFFSET + PH.TOP_THICKNESS)
 
-fun placeHolderBottomRight(): Abstract3dModel =
+fun placeHolderBottomRight(): Model =
     Cube(1.5, 1.5, PH.TOP_THICKNESS).move(PH.CORNER_OFFSET + 1.5, PH.CORNER_OFFSET + 1.5, PH.BASE_TOP_OFFSET + PH.TOP_THICKNESS)

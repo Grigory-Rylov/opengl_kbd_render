@@ -10,7 +10,7 @@ import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.tranzitions.Union
 
 class OuterCornersWallBuilder(
@@ -23,8 +23,8 @@ class OuterCornersWallBuilder(
 ) : CornerWallBuilder {
 
     override fun backLeft(
-        keyPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        keyPlace: (Model) -> Model
+    ): Model {
         val back = keyPlace(
             KeyPlaceholder.placeHolderBackLeft()
                 .move(0.0, wallsSettings.outerVerticalOffset, wallsSettings.outerBorderZOffset)
@@ -75,7 +75,7 @@ class OuterCornersWallBuilder(
         return Union(border, wall)
     }
 
-    override fun backRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): List<Abstract3dModel> {
+    override fun backRight(keyPlace: (Model) -> Model): List<Model> {
         if (isThumb) {
             return listOf(backRightThumb(keyPlace))
         }
@@ -95,7 +95,7 @@ class OuterCornersWallBuilder(
         var lastTop = bottomEdgePatcher.backPoint(right)
         var lastBottom = bottomEdgePatcher.rightPoint(right)
 
-        val models = mutableListOf<Abstract3dModel>()
+        val models = mutableListOf<Model>()
 
         // Генерируем промежуточные точки
         for (i in 0..count) {
@@ -150,7 +150,7 @@ class OuterCornersWallBuilder(
         return models
     }
 
-    private fun backRightThumb(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    private fun backRightThumb(keyPlace: (Model) -> Model): Model {
         val back = keyPlace(
             KeyPlaceholder.placeHolderBackRight()
                 .move(0.0, wallsSettings.outerVerticalOffset, wallsSettings.outerBorderZOffset)
@@ -201,7 +201,7 @@ class OuterCornersWallBuilder(
         return Union(border, wall)
     }
 
-    override fun frontLeft(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun frontLeft(keyPlace: (Model) -> Model): Model {
         val left = keyPlace(
             KeyPlaceholder.placeHolderFrontLeft()
                 .move(-wallsSettings.outerLeftOffset, 0.0, wallsSettings.outerBorderZOffset)
@@ -247,7 +247,7 @@ class OuterCornersWallBuilder(
         return Union(border, wall)
     }
 
-    override fun frontRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun frontRight(keyPlace: (Model) -> Model): Model {
         val front = keyPlace(
             KeyPlaceholder.placeHolderFrontRight()
                 .move(0.0, -wallsSettings.outerVerticalOffset, wallsSettings.outerBorderZOffset)
@@ -293,26 +293,26 @@ class OuterCornersWallBuilder(
         return Union(border, wall)
     }
 
-    private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
+    private fun verticalCube(obj: Model): Model {
         return borderObject(wallsSettings.borderThickness, wallsSettings.borderHeight).moveZ(topEdgeOffsetZ)
             .move(obj.move)
     }
 
-    private fun bottomCylinder(point: V3d): Abstract3dModel {
+    private fun bottomCylinder(point: V3d): Model {
         return Utils.cylinder(
             wallsSettings.borderThickness, wallsSettings.bottomBorderHeight
         ).move(point.projectionZ(wallsSettings.bottomBorderHeight / 2))
     }
 
-    private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
+    private fun borderObject(thickness: Double, height: Double): Model {
         return Utils.cylinder(thickness, height)
     }
 
-    private fun topBorderObj(obj: Abstract3dModel): Abstract3dModel {
+    private fun topBorderObj(obj: Model): Model {
         return Utils.sphere(wallsSettings.borderThickness / 2.0).move(obj.move)
     }
 
-    private fun topBorderObj(point: V3d): Abstract3dModel {
+    private fun topBorderObj(point: V3d): Model {
         return Utils.sphere(wallsSettings.borderThickness / 2.0).move(point)
     }
 }

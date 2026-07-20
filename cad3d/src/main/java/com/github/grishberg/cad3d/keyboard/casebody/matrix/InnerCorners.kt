@@ -3,7 +3,7 @@ package com.github.grishberg.cad3d.keyboard.casebody.matrix
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.casebody.CornerWallBuilder
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 
 class InnerCorners(
     private val borderThickness: Double = 1.5,
@@ -14,7 +14,7 @@ class InnerCorners(
     private val borderZOffset: Double = -2.0,
 ) : CornerWallBuilder {
 
-    override fun backLeft(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun backLeft(keyPlace: (Model) -> Model): Model {
         return Utils.hull(
             verticalCube(keyPlace(KeyPlaceholder.placeHolderBackLeft().move(0.0, verticalOffset, borderZOffset))),
             verticalCube(keyPlace(KeyPlaceholder.placeHolderBackLeft().move(leftOffset, 0.0, borderZOffset))),
@@ -22,7 +22,7 @@ class InnerCorners(
         )
     }
 
-    override fun backRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): List<Abstract3dModel> {
+    override fun backRight(keyPlace: (Model) -> Model): List<Model> {
         return listOf(
             Utils.hull(
                 verticalCube(keyPlace(KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset, borderZOffset))),
@@ -32,7 +32,7 @@ class InnerCorners(
         )
     }
 
-    override fun frontLeft(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun frontLeft(keyPlace: (Model) -> Model): Model {
         return Utils.hull(
             verticalCube(
                 keyPlace(
@@ -46,7 +46,7 @@ class InnerCorners(
         )
     }
 
-    override fun frontRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun frontRight(keyPlace: (Model) -> Model): Model {
         return Utils.hull(
             verticalCube(
                 keyPlace(
@@ -60,11 +60,11 @@ class InnerCorners(
         )
     }
 
-    private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
+    private fun verticalCube(obj: Model): Model {
         return borderObject(borderThickness, borderHeight).move(obj.move)
     }
 
-    private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
+    private fun borderObject(thickness: Double, height: Double): Model {
         return Utils.cylinder(thickness, height)
     }
 }

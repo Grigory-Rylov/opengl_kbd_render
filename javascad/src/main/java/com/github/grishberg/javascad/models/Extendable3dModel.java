@@ -19,10 +19,10 @@ import java.util.List;
  * @author ivivan <ivivan@printingin3d.eu>
  */
 public abstract class Extendable3dModel extends Complex3dModel {
-	protected Abstract3dModel baseModel;
+	protected Model baseModel;
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return innerSubModel(ScadGenerationContextFactory.DEFAULT);
 	}
 
@@ -38,7 +38,7 @@ public abstract class Extendable3dModel extends Complex3dModel {
 	}
 	
 	@Override
-	protected Abstract3dModel innerSubModel(IScadGenerationContext context) {
+	protected Model innerSubModel(IScadGenerationContext context) {
 		Extendable3dModel newInstance;
 		try {
 			Constructor<? extends Extendable3dModel> constructor = getClass().getDeclaredConstructor();
@@ -54,7 +54,7 @@ public abstract class Extendable3dModel extends Complex3dModel {
 	}
 
     @Override
-    protected List<Abstract3dModel> getChildrenModels() {
+    protected List<Model> getChildrenModels() {
         return Collections.singletonList(baseModel);
     }
 }

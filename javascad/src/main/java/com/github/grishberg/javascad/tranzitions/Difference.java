@@ -5,7 +5,7 @@ import com.github.grishberg.javascad.coords.Boundaries3d;
 import com.github.grishberg.javascad.coords.Boundary;
 import com.github.grishberg.javascad.exceptions.IllegalValueException;
 import com.github.grishberg.javascad.manifold.Manifold3dEngine;
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 import com.github.grishberg.javascad.models.Complex3dModel;
 import com.github.grishberg.javascad.models.Cube;
 import com.github.grishberg.javascad.utils.AssertValue;
@@ -22,8 +22,8 @@ import java.util.List;
  * @author ivivan <ivivan@printingin3d.eu>
  */
 public class Difference extends Complex3dModel {
-	private final Abstract3dModel model1;
-	private final List<Abstract3dModel> model2;
+	private final Model model1;
+	private final List<Model> model2;
 	
 	/**
 	 * <p>Creates the object with the models given. The first parameter will be the model
@@ -35,11 +35,11 @@ public class Difference extends Complex3dModel {
 	 * @param model2 the model to be subtracted
 	 * @throws IllegalValueException if the first model is null
 	 */
-	public Difference(Abstract3dModel model1, List<Abstract3dModel> model2) throws IllegalValueException {
+	public Difference(Model model1, List<Model> model2) throws IllegalValueException {
 		AssertValue.isNotNull(model1, "The first parameter of the difference operation should not be null!");
 		
 		this.model1 = model1;
-		this.model2 = model2==null ? Collections.<Abstract3dModel>emptyList() : ListUtils.removeNulls(model2);
+		this.model2 = model2==null ? Collections.<Model>emptyList() : ListUtils.removeNulls(model2);
 		this.setColor(model1.getColor());
 	}
 	
@@ -53,7 +53,7 @@ public class Difference extends Complex3dModel {
 	 * @param model2 the model to be subtracted
 	 * @throws IllegalValueException if the first model is null
 	 */
-	public Difference(Abstract3dModel model1, Abstract3dModel... model2) throws IllegalValueException {
+	public Difference(Model model1, Model... model2) throws IllegalValueException {
 		this(model1, Arrays.asList(model2));
 	}
 
@@ -64,7 +64,7 @@ public class Difference extends Complex3dModel {
 		Boundary y = boundaries.getY();
 		Boundary z = boundaries.getZ();
 		
-		for (Abstract3dModel model : model2) {
+		for (Model model : model2) {
 			if (model instanceof Cube && !model.isRotated()) {
 				Boundaries3d b = model.getBoundaries();
 				if (x.isInsideOf(b.getX())) {
@@ -85,8 +85,8 @@ public class Difference extends Complex3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
-		return new Difference(model1, new ArrayList<Abstract3dModel>(model2));
+	protected Model innerCloneModel() {
+		return new Difference(model1, new ArrayList<Model>(model2));
 	}
 
     @Override
@@ -96,7 +96,7 @@ public class Difference extends Complex3dModel {
             return 0L;
         }
         try {
-            for (Abstract3dModel model : model2) {
+            for (Model model : model2) {
                 long m = model.toNativeMesh(context);
                 if (m == 0L) {
                     continue;
@@ -114,32 +114,32 @@ public class Difference extends Complex3dModel {
     }
 	
 	@Override
-	public Abstract3dModel subtractModel(Abstract3dModel model) {
+	public Model subtractModel(Model model) {
 		if (isMoved() || isRotated()) {
 			return super.subtractModel(model);
 		}
 		
-		List<Abstract3dModel> newModel2 = new ArrayList<>(model2);
+		List<Model> newModel2 = new ArrayList<>(model2);
 		newModel2.add(model);
 		return new Difference(model1, newModel2);
 	}
 
 	@Override
-	protected Abstract3dModel innerSubModel(IScadGenerationContext context) {
-		Abstract3dModel subModel = model1.subModel(context);
+	protected Model innerSubModel(IScadGenerationContext context) {
+		Model subModel = model1.subModel(context);
 		if (subModel==null) {
 			return null;
 		}
-		List<Abstract3dModel> subModels = new ArrayList<>();
-		for (Abstract3dModel model : model2) {
+		List<Model> subModels = new ArrayList<>();
+		for (Model model : model2) {
 			subModels.add(model.subModel(context));
 		}
 		return new Difference(subModel, subModels);
 	}
 
     @Override
-    protected List<Abstract3dModel> getChildrenModels() {
-        List<Abstract3dModel> result = new ArrayList<>(model2);
+    protected List<Model> getChildrenModels() {
+        List<Model> result = new ArrayList<>(model2);
         result.add(model1);
         return result;
     }

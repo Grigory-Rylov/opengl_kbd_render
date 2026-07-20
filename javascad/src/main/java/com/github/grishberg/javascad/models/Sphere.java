@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents a sphere. It is a descendant of {@link Abstract3dModel}, which means you
+ * Represents a sphere. It is a descendant of {@link Model}, which means you
  * can use the convenient methods on spheres too.
  *
  * @author ivivan <ivivan@printingin3d.eu>
@@ -48,7 +48,7 @@ public class Sphere extends Atomic3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new Sphere(r);
 	}
 

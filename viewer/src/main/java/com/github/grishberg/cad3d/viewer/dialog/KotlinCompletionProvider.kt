@@ -12,8 +12,8 @@ import javax.swing.text.JTextComponent
  * Heuristics (no real type inference):
  *  - "Color."                -> color constants
  *  - "." (after identifier)  -> transform/method names (move, rotate, withColor, ...)
- *  - inside a `fun ...(): Abstract3dModel` / after `return `/`= `
- *                             -> shape builders + transforms (return Abstract3dModel)
+ *  - inside a `fun ...(): Model` / after `return `/`= `
+ *                             -> shape builders + transforms (return Model)
  *  - otherwise               -> everything (shapes, keywords, snippets)
  */
 class KotlinCompletionProvider : DefaultCompletionProvider() {
@@ -25,32 +25,32 @@ class KotlinCompletionProvider : DefaultCompletionProvider() {
     private val snippets = mutableListOf<Completion>()
 
     init {
-        // DSL shape builders (return Abstract3dModel)
-        shapes += BasicCompletion(this, "cube", "cube(size: Number): Abstract3dModel")
-        shapes += BasicCompletion(this, "sphere", "sphere(radius: Number): Abstract3dModel")
-        shapes += BasicCompletion(this, "cylinder", "cylinder(length, radius): Abstract3dModel")
-        shapes += BasicCompletion(this, "prism", "prism(length, radius, sides): Abstract3dModel")
-        shapes += BasicCompletion(this, "hull", "hull(vararg models): Abstract3dModel")
-        shapes += BasicCompletion(this, "union", "union(vararg models): Abstract3dModel")
-        shapes += BasicCompletion(this, "emptyModel", "emptyModel(): Abstract3dModel")
-        shapes += BasicCompletion(this, "importStl", "importStl(path: String, color: String? = null): Abstract3dModel")
+        // DSL shape builders (return Model)
+        shapes += BasicCompletion(this, "cube", "cube(size: Number): Model")
+        shapes += BasicCompletion(this, "sphere", "sphere(radius: Number): Model")
+        shapes += BasicCompletion(this, "cylinder", "cylinder(length, radius): Model")
+        shapes += BasicCompletion(this, "prism", "prism(length, radius, sides): Model")
+        shapes += BasicCompletion(this, "hull", "hull(vararg models): Model")
+        shapes += BasicCompletion(this, "union", "union(vararg models): Model")
+        shapes += BasicCompletion(this, "emptyModel", "emptyModel(): Model")
+        shapes += BasicCompletion(this, "importStl", "importStl(path: String, color: String? = null): Model")
         shapes += BasicCompletion(this, "v3", "v3(x, y, z): V3d")
         shapes += BasicCompletion(this, "angles", "angles(x, y, z): V3d")
         shapes += BasicCompletion(this, "deg", "deg(degrees: Number): Double")
-        shapes += BasicCompletion(this, "repeat", "repeat(count) { i -> Abstract3dModel }")
+        shapes += BasicCompletion(this, "repeat", "repeat(count) { i -> Model }")
 
         // DSL transforms / modifiers (member-like)
-        transforms += BasicCompletion(this, "move", "move(x, y, z): Abstract3dModel")
-        transforms += BasicCompletion(this, "moveX", "moveX(x): Abstract3dModel")
-        transforms += BasicCompletion(this, "moveY", "moveY(y): Abstract3dModel")
-        transforms += BasicCompletion(this, "moveZ", "moveZ(z): Abstract3dModel")
-        transforms += BasicCompletion(this, "rotate", "rotate(x, y, z): Abstract3dModel")
-        transforms += BasicCompletion(this, "rotateX", "rotateX(deg): Abstract3dModel")
-        transforms += BasicCompletion(this, "rotateY", "rotateY(deg): Abstract3dModel")
-        transforms += BasicCompletion(this, "rotateZ", "rotateZ(deg): Abstract3dModel")
-        transforms += BasicCompletion(this, "scale", "scale(x, y, z): Abstract3dModel")
-        transforms += BasicCompletion(this, "mirror", "mirror(axis): Abstract3dModel")
-        transforms += BasicCompletion(this, "withColor", "withColor(color: Color): Abstract3dModel")
+        transforms += BasicCompletion(this, "move", "move(x, y, z): Model")
+        transforms += BasicCompletion(this, "moveX", "moveX(x): Model")
+        transforms += BasicCompletion(this, "moveY", "moveY(y): Model")
+        transforms += BasicCompletion(this, "moveZ", "moveZ(z): Model")
+        transforms += BasicCompletion(this, "rotate", "rotate(x, y, z): Model")
+        transforms += BasicCompletion(this, "rotateX", "rotateX(deg): Model")
+        transforms += BasicCompletion(this, "rotateY", "rotateY(deg): Model")
+        transforms += BasicCompletion(this, "rotateZ", "rotateZ(deg): Model")
+        transforms += BasicCompletion(this, "scale", "scale(x, y, z): Model")
+        transforms += BasicCompletion(this, "mirror", "mirror(axis): Model")
+        transforms += BasicCompletion(this, "withColor", "withColor(color: Color): Model")
 
         // Color constants
         colors += BasicCompletion(this, "Color", "java.awt.Color")
@@ -99,8 +99,8 @@ class KotlinCompletionProvider : DefaultCompletionProvider() {
             return filterByPrefix(transforms, lineBefore)
         }
 
-        // Inside a model-returning function body (after return /= /fun ...(): Abstract3dModel)
-        val insideModelFn = Regex("""fun\s+[\w<>():,\s]*Abstract3dModel\s*\{[^}]*$""").find(before) != null
+        // Inside a model-returning function body (after return /= /fun ...(): Model)
+        val insideModelFn = Regex("""fun\s+[\w<>():,\s]*Model\s*\{[^}]*$""").find(before) != null
         val afterReturnOrAssign = Regex("""(return|=)\s*[^=]*$""").find(before) != null
         if (insideModelFn || afterReturnOrAssign) {
             val base = shapes + transforms

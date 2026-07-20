@@ -8,7 +8,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerPlace
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
 import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.utils.Color
 
 class TrackballCase(
@@ -52,20 +52,20 @@ class TrackballCase(
         return ModelHolder(cfg, plate.withColor(Color.LIGHT_SKY_BLUE).moveZ(-2))
     }
 
-    fun createHolder(): Abstract3dModel {
+    fun createHolder(): Model {
         val trackBallHolder = Trackball(cfg).trackBallCaseHolder().addModel(Utils.cube(28, 10, 1.5).move(0, 0, -5))
             .withColor(Color.ORANGE)
         val trackHolderOffset = Utils.v3d(offsetX, 7, height + 10.9)
         return trackBallHolder.subtractModel(createHoles(rad = 3.5 / 2).move(0, 0, -5)).move(trackHolderOffset)
     }
 
-    private fun createHoles(rad: Double = 0.7): Abstract3dModel {
+    private fun createHoles(rad: Double = 0.7): Model {
         val holeCylinder = Utils.cylinder(rad, 10)
         val delta = 10
         return Utils.union(holeCylinder.moveX(-delta), holeCylinder.moveX(delta))
     }
 
-    private fun createShape(offset: Int = 0, withTop: Boolean = true): Abstract3dModel {
+    private fun createShape(offset: Int = 0, withTop: Boolean = true): Model {
         val bottomZ = 0.0
         val topZ = height - offset
         val leftBottom = Utils.v3d(offset, offset, bottomZ)

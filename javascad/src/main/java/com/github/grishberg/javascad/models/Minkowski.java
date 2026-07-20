@@ -8,20 +8,20 @@ import java.util.List;
 
 public class Minkowski extends Atomic3dModel {
 
-    private final List<Abstract3dModel> models;
+    private final List<Model> models;
 
-    public Minkowski(Abstract3dModel... obj) {
+    public Minkowski(Model... obj) {
         this.models = new ArrayList<>();
         Collections.addAll(models, obj);
     }
 
-    public Minkowski(List<Abstract3dModel> obj) {
+    public Minkowski(List<Model> obj) {
         this.models = new ArrayList<>();
         models.addAll(obj);
     }
 
     @Override
-    protected Abstract3dModel innerCloneModel() {
+    protected Model innerCloneModel() {
         return new Minkowski(models);
     }
 
@@ -29,7 +29,7 @@ public class Minkowski extends Atomic3dModel {
     protected Boundaries3d getModelBoundaries() {
         //TODO calculate real boundary
         ArrayList<Boundaries3d> boundaries3ds = new ArrayList<>();
-        for (Abstract3dModel model : models) {
+        for (Model model : models) {
             boundaries3ds.add(model.getBoundaries());
         }
         return Boundaries3d.combine(boundaries3ds);

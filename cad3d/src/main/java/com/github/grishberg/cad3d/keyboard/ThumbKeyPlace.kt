@@ -4,7 +4,7 @@ import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
 import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterSettings
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 
 class ThumbKeyPlace(private val cfg: KeyboardConfig) {
 
@@ -42,7 +42,7 @@ class ThumbKeyPlace(private val cfg: KeyboardConfig) {
         }
     }
 
-    fun thumbPlace(obj: Abstract3dModel): Abstract3dModel {
+    fun thumbPlace(obj: Model): Model {
         return when (thumbConfig.type) {
             ThumbClusterMode.SingleColumn4Buttons -> placeR(obj).addModel(placeM(obj)).addModel(placeL(obj))
                 .addModel(placeLM(obj))
@@ -83,7 +83,7 @@ class ThumbKeyPlace(private val cfg: KeyboardConfig) {
         )
     }
 
-    fun placeR(obj: Abstract3dModel): Abstract3dModel {
+    fun placeR(obj: Model): Model {
         val offset = when (thumbConfig.type) {
             ThumbClusterMode.SingleColumn4Buttons -> thumbCoordinates[3]
             ThumbClusterMode.TwoRows5Buttons -> thumbCoordinates[2]
@@ -93,7 +93,7 @@ class ThumbKeyPlace(private val cfg: KeyboardConfig) {
         return place(obj, 0.0, arcResult.angleY, arcResult.angleZ, arcResult.offset)
     }
 
-    fun placeM(obj: Abstract3dModel): Abstract3dModel {
+    fun placeM(obj: Model): Model {
         val offset = when (thumbConfig.type) {
             ThumbClusterMode.SingleColumn4Buttons -> thumbCoordinates[2]
             ThumbClusterMode.TwoRows5Buttons -> thumbCoordinates[1]
@@ -105,7 +105,7 @@ class ThumbKeyPlace(private val cfg: KeyboardConfig) {
         )
     }
 
-    fun placeL(obj: Abstract3dModel): Abstract3dModel {
+    fun placeL(obj: Model): Model {
         val offset = thumbCoordinates[0]
         val arcResult = convertToArc(offset)
         return place(
@@ -113,7 +113,7 @@ class ThumbKeyPlace(private val cfg: KeyboardConfig) {
         )
     }
 
-    fun placeLM(obj: Abstract3dModel): Abstract3dModel {
+    fun placeLM(obj: Model): Model {
         val offset = thumbCoordinates[1]
         val arcResult = convertToArc(point = offset)
         return place(
@@ -122,7 +122,7 @@ class ThumbKeyPlace(private val cfg: KeyboardConfig) {
     }
 
     // Методы для второго ряда
-    fun placeR2(obj: Abstract3dModel): Abstract3dModel {
+    fun placeR2(obj: Model): Model {
         val offset = thumbCoordinatesRow2[1] // Правая кнопка второго ряда
         val arcResult = convertToArc(point = offset, radiusY = row2radiusY, radiusZ = row2radiusZ, secondRowOffset)
         return place(
@@ -130,7 +130,7 @@ class ThumbKeyPlace(private val cfg: KeyboardConfig) {
         )
     }
 
-    fun placeL2(obj: Abstract3dModel): Abstract3dModel {
+    fun placeL2(obj: Model): Model {
         val offset = thumbCoordinatesRow2[0] // Левая кнопка второго ряда
         val arcResult = convertToArc(point = offset, radiusY = row2radiusY, radiusZ = row2radiusZ, secondRowOffset)
         return place(
@@ -139,8 +139,8 @@ class ThumbKeyPlace(private val cfg: KeyboardConfig) {
     }
 
     private fun place(
-        obj: Abstract3dModel, xAngle: Number, yAngle: Number, zAngle: Number, offset: V3d
-    ): Abstract3dModel {
+        obj: Model, xAngle: Number, yAngle: Number, zAngle: Number, offset: V3d
+    ): Model {
         return obj.rotate(xAngle.toDouble(), yAngle.toDouble(), zAngle.toDouble()).move(offset)
             .rotate(0.0, thumbConfig.rotateY, thumbConfig.rotateZ)
             .move(thumbConfig.xOffset, thumbConfig.yOffset, thumbConfig.zOffset + cfg.keyPlaceConfig.plateZOffset)

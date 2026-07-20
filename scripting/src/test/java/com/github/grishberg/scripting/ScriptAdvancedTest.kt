@@ -69,7 +69,7 @@ class ScriptAdvancedTest {
     fun `interface with implementation`() {
         val result = getEvaluator().evaluate("""
             interface Shape {
-                fun build(): Abstract3dModel
+                fun build(): Model
             }
             class CylinderShape(val length: Double, val radius: Double) : Shape {
                 override fun build() = bindings.cylinder(length, radius)
@@ -84,7 +84,7 @@ class ScriptAdvancedTest {
     fun `interface with default implementation`() {
         val result = getEvaluator().evaluate("""
             interface Shape {
-                fun build(): Abstract3dModel = bindings.sphere(1.0)
+                fun build(): Model = bindings.sphere(1.0)
             }
             class DefaultShape : Shape
             DefaultShape().build()
@@ -96,9 +96,9 @@ class ScriptAdvancedTest {
     // ===== EXTENSION FUNCTIONS =====
 
     @Test
-    fun `extension function on Abstract3dModel`() {
+    fun `extension function on Model`() {
         val result = getEvaluator().evaluate("""
-            fun Abstract3dModel.moveToCenter(cx: Double, cy: Double, cz: Double) =
+            fun Model.moveToCenter(cx: Double, cy: Double, cz: Double) =
                 this.move(cx, cy, cz)
 
             bindings.cube(5.0).moveToCenter(10.0, 0.0, 0.0)
@@ -110,10 +110,10 @@ class ScriptAdvancedTest {
     @Test
     fun `multiple chained extensions`() {
         val result = getEvaluator().evaluate("""
-            fun Abstract3dModel.movedY(y: Double) =
+            fun Model.movedY(y: Double) =
                 this.moveY(y)
 
-            fun Abstract3dModel.movedZ(z: Double) =
+            fun Model.movedZ(z: Double) =
                 this.moveZ(z)
 
             bindings.cube(5.0).movedY(10.0).movedZ(5.0)
@@ -127,7 +127,7 @@ class ScriptAdvancedTest {
     @Test
     fun `lambda with parameters`() {
         val result = getEvaluator().evaluate("""
-            val makeCube: (Double) -> Abstract3dModel = { s -> bindings.cube(s) }
+            val makeCube: (Double) -> Model = { s -> bindings.cube(s) }
             makeCube(10.0)
         """.trimIndent())
         assertNull(result.error)
@@ -138,7 +138,7 @@ class ScriptAdvancedTest {
     fun `lambda used in collection operations`() {
         val result = getEvaluator().evaluate("""
             val sizes = listOf(5.0, 10.0, 15.0)
-            var combined: Abstract3dModel = bindings.emptyModel()
+            var combined: Model = bindings.emptyModel()
             sizes.forEach { s ->
                 combined = combined.addModel(bindings.cube(s).moveX(s))
             }
@@ -224,7 +224,7 @@ class ScriptAdvancedTest {
     fun `sealed class with when`() {
         val result = getEvaluator().evaluate("""
             sealed class Shape {
-                abstract fun build(): Abstract3dModel
+                abstract fun build(): Model
             }
             class BoxShape(val size: Double) : Shape() {
                 override fun build() = bindings.cube(size)
@@ -248,17 +248,17 @@ class ScriptAdvancedTest {
     fun `complex class implementing interface with extension and lambda`() {
         val result = getEvaluator().evaluate("""
             interface Component {
-                fun render(): Abstract3dModel
+                fun render(): Model
             }
 
             class BoxComponent(
                 val size: Double,
-                val transform: (Abstract3dModel) -> Abstract3dModel
+                val transform: (Model) -> Model
             ) : Component {
                 override fun render() = transform(bindings.cube(size))
             }
 
-            fun Abstract3dModel.mirrorX(): Abstract3dModel =
+            fun Model.mirrorX(): Model =
                 this.addModel(Mirror.mirrorX(this))
 
             val right = BoxComponent(5.0) { it.moveX(10.0) }
@@ -279,7 +279,7 @@ class ScriptAdvancedTest {
                 V3d(10.0, 0.0, 0.0),
                 V3d(0.0, 10.0, 0.0)
             )
-            var result: Abstract3dModel = bindings.emptyModel()
+            var result: Model = bindings.emptyModel()
             for ((i, pos) in positions.withIndex()) {
                 result = result.addModel(
                     bindings.sphere(2.0).move(pos.x, pos.y, pos.z)
@@ -317,7 +317,7 @@ class ScriptAdvancedTest {
     @Test
     fun `companion object factory`() {
         val result = getEvaluator().evaluate("""
-            class Part(val model: Abstract3dModel) {
+            class Part(val model: Model) {
                 companion object {
                     fun box(s: Double) = Part(bindings.cube(s))
                     fun ball(r: Double) = Part(bindings.sphere(r))
@@ -379,10 +379,10 @@ class ScriptAdvancedTest {
                 class Box(val size: Double) {
                     fun build() = bindings.cube(size)
                 }
-                fun Abstract3dModel.doubled() = this.addModel(this)
+                fun Model.doubled() = this.addModel(this)
             """.trimIndent(),
             "Main.kt" to """
-                fun scriptMain(): Abstract3dModel {
+                fun scriptMain(): Model {
                     return Box(10.0).build().doubled()
                 }
             """.trimIndent()
@@ -397,14 +397,14 @@ class ScriptAdvancedTest {
         val dir = createScriptDir(
             "Component.kt" to """
                 interface Component {
-                    fun render(): Abstract3dModel
+                    fun render(): Model
                 }
                 class SphereComponent(val radius: Double) : Component {
                     override fun render() = bindings.sphere(radius)
                 }
             """.trimIndent(),
             "Main.kt" to """
-                fun scriptMain(): Abstract3dModel {
+                fun scriptMain(): Model {
                     val c1: Component = SphereComponent(5.0)
                     val c2: Component = SphereComponent(3.0)
                     return c1.render().addModel(c2.render().moveX(10.0))
@@ -421,7 +421,7 @@ class ScriptAdvancedTest {
         val dir = createScriptDir(
             "Shape.kt" to """
                 sealed class Shape {
-                    abstract fun build(): Abstract3dModel
+                    abstract fun build(): Model
                 }
                 class CubeShape(val size: Double) : Shape() {
                     override fun build() = bindings.cube(size)
@@ -431,7 +431,7 @@ class ScriptAdvancedTest {
                 }
             """.trimIndent(),
             "Renderer.kt" to """
-                fun renderAll(shapes: List<Shape>): Abstract3dModel {
+                fun renderAll(shapes: List<Shape>): Model {
                     var result = bindings.emptyModel()
                     for ((i, s) in shapes.withIndex()) {
                         result = result.addModel(s.build().moveX(i * 20.0))
@@ -440,7 +440,7 @@ class ScriptAdvancedTest {
                 }
             """.trimIndent(),
             "Main.kt" to """
-                fun scriptMain(): Abstract3dModel {
+                fun scriptMain(): Model {
                     val shapes = listOf<Shape>(
                         CubeShape(10.0),
                         SphereShape(5.0),
@@ -459,12 +459,12 @@ class ScriptAdvancedTest {
     fun `multi file extension function defined in separate file`() {
         val dir = createScriptDir(
             "Extensions.kt" to """
-                fun Abstract3dModel.movedY(y: Double) = this.moveY(y)
-                fun Abstract3dModel.movedZ(z: Double) = this.moveZ(z)
-                infix fun Abstract3dModel.with(other: Abstract3dModel) = this.addModel(other)
+                fun Model.movedY(y: Double) = this.moveY(y)
+                fun Model.movedZ(z: Double) = this.moveZ(z)
+                infix fun Model.with(other: Model) = this.addModel(other)
             """.trimIndent(),
             "Main.kt" to """
-                fun scriptMain(): Abstract3dModel {
+                fun scriptMain(): Model {
                     val base = bindings.cube(10.0).movedY(5.0)
                     val top = bindings.sphere(3.0).movedZ(10.0)
                     return base with top
@@ -480,7 +480,7 @@ class ScriptAdvancedTest {
     fun `multi file lambda and collection helpers in separate file`() {
         val dir = createScriptDir(
             "Helpers.kt" to """
-                fun grid(size: Int, spacing: Double, factory: (Int, Int) -> Abstract3dModel): Abstract3dModel {
+                fun grid(size: Int, spacing: Double, factory: (Int, Int) -> Model): Model {
                     var result = bindings.emptyModel()
                     for (x in 0 until size) {
                         for (y in 0 until size) {
@@ -491,7 +491,7 @@ class ScriptAdvancedTest {
                 }
             """.trimIndent(),
             "Main.kt" to """
-                fun scriptMain(): Abstract3dModel {
+                fun scriptMain(): Model {
                     return grid(3, 12.0) { x, y ->
                         if ((x + y) % 2 == 0) bindings.cube(8.0) else bindings.sphere(4.0)
                     }
@@ -515,7 +515,7 @@ class ScriptAdvancedTest {
                 }
             """.trimIndent(),
             "Main.kt" to """
-                fun scriptMain(): Abstract3dModel {
+                fun scriptMain(): Model {
                     val base = BoxConfig(100.0, 60.0, 15.0).toModel()
                     val hole = HoleConfig(3.0, 20.0).toModel()
                     return base.subtractModel(hole)

@@ -9,12 +9,12 @@ import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBack
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBackLeft
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBackRight
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 
 class Connections(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
 
-    private val models = ArrayList<Abstract3dModel>()
-    fun buildConnections(): Abstract3dModel {
+    private val models = ArrayList<Model>()
+    fun buildConnections(): Model {
         models.clear()
         // diagonals
         for (column in 0 until cfg.keyPlaceConfig.columnsCount - 1) {
@@ -73,7 +73,7 @@ class Connections(private val cfg: KeyboardConfig, private val keyPlace: KeyPlac
         return Utils.union(models)
     }
 
-    private fun addHull(vararg children: Abstract3dModel) {
+    private fun addHull(vararg children: Model) {
         models.add(Utils.hull(*children))
     }
 }

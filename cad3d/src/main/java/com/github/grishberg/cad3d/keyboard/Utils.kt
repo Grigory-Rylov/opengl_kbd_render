@@ -2,7 +2,7 @@ package com.github.grishberg.cad3d.keyboard
 
 import com.github.grishberg.javascad.basic.Radius
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Cube
 import com.github.grishberg.javascad.models.Cylinder
 import com.github.grishberg.javascad.models.Hull
@@ -12,22 +12,22 @@ import com.github.grishberg.javascad.tranzitions.Union
 object Utils {
 
     @JvmStatic
-    fun union(models: List<Abstract3dModel>): Abstract3dModel {
+    fun union(models: List<Model>): Model {
         return Union(models)
     }
 
     @JvmStatic
-    fun union(vararg models: Abstract3dModel): Abstract3dModel {
+    fun union(vararg models: Model): Model {
         return Union(*models)
     }
 
     @JvmStatic
-    fun hull(vararg models: Abstract3dModel): Abstract3dModel {
+    fun hull(vararg models: Model): Model {
         return Hull(*models)
     }
 
     @JvmStatic
-    fun hull(models: List<Abstract3dModel>): Abstract3dModel {
+    fun hull(models: List<Model>): Model {
         return Hull(models)
     }
 

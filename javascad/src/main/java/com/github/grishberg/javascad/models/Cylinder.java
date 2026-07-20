@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Represents a cylinder, a truncated cone or a cone. It is a descendant of {@link Abstract3dModel}, 
+ * Represents a cylinder, a truncated cone or a cone. It is a descendant of {@link Model}, 
  * which means you can use the convenient methods on cylinders too.
  *
  * @author ivivan <ivivan@printingin3d.eu>
@@ -99,7 +99,7 @@ public class Cylinder extends Atomic3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new Cylinder(length, bottomRadius, topRadius);
 	}
 

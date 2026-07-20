@@ -1,7 +1,7 @@
 package com.github.grishberg.cad3d.keyboard.casebody.controllers
 
 import com.github.grishberg.cad3d.keyboard.ModelHolder
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 
 interface Controller {
 
@@ -12,8 +12,8 @@ interface Controller {
     val isWireless: Boolean
 
     fun create(controllerPlace: ControllerPlace): ModelHolder
-    fun createBody(controllerPlace: ControllerPlace): Abstract3dModel
-    fun createResetButton(controllerPlace: ControllerPlace): Abstract3dModel? = null
+    fun createBody(controllerPlace: ControllerPlace): Model
+    fun createResetButton(controllerPlace: ControllerPlace): Model? = null
 
-    fun placeUsbPort(obj: Abstract3dModel): Abstract3dModel
+    fun placeUsbPort(obj: Model): Model
 }

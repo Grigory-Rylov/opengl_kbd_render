@@ -1,6 +1,6 @@
 package com.github.grishberg.cad3d.keyboard.casebody.controllers.battery
 
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Cube
 
 class SquareBattery : Battery {
@@ -14,7 +14,7 @@ class SquareBattery : Battery {
     override val depth: Double = innerDepth + wallWidth * 2
     override val height: Double = innerHeight + wallWidth * 2
 
-    override fun create(): Abstract3dModel {
+    override fun create(): Model {
         val holeHeight = 5.0
         val hole = Cube(innerWidth + 0.5, innerDepth + 0.5, holeHeight)
 
@@ -23,7 +23,7 @@ class SquareBattery : Battery {
             .moveZ(height/2)
     }
 
-    override fun createBatteryPreview(): Abstract3dModel {
+    override fun createBatteryPreview(): Model {
         return Cube(innerWidth + 0.5, innerDepth + 0.5, innerHeight).moveZ(innerHeight/2)
     }
 }

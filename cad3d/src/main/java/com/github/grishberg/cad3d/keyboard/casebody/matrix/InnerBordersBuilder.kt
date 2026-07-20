@@ -4,7 +4,7 @@ import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.casebody.WallsBuilder
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 
 class InnerBordersBuilder(
     private val thumbKeyPlace: ThumbKeyPlace,
@@ -18,8 +18,8 @@ class InnerBordersBuilder(
     ) : WallsBuilder {
 
     override fun backWall(
-        onlyBorder: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        onlyBorder: Boolean, keyPlace: (Model) -> Model
+    ): Model {
         return Utils.hull(
             keyPlace(KeyPlaceholder.placeHolderBack()),
 
@@ -41,9 +41,9 @@ class InnerBordersBuilder(
         onlyBorder: Boolean,
         leftOffset: Double,
         rightOffset: Double,
-        leftPlace: (Abstract3dModel) -> Abstract3dModel,
-        rightPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        leftPlace: (Model) -> Model,
+        rightPlace: (Model) -> Model
+    ): Model {
         return Utils.hull(
             leftPlace.invoke(KeyPlaceholder.placeHolderBackRight()),
             rightPlace.invoke(KeyPlaceholder.placeHolderBackLeft()),
@@ -62,8 +62,8 @@ class InnerBordersBuilder(
     }
 
     override fun leftWall(
-        topOffset: Double, bottomOffset: Double, keyPlace: (Abstract3dModel) -> Abstract3dModel
-    ): List<Abstract3dModel> {
+        topOffset: Double, bottomOffset: Double, keyPlace: (Model) -> Model
+    ): List<Model> {
         return listOf(
             Utils.hull(
                 keyPlace(KeyPlaceholder.placeHolderLeft()),
@@ -82,8 +82,8 @@ class InnerBordersBuilder(
     }
 
     override fun leftMidWall(
-        leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        leftPlace: (Model) -> Model, rightPlace: (Model) -> Model
+    ): Model {
         return Utils.hull(
             leftPlace(KeyPlaceholder.placeHolderFrontLeft()),
             rightPlace(KeyPlaceholder.placeHolderBackLeft()),
@@ -101,8 +101,8 @@ class InnerBordersBuilder(
     }
 
     override fun frontWall(
-        leftOffset: Double, rightOffset: Double, onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        leftOffset: Double, rightOffset: Double, onlyBottomEdge: Boolean, keyPlace: (Model) -> Model
+    ): Model {
         return Utils.hull(
             keyPlace(KeyPlaceholder.placeHolderFront()),
             verticalCube(
@@ -121,9 +121,9 @@ class InnerBordersBuilder(
     override fun frontMidWall(
         leftOffset: Double,
         rightOffset: Double,
-        leftPlace: (Abstract3dModel) -> Abstract3dModel,
-        rightPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        leftPlace: (Model) -> Model,
+        rightPlace: (Model) -> Model
+    ): Model {
         return Utils.hull(
             leftPlace(KeyPlaceholder.placeHolderFrontRight()),
             rightPlace(KeyPlaceholder.placeHolderFrontLeft()),
@@ -141,8 +141,8 @@ class InnerBordersBuilder(
     }
 
     override fun rightWall(
-        topOffset: Double, bottomOffset: Double, keyPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        topOffset: Double, bottomOffset: Double, keyPlace: (Model) -> Model
+    ): Model {
         return Utils.hull(
             keyPlace(KeyPlaceholder.placeHolderRight()),
             verticalCube(
@@ -155,8 +155,8 @@ class InnerBordersBuilder(
     }
 
     override fun rightMidWall(
-        backPlace: (Abstract3dModel) -> Abstract3dModel, frontPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        backPlace: (Model) -> Model, frontPlace: (Model) -> Model
+    ): Model {
         return Utils.hull(
             backPlace(KeyPlaceholder.placeHolderFrontRight()),
             frontPlace(KeyPlaceholder.placeHolderBackRight()),
@@ -174,9 +174,9 @@ class InnerBordersBuilder(
     }
 
     override fun midEdge(
-        midPlace: (Abstract3dModel) -> Abstract3dModel,
-        leftPlace: (Abstract3dModel) -> Abstract3dModel,
-        rightPlace: (Abstract3dModel) -> Abstract3dModel
+        midPlace: (Model) -> Model,
+        leftPlace: (Model) -> Model,
+        rightPlace: (Model) -> Model
     ) = Utils.hull(
         verticalCube(
             thumbKeyPlace.placeM(
@@ -201,9 +201,9 @@ class InnerBordersBuilder(
     )
 
     override fun rightDiagonal(
-        backKeyPlace: (Abstract3dModel) -> Abstract3dModel,
-        frontKeyPlace: (Abstract3dModel) -> Abstract3dModel,
-    ): Abstract3dModel {
+        backKeyPlace: (Model) -> Model,
+        frontKeyPlace: (Model) -> Model,
+    ): Model {
         return Utils.hull(
             backKeyPlace(KeyPlaceholder.placeHolderFrontRight()),
             frontKeyPlace(KeyPlaceholder.placeHolderFrontRight()),
@@ -216,15 +216,15 @@ class InnerBordersBuilder(
         )
     }
 
-    private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
+    private fun verticalCube(obj: Model): Model {
         return borderObject(borderThickness, borderHeight).move(obj.move)
     }
 
-    private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
+    private fun borderObject(thickness: Double, height: Double): Model {
         return Utils.cylinder(thickness, height)
     }
 
-    private fun topBorderObject(): Abstract3dModel {
+    private fun topBorderObject(): Model {
         return Utils.cylinder(borderThickness, borderHeight)
     }
 }

@@ -8,7 +8,7 @@ import com.github.grishberg.javascad.vrl.FacetGenerationContext;
 
 /**
  * Represents a prism or a pyramid.
- * It is a descendant of Abstract3dModel, 
+ * It is a descendant of Model, 
  * which means you can use the convenient methods on prisms too.
  *
  * @author ivivan <ivivan@printingin3d.eu>
@@ -77,7 +77,7 @@ public class Prism extends Cylinder {
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new Prism(length, bottomRadius, topRadius, numberOfSides);
 	}
 

@@ -3,7 +3,7 @@ package com.github.grishberg.scripting
 import com.github.grishberg.javascad.StlImporter
 import com.github.grishberg.javascad.coords.Angles3d
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Cube
 import com.github.grishberg.javascad.models.Cylinder
 import com.github.grishberg.javascad.models.Empty3dModel
@@ -19,33 +19,33 @@ import com.github.grishberg.javascad.utils.Color
 class ScriptBindings {
 
     // Примитивы
-    fun cube(size: Number): Abstract3dModel = Cube(size.toDouble())
-    fun cube(x: Number, y: Number, z: Number): Abstract3dModel =
+    fun cube(size: Number): Model = Cube(size.toDouble())
+    fun cube(x: Number, y: Number, z: Number): Model =
         Cube(x.toDouble(), y.toDouble(), z.toDouble())
-    fun cylinder(length: Number, radius: Number, fn: Int? = null): Abstract3dModel =
+    fun cylinder(length: Number, radius: Number, fn: Int? = null): Model =
         if (fn != null) Prism(length.toDouble(), radius.toDouble(), fn)
         else Cylinder(length.toDouble(), radius.toDouble())
-    fun cylinder(length: Number, bottomR: Number, topR: Number, fn: Int? = null): Abstract3dModel =
+    fun cylinder(length: Number, bottomR: Number, topR: Number, fn: Int? = null): Model =
         if (fn != null) Prism(length.toDouble(), bottomR.toDouble(), topR.toDouble(), fn)
         else Cylinder(length.toDouble(), bottomR.toDouble(), topR.toDouble())
-    fun cylinderD(d: Number, h: Number, fn: Int? = null): Abstract3dModel =
+    fun cylinderD(d: Number, h: Number, fn: Int? = null): Model =
         cylinder(h, d.toDouble() / 2.0, fn)
-    fun cylinderR(r: Number, h: Number, fn: Int? = null): Abstract3dModel =
+    fun cylinderR(r: Number, h: Number, fn: Int? = null): Model =
         cylinder(h, r, fn)
-    fun sphere(radius: Number): Abstract3dModel = Sphere(radius.toDouble())
-    fun prism(length: Number, radius: Number, sides: Int): Abstract3dModel =
+    fun sphere(radius: Number): Model = Sphere(radius.toDouble())
+    fun prism(length: Number, radius: Number, sides: Int): Model =
         Prism(length.toDouble(), radius.toDouble(), sides)
-    fun prism(length: Number, r1: Number, r2: Number, sides: Int): Abstract3dModel =
+    fun prism(length: Number, r1: Number, r2: Number, sides: Int): Model =
         Prism(length.toDouble(), r1.toDouble(), r2.toDouble(), sides)
-    fun emptyModel(): Abstract3dModel = Empty3dModel()
+    fun emptyModel(): Model = Empty3dModel()
 
     /**
-     * Loads a binary STL file and returns it as an [Abstract3dModel].
+     * Loads a binary STL file and returns it as an [Model].
      * @param path file path; if not absolute, resolved relative to the project root
      *             (user.dir and its parents).
      * @param color optional color name ("red", "green", ...) or hex like "#rrggbb".
      */
-    fun importStl(path: String, color: String? = null): Abstract3dModel {
+    fun importStl(path: String, color: String? = null): Model {
         val file = resolveFileLoop(path)
         if (!file.exists()) {
             throw IllegalArgumentException("STL file not found: ${file.absolutePath}")
@@ -54,13 +54,13 @@ class ScriptBindings {
         val polygons = StlImporter().loadBinarySTL(file.absolutePath, c)
         return StlModel(polygons)
     }
-    fun hull(vararg models: Abstract3dModel): Abstract3dModel =
+    fun hull(vararg models: Model): Model =
         com.github.grishberg.javascad.tranzitions.Hull(models.toList())
-    fun hull(models: List<Abstract3dModel>): Abstract3dModel =
+    fun hull(models: List<Model>): Model =
         com.github.grishberg.javascad.tranzitions.Hull(models)
-    fun union(vararg models: Abstract3dModel): Abstract3dModel =
+    fun union(vararg models: Model): Model =
         com.github.grishberg.javascad.tranzitions.Union(models.toList())
-    fun union(models: List<Abstract3dModel>): Abstract3dModel =
+    fun union(models: List<Model>): Model =
         com.github.grishberg.javascad.tranzitions.Union(models)
 
     // Координаты и углы
@@ -70,16 +70,12 @@ class ScriptBindings {
         Angles3d(x.toDouble(), y.toDouble(), z.toDouble())
 
     // CSG-операторы как infix-функции
-    infix fun Abstract3dModel.union(other: Abstract3dModel): Abstract3dModel =
+    infix fun Model.union(other: Model): Model =
         this.addModel(other)
-    infix fun Abstract3dModel.minus(other: Abstract3dModel): Abstract3dModel =
+    infix fun Model.minus(other: Model): Model =
         this.subtractModel(other)
 
-    // Цвета
-    fun Abstract3dModel.color(r: Int, g: Int, b: Int): Abstract3dModel =
-        this.withColor(Color(r, g, b))
-    fun Abstract3dModel.color(name: String): Abstract3dModel =
-        this.withColor(parseColor(name))
+    // Цвета (перенесены на top-level для доступности в мультифайловых скриптах)
 
     private fun parseColor(name: String): Color = when (name.lowercase()) {
         "red" -> Color.RED
@@ -116,17 +112,17 @@ class ScriptBindings {
     }
 
     // Повторение
-    fun repeat(count: Int, block: (Int) -> Abstract3dModel): Abstract3dModel {
-        var result: Abstract3dModel = emptyModel()
+    fun repeat(count: Int, block: (Int) -> Model): Model {
+        var result: Model = emptyModel()
         for (i in 0 until count) {
             result = result.addModel(block(i))
         }
         return result
     }
 
-    fun Abstract3dModel.along(axis: Axis, step: Number, count: Int, block: (Int) -> Abstract3dModel): Abstract3dModel {
+    fun Model.along(axis: Axis, step: Number, count: Int, block: (Int) -> Model): Model {
         val stepD = step.toDouble()
-        var result: Abstract3dModel = this
+        var result: Model = this
         for (i in 0 until count) {
             val m = block(i)
             result = result.addModel(
@@ -176,7 +172,7 @@ class ScriptBindings {
         thumbYRotation: Number = -30.0,
         thumbZRotation: Number = 10.0,
         onStep: ((String) -> Unit)? = null,
-    ): Abstract3dModel {
+    ): Model {
         val step = onStep ?: { _ -> }
 
         val cfg = com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig(
@@ -305,4 +301,30 @@ class ScriptBindings {
         step("Union")
         return placeholders.model.addModel(connections.model.addModel(borders.model))
     }
+}
+
+// Top-level extension functions для цветов — доступны через ScriptBindings.*
+fun Model.color(r: Int, g: Int, b: Int): Model =
+    this.withColor(Color(r, g, b))
+fun Model.color(name: String): Model =
+    this.withColor(parseColorTop(name))
+
+private fun parseColorTop(name: String): Color = when (name.lowercase()) {
+    "red" -> Color.RED
+    "green" -> Color.GREEN
+    "blue" -> Color.BLUE
+    "gray", "grey" -> Color.GRAY
+    "white" -> Color.WHITE
+    "black" -> Color.BLACK
+    "yellow" -> Color.YELLOW
+    "cyan" -> Color.CYAN
+    "magenta" -> Color.MAGENTA
+    "orange" -> Color.ORANGE
+    "pink" -> Color.PINK
+    else -> if (name.startsWith("#") && name.length == 7) {
+        val rr = name.substring(1, 3).toInt(16)
+        val gg = name.substring(3, 5).toInt(16)
+        val bb = name.substring(5, 7).toInt(16)
+        Color(rr, gg, bb)
+    } else Color.GRAY
 }

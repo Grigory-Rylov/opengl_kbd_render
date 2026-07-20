@@ -8,11 +8,11 @@ import java.util.List;
  * Represents an atomic 3D object. Every primitive is a descendant of this class.
  * @author Ivan
  */
-public abstract class Atomic3dModel extends Abstract3dModel {
+public abstract class Atomic3dModel extends Model {
 	
 	
 	@Override
-	protected final Abstract3dModel innerSubModel(IScadGenerationContext context) {
+	protected final Model innerSubModel(IScadGenerationContext context) {
 		if (context.isTagIncluded()) {
 			return this;
 		}
@@ -20,7 +20,7 @@ public abstract class Atomic3dModel extends Abstract3dModel {
 	}
 	
 	@Override
-    protected final List<Abstract3dModel> getChildrenModels() {
+    protected final List<Model> getChildrenModels() {
 	    return Collections.emptyList();
 	}
 }

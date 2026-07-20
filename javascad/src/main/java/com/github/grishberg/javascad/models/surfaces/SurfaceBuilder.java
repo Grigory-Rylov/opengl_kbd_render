@@ -3,7 +3,7 @@ package com.github.grishberg.javascad.models.surfaces;
 import com.github.grishberg.javascad.coords.Boundaries3d;
 import com.github.grishberg.javascad.coords.Boundary;
 import com.github.grishberg.javascad.coords.V3d;
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 import com.github.grishberg.javascad.models.Atomic3dModel;
 import com.github.grishberg.javascad.utils.Color;
 import com.github.grishberg.javascad.vrl.CSG;
@@ -175,7 +175,7 @@ public class SurfaceBuilder extends Atomic3dModel {
     }
 
     @Override
-    protected Abstract3dModel innerCloneModel() {
+    protected Model innerCloneModel() {
         return new SurfaceBuilder(points, thickness);
     }
 

@@ -2,7 +2,7 @@ package com.github.grishberg.cad3d.keyboard.casebody
 
 import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import kotlin.math.abs
 import kotlin.math.sign
 import kotlin.math.sqrt
@@ -17,7 +17,7 @@ class CircleBottomEdgePatcher(
 
     ) : WallBottomEdgePatcher {
 
-    override fun backPoint(o: Abstract3dModel): Abstract3dModel {
+    override fun backPoint(o: Model): Model {
         if (radiusX == 0.0 || radiusY == 0.0) {
             return projection(o)
         }
@@ -26,15 +26,15 @@ class CircleBottomEdgePatcher(
         return borderObject(thickness, objectHeight).move(convertedPoint)
     }
 
-    override fun leftPoint(o: Abstract3dModel): Abstract3dModel {
+    override fun leftPoint(o: Model): Model {
         return projection(o)
     }
 
-    override fun frontPoint(o: Abstract3dModel): Abstract3dModel {
+    override fun frontPoint(o: Model): Model {
         return projection(o)
     }
 
-    override fun rightPoint(o: Abstract3dModel): Abstract3dModel {
+    override fun rightPoint(o: Model): Model {
         return projection(o)
     }
 
@@ -98,7 +98,7 @@ class CircleBottomEdgePatcher(
         return V3d(targetX, point.y, objectHeight / 2)
     }
 
-    override fun projection(obj: Abstract3dModel): Abstract3dModel {
+    override fun projection(obj: Model): Model {
         val point = obj.move
         return borderObject(thickness, objectHeight).move(V3d(point.x, point.y, objectHeight / 2))
     }
@@ -117,7 +117,7 @@ class CircleBottomEdgePatcher(
         return projectToEllipseX(src, centerX, centerY, radiusX, radiusY)
     }
 
-    private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
+    private fun borderObject(thickness: Double, height: Double): Model {
         return Utils.cylinder(thickness, height)
     }
 }

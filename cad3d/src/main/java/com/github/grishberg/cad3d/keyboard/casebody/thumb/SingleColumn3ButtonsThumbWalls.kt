@@ -10,7 +10,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.WallsBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.wall.FrontRightToMatrixWallBuilder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.utils.Color
 
 class SingleColumn3ButtonsThumbWalls(
@@ -27,13 +27,13 @@ class SingleColumn3ButtonsThumbWalls(
         leftOffset: Double,
         bottomEdgePatcher: WallBottomEdgePatcher,
         topEdgeOffsetZ: Double,
-    ): List<Abstract3dModel> {
-        val models = mutableListOf<Abstract3dModel>()
+    ): List<Model> {
+        val models = mutableListOf<Model>()
         val wallsSettings = cfg.wallsSettings
         val borderZOffset: Double = -2.0
         //corners
         //left back
-        val thumbKeyPlaceL: (Abstract3dModel) -> Abstract3dModel = { o -> thumbKeyPlace.placeL(o) }
+        val thumbKeyPlaceL: (Model) -> Model = { o -> thumbKeyPlace.placeL(o) }
         val thumbBackLPoint = verticalCube(
             thumbKeyPlaceL(
                 KeyPlaceholder.placeHolderBackLeft()
@@ -147,16 +147,16 @@ class SingleColumn3ButtonsThumbWalls(
     }
 
     //TODO: refactor
-    private fun verticalCube(obj: Abstract3dModel, topEdgeOffsetZ: Double): Abstract3dModel {
+    private fun verticalCube(obj: Model, topEdgeOffsetZ: Double): Model {
         return borderObject(cfg.wallsSettings.borderThickness, cfg.wallsSettings.borderHeight).moveZ(topEdgeOffsetZ)
             .move(obj.move)
     }
 
-    private fun topBorderObj(obj: Abstract3dModel): Abstract3dModel {
+    private fun topBorderObj(obj: Model): Model {
         return Utils.sphere(cfg.wallsSettings.borderThickness / 2.0).move(obj.move)
     }
 
-    private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
+    private fun borderObject(thickness: Double, height: Double): Model {
         return Utils.cylinder(thickness, height)
     }
 

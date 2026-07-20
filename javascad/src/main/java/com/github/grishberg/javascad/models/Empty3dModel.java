@@ -8,7 +8,7 @@ import com.github.grishberg.javascad.vrl.FacetGenerationContext;
  * <p>Example:</p>
  * <pre>
 * {@code
-* Abstract3dModel result = new Empty3dModel();
+* Model result = new Empty3dModel();
 * if (isCrit1()) {
 *   result = result.addModel(addModel1());
 * }
@@ -20,7 +20,7 @@ import com.github.grishberg.javascad.vrl.FacetGenerationContext;
  */
 public class Empty3dModel extends Atomic3dModel {
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new Empty3dModel();
 	}
 
@@ -35,12 +35,12 @@ public class Empty3dModel extends Atomic3dModel {
 	}
 
 	@Override
-	public Abstract3dModel addModel(Abstract3dModel model) {
+	public Model addModel(Model model) {
 		return model;
 	}
 	
 	@Override
-	public Abstract3dModel subtractModel(Abstract3dModel model) {
+	public Model subtractModel(Model model) {
 		return this;
 	}
 }

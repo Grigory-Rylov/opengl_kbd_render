@@ -17,7 +17,7 @@ import com.github.grishberg.cad3d.keyboard.screws.ScrewKeyMatrixPlace
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
 import com.github.grishberg.cad3d.util.fromModel
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.IModel
 import com.github.grishberg.javascad.tranzitions.Union
 import com.github.grishberg.javascad.utils.Color
@@ -38,7 +38,7 @@ class KeyMatrix(
     }
 
     fun createBordersModel(
-        amoebaHoles: Abstract3dModel?,
+        amoebaHoles: Model?,
         thumbBorders: ThumbBorders,
         thumbWalls: ThumbWalls,
     ): ModelHolder {
@@ -69,7 +69,7 @@ class KeyMatrix(
         )
     }
 
-    fun createPlaceHolder(): Abstract3dModel {
+    fun createPlaceHolder(): Model {
         val amoeba = Amoeba(cfg)
         val amoebaHole = amoeba.createHoles(height = 8.0, diameter = 0.7).addModel(amoeba.createSimple())
         return if (cfg.keyPlaceConfig.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120) {
@@ -80,7 +80,7 @@ class KeyMatrix(
     }
 
     fun createPlaceholders(): ModelHolder {
-        val models = mutableListOf<Abstract3dModel>()
+        val models = mutableListOf<Model>()
 
         val placeHolder = createPlaceHolder()
 

@@ -1,7 +1,7 @@
 // Main.kt — точка входа: собирает полную модель matrix_right
 // Запуск: ./gradlew :scripting:run --args="examples/matrix_project"
 
-fun scriptMain(): Abstract3dModel {
+fun scriptMain(): Model {
     val matrixCfg = KeyboardConfig.matrix
     val thumbCfg = KeyboardConfig.thumb
 

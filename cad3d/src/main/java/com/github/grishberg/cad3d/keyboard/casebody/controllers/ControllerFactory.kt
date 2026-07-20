@@ -4,7 +4,7 @@ import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.plugin.cfg.ControllerType
 import com.github.grishberg.javascad.basic.Radius
 import com.github.grishberg.javascad.coords.Angles3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Cylinder
 import com.github.grishberg.javascad.models.Hull
 
@@ -24,17 +24,17 @@ class ControllerFactory(private val cfg: KeyboardConfig) {
         }
     }
 
-    fun createUsbPortHole(): Abstract3dModel {
+    fun createUsbPortHole(): Model {
         return place(usbHoleObject())
     }
 
-    fun createUsbPortCase(): Abstract3dModel {
+    fun createUsbPortCase(): Model {
         return place(
             usbHoleCaseObject().subtractModel(usbHoleObject().moveY(0.5)).subtractModel(createUsb()),
         )
     }
 
-    private fun usbHoleObject(): Abstract3dModel {
+    private fun usbHoleObject(): Model {
         val diameter = usbHoleHeight
         val width = usbHoleWidth
 
@@ -45,7 +45,7 @@ class ControllerFactory(private val cfg: KeyboardConfig) {
             .moveZ(( usbPortHeight) / 2)
     }
 
-    private fun usbHoleCaseObject(): Abstract3dModel {
+    private fun usbHoleCaseObject(): Model {
         val diameter = usbHoleHeight + 2 * usbHolderWallWidth
         val width = usbHoleWidth + 2 * usbHolderWallWidth
 
@@ -55,7 +55,7 @@ class ControllerFactory(private val cfg: KeyboardConfig) {
         ).moveY(4.5).moveZ((usbPortHeight) / 2)
     }
 
-    private fun createUsb(): Abstract3dModel {
+    private fun createUsb(): Model {
         val diameter = 3.2
         val width = 8.34
 
@@ -66,7 +66,7 @@ class ControllerFactory(private val cfg: KeyboardConfig) {
         ).moveZ(diameter / 2).moveY(2.0)
     }
 
-    private fun place(o: Abstract3dModel): Abstract3dModel {
+    private fun place(o: Model): Model {
         return o.moveZ(1.5)
     }
 }

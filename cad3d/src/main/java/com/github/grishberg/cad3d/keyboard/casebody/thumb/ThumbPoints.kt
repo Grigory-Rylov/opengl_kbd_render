@@ -5,7 +5,7 @@ import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 
 /**
  * FR - Front Right Corner
@@ -43,7 +43,7 @@ class ThumbPoints(
         )
     )
 
-    private fun topBorderObj(obj: Abstract3dModel): Abstract3dModel {
+    private fun topBorderObj(obj: Model): Model {
         return Utils.sphere(cfg.wallsSettings.borderThickness / 2.0).move(obj.move)
     }
 

@@ -4,7 +4,7 @@ import com.github.grishberg.javascad.context.IScadGenerationContext;
 import com.github.grishberg.javascad.coords.Boundaries3d;
 import com.github.grishberg.javascad.exceptions.IllegalValueException;
 import com.github.grishberg.javascad.manifold.Manifold3dEngine;
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 import com.github.grishberg.javascad.models.Complex3dModel;
 import com.github.grishberg.javascad.tranform.TransformationFactory;
 import com.github.grishberg.javascad.utils.AssertValue;
@@ -25,7 +25,7 @@ public final class Mirror extends Complex3dModel {
 	 * @return the mirrored model
 	 * @throws IllegalValueException if the model is null
 	 */
-	public static Mirror mirrorX(Abstract3dModel model) throws IllegalValueException {
+	public static Mirror mirrorX(Model model) throws IllegalValueException {
 		return new Mirror(model, Direction.X);
 	}
 	
@@ -35,7 +35,7 @@ public final class Mirror extends Complex3dModel {
 	 * @return the mirrored model
 	 * @throws IllegalValueException if the model is null
 	 */
-	public static Mirror mirrorY(Abstract3dModel model) throws IllegalValueException {
+	public static Mirror mirrorY(Model model) throws IllegalValueException {
 		return new Mirror(model, Direction.Y);
 	}
 	
@@ -45,14 +45,14 @@ public final class Mirror extends Complex3dModel {
 	 * @return the mirrored model
 	 * @throws IllegalValueException if the model is null
 	 */
-	public static Mirror mirrorZ(Abstract3dModel model) throws IllegalValueException {
+	public static Mirror mirrorZ(Model model) throws IllegalValueException {
 		return new Mirror(model, Direction.Z);
 	}
 	
-	private final Abstract3dModel model;
+	private final Model model;
 	private final Direction direction;
 
-	private Mirror(Abstract3dModel model, Direction direction) throws IllegalValueException {
+	private Mirror(Model model, Direction direction) throws IllegalValueException {
 		AssertValue.isNotNull(model, "The model to be mirrored must not be null!");
 		
 		this.model = model;
@@ -69,7 +69,7 @@ public final class Mirror extends Complex3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new Mirror(model, direction);
 	}
 
@@ -95,13 +95,13 @@ public final class Mirror extends Complex3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerSubModel(IScadGenerationContext context) {
-		Abstract3dModel subModel = model.subModel(context);
+	protected Model innerSubModel(IScadGenerationContext context) {
+		Model subModel = model.subModel(context);
 		return subModel==null ? null : new Mirror(subModel, direction);
 	}
 
     @Override
-    protected List<Abstract3dModel> getChildrenModels() {
+    protected List<Model> getChildrenModels() {
         return Collections.singletonList(model);
     }
 }

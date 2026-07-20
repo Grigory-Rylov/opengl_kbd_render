@@ -5,7 +5,7 @@ import com.github.grishberg.javascad.coords.Boundaries3d;
 import com.github.grishberg.javascad.coords.V3d;
 import com.github.grishberg.javascad.exceptions.IllegalValueException;
 import com.github.grishberg.javascad.manifold.Manifold3dEngine;
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 import com.github.grishberg.javascad.models.Complex3dModel;
 import com.github.grishberg.javascad.tranform.TransformationFactory;
 import com.github.grishberg.javascad.utils.AssertValue;
@@ -14,13 +14,13 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Scales a model by the given value on X, Y and Z plane. It is a descendant of {@link Abstract3dModel}, 
+ * Scales a model by the given value on X, Y and Z plane. It is a descendant of {@link Model}, 
  * which means you can use the convenient methods on scales too.
  *
  * @author ivivan <ivivan@printingin3d.eu>
  */
 public class Scale extends Complex3dModel {
-	private final Abstract3dModel model;
+	private final Model model;
 	private final V3d scale;
 
 	/**
@@ -30,7 +30,7 @@ public class Scale extends Complex3dModel {
 	 * @param scale the scale values to be used
 	 * @throws IllegalValueException if either of the parameters is null
 	 */
-	public Scale(Abstract3dModel model, V3d scale) throws IllegalValueException {
+	public Scale(Model model, V3d scale) throws IllegalValueException {
 		AssertValue.isNotNull(model, "Model should not be null for scale operation!");
 		AssertValue.isNotNull(scale, "Scale should not be null for scale operation!");
 		
@@ -48,7 +48,7 @@ public class Scale extends Complex3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new Scale(model, scale);
 	}
 
@@ -61,13 +61,13 @@ public class Scale extends Complex3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerSubModel(IScadGenerationContext context) {
-		Abstract3dModel subModel = model.subModel(context);
+	protected Model innerSubModel(IScadGenerationContext context) {
+		Model subModel = model.subModel(context);
 		return subModel==null ? null : new Scale(subModel, scale);
 	}
 
     @Override
-    protected List<Abstract3dModel> getChildrenModels() {
+    protected List<Model> getChildrenModels() {
         return Collections.singletonList(model);
     }
 }

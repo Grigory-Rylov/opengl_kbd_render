@@ -1,8 +1,8 @@
 package com.github.grishberg.scripting.matrix
 
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 
-fun placeKey(model: Abstract3dModel, column: Int, row: Int): Abstract3dModel {
+fun placeKey(model: Model, column: Int, row: Int): Model {
     val kfc = KeyCfg
     val ko = keyOffsets[column]
     val zAngle = zAngles[column]

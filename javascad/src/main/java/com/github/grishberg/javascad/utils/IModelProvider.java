@@ -2,7 +2,7 @@ package com.github.grishberg.javascad.utils;
 
 import java.util.List;
 
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 
 /**
  * Represents a complex 3D object, which assembled by several different parts. This interface provides 
@@ -16,7 +16,7 @@ public interface IModelProvider {
 	 * returned by getParts method.
 	 * @return the assembled object
 	 */
-	Abstract3dModel getAssembledModel();
+	Model getAssembledModel();
 	
 	/**
 	 * The parts of the object with the path for them.

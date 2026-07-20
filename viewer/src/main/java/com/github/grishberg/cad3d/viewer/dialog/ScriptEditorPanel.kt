@@ -104,7 +104,7 @@ class ScriptEditorPanel(
         )
         scriptText.syntaxScheme = scheme
         scriptText.text = if (initialScript.isNotEmpty()) initialScript else """// Script editor — F5 to run, F7 to export STL
- // Available: bindings, Abstract3dModel, V3d
+ // Available: bindings, Model, V3d
 
  bindings.cube(50.0) // fallback if matrix_right not found
  """

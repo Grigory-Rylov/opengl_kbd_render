@@ -3,7 +3,7 @@ package com.github.grishberg.cad3d.util
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.javascad.Triangulator
 import com.github.grishberg.javascad.manifold.Manifold3dEngine
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.IModel
 import com.github.grishberg.javascad.utils.Color
 import com.github.grishberg.javascad.vrl.ColorFacetGenerationContext
@@ -15,11 +15,11 @@ fun fromModel(model: IModel, color: Color, fn: Int): VertexHolder {
     return fromModelNative(model, color, fn)
 }
 
-fun fromModel(model: Abstract3dModel, fn: Int): VertexHolder {
+fun fromModel(model: Model, fn: Int): VertexHolder {
     return fromModelNative(model, fn)
 }
 
-fun fromModelNative(model: Abstract3dModel, fn: Int): VertexHolder {
+fun fromModelNative(model: Model, fn: Int): VertexHolder {
     val context: FacetGenerationContext = ColorFacetGenerationContext(model.color)
     context.setFn(fn)
     val mesh = model.toNativeMesh(context)
@@ -34,7 +34,7 @@ fun fromModelNative(model: Abstract3dModel, fn: Int): VertexHolder {
     }
 }
 
-fun fromModelNative(model: Abstract3dModel, color: Color): VertexHolder {
+fun fromModelNative(model: Model, color: Color): VertexHolder {
     val mesh = model.toNativeMesh()
     return try {
         val nv = Manifold3dEngine.toVertexHolder(mesh, color)

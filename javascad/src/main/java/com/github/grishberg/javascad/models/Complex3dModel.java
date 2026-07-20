@@ -5,5 +5,5 @@ package com.github.grishberg.javascad.models;
  * Every transition is a descendant of this class.
  * @author Ivan
  */
-public abstract class Complex3dModel extends Abstract3dModel {
+public abstract class Complex3dModel extends Model {
 }

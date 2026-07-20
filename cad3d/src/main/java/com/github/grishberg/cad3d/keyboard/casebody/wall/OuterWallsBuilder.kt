@@ -10,7 +10,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.WallsBuilder
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.tranzitions.Union
 import com.github.grishberg.javascad.utils.Color
 
@@ -25,8 +25,8 @@ class OuterWallsBuilder(
 ) : WallsBuilder {
 
     override fun backWall(
-        onlyBorder: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        onlyBorder: Boolean, keyPlace: (Model) -> Model
+    ): Model {
         val left =
             keyPlace(KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
         val right =
@@ -81,9 +81,9 @@ class OuterWallsBuilder(
         onlyBorder: Boolean,
         leftOffset: Double,
         rightOffset: Double,
-        leftPlace: (Abstract3dModel) -> Abstract3dModel,
-        rightPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        leftPlace: (Model) -> Model,
+        rightPlace: (Model) -> Model
+    ): Model {
         val left = leftPlace.invoke(
             KeyPlaceholder.placeHolderBackRight().move(leftOffset, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
@@ -124,8 +124,8 @@ class OuterWallsBuilder(
     }
 
     override fun leftWall(
-        topOffset: Double, bottomOffset: Double, keyPlace: (Abstract3dModel) -> Abstract3dModel
-    ): List<Abstract3dModel> {
+        topOffset: Double, bottomOffset: Double, keyPlace: (Model) -> Model
+    ): List<Model> {
         val back = keyPlace(
             KeyPlaceholder.placeHolderBackLeft().move(-cfg.outerHorizontalOffset, topOffset, cfg.outerBorderZOffset)
         )
@@ -164,8 +164,8 @@ class OuterWallsBuilder(
     }
 
     override fun leftMidWall(
-        leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        leftPlace: (Model) -> Model, rightPlace: (Model) -> Model
+    ): Model {
         val top = leftPlace(
             KeyPlaceholder.placeHolderFrontLeft().move(-cfg.outerHorizontalOffset, 0.0, cfg.outerBorderZOffset)
         )
@@ -209,8 +209,8 @@ class OuterWallsBuilder(
     override fun frontWall(
         leftOffset: Double, rightOffset: Double,
         onlyBorder: Boolean,
-        keyPlace: (Abstract3dModel) -> Abstract3dModel,
-    ): Abstract3dModel {
+        keyPlace: (Model) -> Model,
+    ): Model {
         val left = keyPlace(
             KeyPlaceholder.placeHolderFrontLeft().move(leftOffset, -cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
@@ -257,9 +257,9 @@ class OuterWallsBuilder(
     override fun frontMidWall(
         leftOffset: Double,
         rightOffset: Double,
-        leftPlace: (Abstract3dModel) -> Abstract3dModel,
-        rightPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        leftPlace: (Model) -> Model,
+        rightPlace: (Model) -> Model
+    ): Model {
         val left = leftPlace(
             KeyPlaceholder.placeHolderFrontRight().move(leftOffset, -cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
@@ -301,8 +301,8 @@ class OuterWallsBuilder(
     }
 
     override fun rightWall(
-        topOffset: Double, bottomOffset: Double, keyPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        topOffset: Double, bottomOffset: Double, keyPlace: (Model) -> Model
+    ): Model {
         val top = keyPlace(
             KeyPlaceholder.placeHolderBackRight().move(cfg.outerHorizontalOffset, topOffset, cfg.outerBorderZOffset)
         )
@@ -339,8 +339,8 @@ class OuterWallsBuilder(
     }
 
     override fun rightMidWall(
-        backPlace: (Abstract3dModel) -> Abstract3dModel, frontPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        backPlace: (Model) -> Model, frontPlace: (Model) -> Model
+    ): Model {
         val top = frontPlace(
             KeyPlaceholder.placeHolderBackRight().move(cfg.outerHorizontalOffset, 0.0, cfg.outerBorderZOffset)
         )
@@ -379,10 +379,10 @@ class OuterWallsBuilder(
     }
 
     override fun midEdge(
-        midPlace: (Abstract3dModel) -> Abstract3dModel,
-        leftPlace: (Abstract3dModel) -> Abstract3dModel,
-        rightPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        midPlace: (Model) -> Model,
+        leftPlace: (Model) -> Model,
+        rightPlace: (Model) -> Model
+    ): Model {
         val left = leftPlace(
             KeyPlaceholder.placeHolderFrontRight().move(0.0, -cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
@@ -422,9 +422,9 @@ class OuterWallsBuilder(
     }
 
     override fun rightDiagonal(
-        backKeyPlace: (Abstract3dModel) -> Abstract3dModel,
-        frontKeyPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        backKeyPlace: (Model) -> Model,
+        frontKeyPlace: (Model) -> Model
+    ): Model {
         val topOffset = 0.0
         val bottomOffset = 0.0
         val offset = 1.0
@@ -466,19 +466,19 @@ class OuterWallsBuilder(
         return Union(border, wall)
     }
 
-    private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
+    private fun verticalCube(obj: Model): Model {
         return borderObject(cfg.borderThickness, cfg.borderHeight).moveZ(topEdgeOffsetZ).move(obj.move)
     }
 
-    private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
+    private fun borderObject(thickness: Double, height: Double): Model {
         return Utils.cylinder(thickness, height)
     }
 
-    private fun topBorderObj(obj: Abstract3dModel): Abstract3dModel {
+    private fun topBorderObj(obj: Model): Model {
         return Utils.sphere(cfg.borderThickness / 2.0).move(obj.move)
     }
 
-    private fun topBorderObj(point: V3d): Abstract3dModel {
+    private fun topBorderObj(point: V3d): Model {
         return Utils.sphere(cfg.borderThickness / 2.0).move(point)
     }
 }

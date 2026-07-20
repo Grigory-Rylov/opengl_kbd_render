@@ -1,11 +1,11 @@
 package com.github.grishberg.scripting.matrix
 
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.tranzitions.Hull
 import com.github.grishberg.javascad.tranzitions.Union
 
-fun buildConnections(): Abstract3dModel {
-    val models = mutableListOf<Abstract3dModel>()
+fun buildConnections(): Model {
+    val models = mutableListOf<Model>()
     val kfc = KeyCfg
 
     for (col in 0 until kfc.columnsCount - 1) {

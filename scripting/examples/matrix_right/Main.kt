@@ -2,10 +2,10 @@ package com.github.grishberg.scripting.matrix
 
 import com.github.grishberg.javascad.tranzitions.Union
 
-fun scriptMain(): Abstract3dModel {
+fun scriptMain(): Model {
     val placeholder = createPlaceholder()
 
-    val placeholderModels = mutableListOf<Abstract3dModel>()
+    val placeholderModels = mutableListOf<Model>()
     for (col in 0 until KeyCfg.columnsCount) {
         for (row in 0 until KeyCfg.rowsCount) {
             placeholderModels.add(placeKey(placeholder, col, row))
