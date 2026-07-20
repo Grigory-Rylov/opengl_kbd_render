@@ -102,6 +102,11 @@ import com.github.grishberg.javascad.*
         get() = baseImports + (if (hasCad3d) cad3dImports else "")
 
     private val globalDecls = """
+var bindings = ScriptBindings()
+
+"""
+
+    private val dslShortcuts = """
 infix fun Model.union(other: Model) = this.addModel(other)
 infix fun Model.minus(other: Model) = this.subtractModel(other)
 
@@ -115,7 +120,26 @@ fun colorFromString(n: String): Color = when (n.lowercase()) {
     else -> if (n.startsWith("#") && n.length == 7) Color(n.substring(1, 3).toInt(16), n.substring(3, 5).toInt(16), n.substring(5, 7).toInt(16)) else Color.GRAY
 }
 
-var bindings = ScriptBindings()
+fun cube(size: Number) = bindings.cube(size)
+fun cube(x: Number, y: Number, z: Number) = bindings.cube(x, y, z)
+fun cylinder(length: Number, radius: Number, fn: Int? = null) = bindings.cylinder(length, radius, fn)
+fun cylinder(length: Number, bottomR: Number, topR: Number, fn: Int? = null) = bindings.cylinder(length, bottomR, topR, fn)
+fun cylinderD(d: Number, h: Number, fn: Int? = null) = bindings.cylinderD(d, h, fn)
+fun cylinderR(r: Number, h: Number, fn: Int? = null) = bindings.cylinderR(r, h, fn)
+fun sphere(radius: Number) = bindings.sphere(radius)
+fun prism(length: Number, radius: Number, sides: Int) = bindings.prism(length, radius, sides)
+fun prism(length: Number, r1: Number, r2: Number, sides: Int) = bindings.prism(length, r1, r2, sides)
+fun emptyModel() = bindings.emptyModel()
+fun hull(vararg models: Model) = bindings.hull(*models)
+fun hull(models: List<Model>) = bindings.hull(models)
+fun union(vararg models: Model) = bindings.union(*models)
+fun union(models: List<Model>) = bindings.union(models)
+fun v3(x: Number, y: Number, z: Number) = bindings.v3(x, y, z)
+fun v3(x: Number, y: Number) = bindings.v3(x, y)
+fun angles(x: Number = 0.0, y: Number = 0.0, z: Number = 0.0) = bindings.angles(x, y, z)
+fun repeat(count: Int, block: (Int) -> Model) = bindings.repeat(count, block)
+fun deg(degrees: Number) = bindings.deg(degrees)
+fun importStl(path: String, color: String? = null) = bindings.importStl(path, color)
 
 """
 
@@ -152,15 +176,19 @@ var bindings = ScriptBindings()
             mkdirs()
         }
 
-        // Преамбл добавляем только в первый файл
+        // Создаём общий файл-шаблон с DSL-обёртками, компилируем его вместе с пользовательскими файлами
+        val sharedStub = File(prefixedDir, "__DslStub.kt").apply {
+            writeText(fileImports + dslShortcuts + globalDecls)
+        }
+
         val prefixedFiles = ktFiles.mapIndexed { idx, orig ->
             val originalContent = orig.readText()
             val (pkgLine, fileImportsPart, restContent) = extractPackageAndImports(originalContent)
-            val content = pkgLine + fileImports + fileImportsPart + (if (idx == 0) globalDecls else "") + restContent
+            val content = pkgLine + fileImports + fileImportsPart + restContent
             val target = File(prefixedDir, orig.name)
             target.writeText(content)
             target
-        }
+        } + sharedStub
 
         val args = arrayOf(
             "-no-stdlib",
