@@ -6,7 +6,6 @@ import com.github.grishberg.cad3d.keyboard.KeyPlace
 import com.github.grishberg.cad3d.keyboard.ModelHolder
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.amoeba.Amoeba
-import com.github.grishberg.cad3d.keyboard.casebody.DefaultBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.Walls
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.Controller
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerFactory
@@ -16,17 +15,8 @@ import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerPlace
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.SwitcherPlace
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.battery.BatteryFactory
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.switcher.SwitcherFactory
-import com.github.grishberg.cad3d.keyboard.casebody.thumb.SingleColumn3ButtonsThumbWalls
-import com.github.grishberg.cad3d.keyboard.casebody.thumb.SingleColumn3ButtonsThumbsBordersBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbBorders
-import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbPoints
 import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbWalls
-import com.github.grishberg.cad3d.keyboard.casebody.thumb.TwoRows5ButtonsMatrixThumbsBordersBuilder
-import com.github.grishberg.cad3d.keyboard.casebody.thumb.TwoRows5ButtonsThumbWalls
-import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
-import com.github.grishberg.cad3d.keyboard.casebody.wall.FrontRightToMatrixWallBuilder
-import com.github.grishberg.cad3d.keyboard.casebody.wall.SingleRow3ButtonsFrontRightToMatrixWallBuilder
-import com.github.grishberg.cad3d.keyboard.casebody.wall.TwoRowsButtonsFrontRightToMatrixWallBuilder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.keyboard.matrix.KeyMatrix
@@ -103,70 +93,25 @@ class KeyboardBuilder(
             cache.remove(it)
         }
 
-        val keyPlace = KeyPlace(cfg.keyPlaceConfig)
-        val thumbKeyPlace = ThumbKeyPlace(cfg)
-        val trackball = Trackball(cfg)
-
-        val controllerFactory = ControllerFactory(cfg)
-        val controller = controllerFactory.createController()
-
-        val controllerPlace = ControllerPlace(cfg, keyPlace, controller)
-        val switcherPlace = SwitcherPlace(controller, controllerPlace)
-        val switcherFactory = SwitcherFactory(cfg)
-        val controllerHolderDimensions = ControllerHolderDimensions()
-
-        val wallsSettings = WallsSettings(bottomBorderHeight = 1.0)
-        val controllerHolderWall = ControllerHolderWall(wallsSettings, keyPlace)
-        val screwWallPlaces = ScrewWallPlaces(
-            cfg, wallsSettings, keyPlace, thumbKeyPlace, controllerHolderWall, controllerHolderDimensions
-        )
-
-        val topEdgeOffsetZ = -2.0
-
-        val thumbPoints = if (cfg.thumbClusterSettings.type == ThumbClusterMode.TwoRows5Buttons) {
-            ThumbPoints(cfg, keyPlace, thumbKeyPlace)
-        } else null
-        val bottomEdgePatcher = DefaultBottomEdgePatcher(
-            wallsSettings.borderThickness, wallsSettings.bottomBorderHeight
-        )
-        val frontRightToMatrixWallBuilder: FrontRightToMatrixWallBuilder = when (cfg.thumbClusterSettings.type) {
-            ThumbClusterMode.SingleColumn3Buttons -> SingleRow3ButtonsFrontRightToMatrixWallBuilder(
-                cfg, bottomEdgePatcher, topEdgeOffsetZ
-            )
-
-            ThumbClusterMode.SingleColumn4Buttons -> SingleRow3ButtonsFrontRightToMatrixWallBuilder(
-                cfg, bottomEdgePatcher, topEdgeOffsetZ
-            )
-
-            ThumbClusterMode.TwoRows5Buttons -> TwoRowsButtonsFrontRightToMatrixWallBuilder(
-                cfg, bottomEdgePatcher, topEdgeOffsetZ, thumbPoints!!
-            )
-        }
-
-        val thumbBorders = when (cfg.thumbClusterSettings.type) {
-            ThumbClusterMode.SingleColumn3Buttons -> SingleColumn3ButtonsThumbsBordersBuilder(thumbKeyPlace)
-            ThumbClusterMode.SingleColumn4Buttons -> SingleColumn3ButtonsThumbsBordersBuilder(thumbKeyPlace)
-            ThumbClusterMode.TwoRows5Buttons -> TwoRows5ButtonsMatrixThumbsBordersBuilder(thumbKeyPlace)
-        }
-
-        val thumbWalls: ThumbWalls = when (cfg.thumbClusterSettings.type) {
-            ThumbClusterMode.SingleColumn3Buttons -> SingleColumn3ButtonsThumbWalls(
-                cfg, keyPlace, thumbKeyPlace, frontRightToMatrixWallBuilder
-            )
-
-            ThumbClusterMode.SingleColumn4Buttons -> SingleColumn3ButtonsThumbWalls(
-                cfg, keyPlace, thumbKeyPlace, frontRightToMatrixWallBuilder
-            )
-
-            ThumbClusterMode.TwoRows5Buttons -> TwoRows5ButtonsThumbWalls(
-                cfg, keyPlace, thumbKeyPlace, thumbPoints!!, frontRightToMatrixWallBuilder
-            )
-        }
-        val walls = Walls(
-            cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ,
-            thumbBorders = thumbBorders,
-            thumbWalls = thumbWalls,
-        )
+        val bc = BuildContext.create(cfg, bottomBorderHeight = 1.0)
+        val keyPlace = bc.keyPlace
+        val thumbKeyPlace = bc.thumbKeyPlace
+        val trackball = bc.trackball
+        val controllerFactory = bc.controllerFactory
+        val controller = bc.controller
+        val controllerPlace = bc.controllerPlace
+        val switcherPlace = bc.switcherPlace
+        val switcherFactory = bc.switcherFactory
+        val controllerHolderDimensions = bc.controllerHolderDimensions
+        val wallsSettings = bc.wallsSettings
+        val controllerHolderWall = bc.controllerHolderWall
+        val screwWallPlaces = bc.screwWallPlaces
+        val topEdgeOffsetZ = bc.topEdgeOffsetZ
+        val thumbPoints = bc.thumbPoints
+        val frontRightToMatrixWallBuilder = bc.frontRightToMatrixWallBuilder
+        val thumbBorders = bc.thumbBorders
+        val thumbWalls = bc.thumbWalls
+        val walls = bc.walls
 
         val resultsChannel = Channel<List<VertexHolder>>()
         var additional = 3
@@ -630,70 +575,25 @@ class KeyboardBuilder(
         stlExportListener = WeakReference(listener)
         val visibleModels = cfg.visibleKeyboardParts
 
-        val keyPlace = KeyPlace(cfg.keyPlaceConfig)
-        val thumbKeyPlace = ThumbKeyPlace(cfg)
-        val trackball = Trackball(cfg)
-
-        val controllerFactory = ControllerFactory(cfg)
-        val controller = controllerFactory.createController()
-
-        val controllerPlace = ControllerPlace(cfg, keyPlace, controller)
-        val switcherPlace = SwitcherPlace(controller, controllerPlace)
-        val switcherFactory = SwitcherFactory(cfg)
-        val controllerHolderDimensions = ControllerHolderDimensions()
-        val wallsSettings = WallsSettings(bottomBorderHeight = 4.0)
-        val controllerHolderWall = ControllerHolderWall(wallsSettings, keyPlace)
-        val screwWallPlaces = ScrewWallPlaces(
-            cfg, wallsSettings, keyPlace, thumbKeyPlace, controllerHolderWall, controllerHolderDimensions
-        )
-
-        // Prepare same helpers as in rebuild flow
-        val topEdgeOffsetZ = -2.0
-        val thumbPoints = if (cfg.thumbClusterSettings.type == ThumbClusterMode.TwoRows5Buttons) {
-            ThumbPoints(cfg, keyPlace, thumbKeyPlace)
-        } else null
-        val bottomEdgePatcher = DefaultBottomEdgePatcher(
-            wallsSettings.borderThickness, wallsSettings.bottomBorderHeight
-        )
-        val frontRightToMatrixWallBuilder: FrontRightToMatrixWallBuilder = when (cfg.thumbClusterSettings.type) {
-            ThumbClusterMode.SingleColumn3Buttons -> SingleRow3ButtonsFrontRightToMatrixWallBuilder(
-                cfg, bottomEdgePatcher, topEdgeOffsetZ
-            )
-
-            ThumbClusterMode.SingleColumn4Buttons -> SingleRow3ButtonsFrontRightToMatrixWallBuilder(
-                cfg, bottomEdgePatcher, topEdgeOffsetZ
-            )
-
-            ThumbClusterMode.TwoRows5Buttons -> TwoRowsButtonsFrontRightToMatrixWallBuilder(
-                cfg, bottomEdgePatcher, topEdgeOffsetZ, thumbPoints!!
-            )
-        }
-
-        val thumbBorders = when (cfg.thumbClusterSettings.type) {
-            ThumbClusterMode.SingleColumn3Buttons -> SingleColumn3ButtonsThumbsBordersBuilder(thumbKeyPlace)
-            ThumbClusterMode.SingleColumn4Buttons -> SingleColumn3ButtonsThumbsBordersBuilder(thumbKeyPlace)
-            ThumbClusterMode.TwoRows5Buttons -> TwoRows5ButtonsMatrixThumbsBordersBuilder(thumbKeyPlace)
-        }
-
-        val thumbWalls: ThumbWalls = when (cfg.thumbClusterSettings.type) {
-            ThumbClusterMode.SingleColumn3Buttons -> SingleColumn3ButtonsThumbWalls(
-                cfg, keyPlace, thumbKeyPlace, frontRightToMatrixWallBuilder
-            )
-
-            ThumbClusterMode.SingleColumn4Buttons -> SingleColumn3ButtonsThumbWalls(
-                cfg, keyPlace, thumbKeyPlace, frontRightToMatrixWallBuilder
-            )
-
-            ThumbClusterMode.TwoRows5Buttons -> TwoRows5ButtonsThumbWalls(
-                cfg, keyPlace, thumbKeyPlace, thumbPoints!!, frontRightToMatrixWallBuilder
-            )
-        }
-
-        val walls = Walls(
-            cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ,
-            thumbBorders = thumbBorders,
-            thumbWalls = thumbWalls,
-        )
+        val bc = BuildContext.create(cfg, bottomBorderHeight = 4.0)
+        val keyPlace = bc.keyPlace
+        val thumbKeyPlace = bc.thumbKeyPlace
+        val trackball = bc.trackball
+        val controllerFactory = bc.controllerFactory
+        val controller = bc.controller
+        val controllerPlace = bc.controllerPlace
+        val switcherPlace = bc.switcherPlace
+        val switcherFactory = bc.switcherFactory
+        val controllerHolderDimensions = bc.controllerHolderDimensions
+        val wallsSettings = bc.wallsSettings
+        val controllerHolderWall = bc.controllerHolderWall
+        val screwWallPlaces = bc.screwWallPlaces
+        val topEdgeOffsetZ = bc.topEdgeOffsetZ
+        val thumbPoints = bc.thumbPoints
+        val frontRightToMatrixWallBuilder = bc.frontRightToMatrixWallBuilder
+        val thumbBorders = bc.thumbBorders
+        val thumbWalls = bc.thumbWalls
+        val walls = bc.walls
 
         coroutineScope.launch {
             isExportMode = true
