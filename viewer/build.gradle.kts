@@ -18,9 +18,15 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.8.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
-    implementation(files("libs/jogamp-fat.jar"))
-    implementation(files("libs/jogl-all-2.5.0.jar"))
-    implementation(files("libs/jogl-all-2.5.0-natives-macosx-universal.jar"))
+    // JOGL 2.6.0 + Gluegen (classifiers for platform natives)
+    implementation("org.jogamp.jogl:jogl-all:2.6.0")
+    implementation("org.jogamp.jogl:jogl-all:2.6.0:natives-macosx-universal")
+    implementation("org.jogamp.jogl:jogl-all:2.6.0:natives-linux-amd64")
+    implementation("org.jogamp.jogl:jogl-all:2.6.0:natives-linux-aarch64")
+    implementation("org.jogamp.gluegen:gluegen-rt:2.6.0")
+    implementation("org.jogamp.gluegen:gluegen-rt:2.6.0:natives-macosx-universal")
+    implementation("org.jogamp.gluegen:gluegen-rt:2.6.0:natives-linux-amd64")
+    implementation("org.jogamp.gluegen:gluegen-rt:2.6.0:natives-linux-aarch64")
 
     testImplementation("junit:junit:4.13.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
