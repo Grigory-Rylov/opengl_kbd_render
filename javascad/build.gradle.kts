@@ -9,7 +9,7 @@ tasks.register<JavaExec>("runTestModel") {
 }
 
 group = "com.github.grishberg.javascad"
-version = "1.0"
+version = "0.1.5"
 
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))

@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm")
     `java-library`
 }
-version = "1.0.1"
+version = "0.1.5"
 
 dependencies {
     implementation(project(":javascad"))

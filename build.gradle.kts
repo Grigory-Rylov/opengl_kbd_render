@@ -7,7 +7,7 @@ plugins {
 
 allprojects {
     group = "com.github.grishberg.cad3d"
-    version = "1.0"
+    version = "0.1.5"
 }
 
 subprojects {

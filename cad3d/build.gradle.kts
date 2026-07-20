@@ -3,7 +3,7 @@ plugins {
     `java-library`
     application
 }
-version = "1.0.1"
+version = "0.1.5"
 
 application {
     mainClass.set("com.github.grishberg.cad3d.cli.CliRunnerKt")

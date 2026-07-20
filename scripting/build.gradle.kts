@@ -3,7 +3,7 @@ plugins {
     `java-library`
     application
 }
-version = "1.0.0"
+version = "0.1.5"
 
 application {
     mainClass.set("com.github.grishberg.scripting.cli.DslRunnerKt")
