@@ -1,6 +1,6 @@
 package com.github.grishberg.cad3d.keyboard.casebody.controllers.battery
 
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 
 object NoBattery : Battery {
 
@@ -8,11 +8,11 @@ object NoBattery : Battery {
     override val depth: Double = 0.0
     override val height: Double = 0.0
 
-    override fun create(): Abstract3dModel {
+    override fun create(): Model {
         throw IllegalStateException()
     }
 
-    override fun createBatteryPreview(): Abstract3dModel {
+    override fun createBatteryPreview(): Model {
         throw IllegalStateException()
     }
 }

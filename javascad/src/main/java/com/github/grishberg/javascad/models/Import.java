@@ -70,7 +70,7 @@ public class Import extends Polyhedron {
 	}
 	
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new Import(file, triangles);
 	}
 

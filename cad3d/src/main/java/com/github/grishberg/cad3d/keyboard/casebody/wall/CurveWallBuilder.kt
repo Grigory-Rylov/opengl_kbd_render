@@ -7,7 +7,7 @@ import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.keyboard.casebody.DefaultBottomEdgePatcher
 import com.github.grishberg.javascad.basic.Radius
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.EdgeType
 import com.github.grishberg.javascad.models.Sphere
 import com.github.grishberg.javascad.models.surfaces.S12x3
@@ -26,13 +26,13 @@ class CurveWallBuilder(
     fun build(
         keyboardConfig: KeyboardConfig,
         keyPlace: KeyPlace,
-    ): Abstract3dModel {
+    ): Model {
         val topEdgePoints = mutableListOf<V3d>()
         val topBorderPoints = mutableListOf<V3d>()
         val bottomEdgePoints = mutableListOf<V3d>()
 
         for (column in 0 until keyboardConfig.keyPlaceConfig.columnsCount) {
-            val topKeyPlace = { obj: Abstract3dModel ->
+            val topKeyPlace = { obj: Model ->
                 keyPlace.place(
                     column, 0, obj
                 )
@@ -88,16 +88,16 @@ class CurveWallBuilder(
         )
         val contours = vs.calculateVoronoiEdges(4)
 
-        val holes = mutableListOf<Abstract3dModel>()
+        val holes = mutableListOf<Model>()
         // Визуализация контуров
         for (contour in contours) {
-            val points = mutableListOf<Abstract3dModel>()
+            val points = mutableListOf<Model>()
             for (point in contour) {
                 points.add(Sphere(Radius.fromDiameter(1.0)).move(point))
             }
             //holes.add(Hull(points))
             holes.addAll(points)
-        }/*val surfaceBuilder: Abstract3dModel = SmoothSurface(
+        }/*val surfaceBuilder: Model = SmoothSurface(
             BicubicSurfaceSpline.bSplineSurface(controlPoints, 10),
             borderHeight,
             EdgeType.Normal,

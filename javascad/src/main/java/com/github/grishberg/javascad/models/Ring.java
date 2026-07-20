@@ -40,7 +40,7 @@ public class Ring extends Atomic3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new Ring(radius, model);
 	}
 

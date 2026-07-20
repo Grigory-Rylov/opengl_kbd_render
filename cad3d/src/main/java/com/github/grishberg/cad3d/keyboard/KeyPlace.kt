@@ -4,7 +4,7 @@ import com.github.grishberg.cad3d.kbd.core.cfg.KeyPlaceConfig
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.javascad.coords.Angles3d
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -20,7 +20,7 @@ class KeyPlace(private val cfg: KeyPlaceConfig) {
         ((mountHeight + cfg.extraWidth) / 2.0) / sin(Math.toRadians(cfg.rowCurvature) / 2.0) + capTopHeight
 
     @JvmOverloads
-    fun place(column: Int, row: Int, obj: Abstract3dModel, offset: V3d = V3d(0.0, 0.0, 0.0)): Abstract3dModel {
+    fun place(column: Int, row: Int, obj: Model, offset: V3d = V3d(0.0, 0.0, 0.0)): Model {
         val keyOffset = cfg.columnOffsetProvider.getOffset(column)
 
         return obj.move(offset).move(0, 0, -rowRadius).rotate(Angles3d.xOnly(calculateXAngle(row)))

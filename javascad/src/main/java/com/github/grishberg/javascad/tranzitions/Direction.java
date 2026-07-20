@@ -3,7 +3,7 @@ package com.github.grishberg.javascad.tranzitions;
 import com.github.grishberg.javascad.coords.V3d;
 import com.github.grishberg.javascad.enums.AlignType;
 import com.github.grishberg.javascad.enums.Side;
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 
 /**
  * Denotes the direction. It is used internally by the {@link Mirror} operation, and used by the 
@@ -49,7 +49,7 @@ public enum Direction {
 	 * @param side the side of the alignment - MIN or MAX is the most commonly used and NONE does nothing
 	 * @return a new object representing <code>model</code>, but aligned to <code>alignTo</code>
 	 */
-	public Abstract3dModel moveTo(Abstract3dModel model, Abstract3dModel alignTo, AlignType side) {
+	public Model moveTo(Model model, Model alignTo, AlignType side) {
 		return model
 				.align(getSide(side), alignTo, true);
 	}

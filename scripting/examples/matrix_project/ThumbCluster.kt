@@ -34,7 +34,7 @@ class ThumbClusterBuilder(
         }
     }
 
-    fun buildCluster(layout: ThumbLayout): Abstract3dModel {
+    fun buildCluster(layout: ThumbLayout): Model {
         val positions = layout.positions()
         val keys = positions.map { (col, row, staggerX) ->
             val key = keyBuilder.buildFullKey()
@@ -52,7 +52,7 @@ class ThumbClusterBuilder(
             .rotatedZ(thumbCfg.rotationZ)
     }
 
-    fun buildStandardCluster(): Abstract3dModel {
+    fun buildStandardCluster(): Model {
         return buildCluster(StandardLayout(thumbCfg.columns, thumbCfg.rows))
     }
 }

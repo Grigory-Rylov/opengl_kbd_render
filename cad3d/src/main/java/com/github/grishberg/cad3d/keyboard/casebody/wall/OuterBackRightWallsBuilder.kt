@@ -7,7 +7,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.DefaultBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.tranzitions.Union
 
 class OuterBackRightWallsBuilder(
@@ -20,8 +20,8 @@ class OuterBackRightWallsBuilder(
 ) {
 
     fun backWall(
-        keyPlace: (Abstract3dModel) -> Abstract3dModel,
-    ): Abstract3dModel {
+        keyPlace: (Model) -> Model,
+    ): Model {
         val leftTop =
             keyPlace(KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
         val rightTop =
@@ -53,8 +53,8 @@ class OuterBackRightWallsBuilder(
     }
 
     fun backMidWall(
-        count: Int = 20, keyPlace: (Abstract3dModel) -> Abstract3dModel, leftPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
+        count: Int = 20, keyPlace: (Model) -> Model, leftPlace: (Model) -> Model
+    ): Model {
         val leftTop =
             keyPlace(KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
         val rightTop =
@@ -69,7 +69,7 @@ class OuterBackRightWallsBuilder(
         var lastTop = topBorderObj(rightPrevTop)
         var lastBottom = bottomEdgePatcher.backPoint(rightPrevTop)
 
-        val models = mutableListOf<Abstract3dModel>()
+        val models = mutableListOf<Model>()
 
         // Генерируем промежуточные точки
         for (i in 0..count) {
@@ -103,23 +103,23 @@ class OuterBackRightWallsBuilder(
         return Union(models)
     }
 
-    private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
+    private fun verticalCube(obj: Model): Model {
         return borderObject(cfg.borderThickness, cfg.borderHeight).moveZ(topEdgeOffsetZ).move(obj.move)
     }
 
-    private fun verticalCube(point: V3d): Abstract3dModel {
+    private fun verticalCube(point: V3d): Model {
         return borderObject(cfg.borderThickness, cfg.borderHeight).moveZ(topEdgeOffsetZ).move(point)
     }
 
-    private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
+    private fun borderObject(thickness: Double, height: Double): Model {
         return Utils.cylinder(thickness, height)
     }
 
-    private fun topBorderObj(obj: Abstract3dModel): Abstract3dModel {
+    private fun topBorderObj(obj: Model): Model {
         return Utils.sphere(cfg.borderThickness / 2.0).move(obj.move)
     }
 
-    private fun topBorderObj(): Abstract3dModel {
+    private fun topBorderObj(): Model {
         return Utils.sphere(cfg.borderThickness / 2.0)
     }
 }

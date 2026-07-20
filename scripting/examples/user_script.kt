@@ -15,8 +15,8 @@ val ys = doubleArrayOf(
     126.96, 139.63, 155.51, 171.39, 184.06, 199.94, 215.82, 228.49
 )
 
-fun place(model: Abstract3dModel): Abstract3dModel {
-	val lst = mutableListOf<Abstract3dModel>()
+fun place(model: Model): Model {
+	val lst = mutableListOf<Model>()
 	return union(
 		ys.map{y -> model.move(0, y, 0)}
 	).move(22.8,0,0)

@@ -31,7 +31,7 @@ import java.util.stream.Collectors
  *
  * @author ivivan <ivivan></ivivan>@printingin3d.eu>
  */
-abstract class Abstract3dModel : IModel {
+abstract class Model : IModel {
 
     /**
      * For testing purposes only.
@@ -71,37 +71,37 @@ abstract class Abstract3dModel : IModel {
      * @param delta the coordinates used by the move
      * @return the new object created
      */
-    fun move(delta: V3d): Abstract3dModel {
+    fun move(delta: V3d): Model {
         val result = cloneModel()
         result.move = this.move.add(delta)
         return result
     }
 
-    fun move(x: Number, y: Number, z: Number): Abstract3dModel {
+    fun move(x: Number, y: Number, z: Number): Model {
         val result = cloneModel()
         result.move = this.move.add(V3d(x.toDouble(), y.toDouble(), z.toDouble()))
         return result
     }
 
-    fun moveY(y: Number): Abstract3dModel {
+    fun moveY(y: Number): Model {
         val result = cloneModel()
         result.move = this.move.add(V3d(0.0, y.toDouble(), 0.0))
         return result
     }
 
-    fun moveX(x: Number): Abstract3dModel {
+    fun moveX(x: Number): Model {
         val result = cloneModel()
         result.move = this.move.add(V3d(x.toDouble(), 0.0, 0.0))
         return result
     }
 
-    fun moveZ(z: Number): Abstract3dModel {
+    fun moveZ(z: Number): Model {
         val result = cloneModel()
         result.move = this.move.add(V3d(0.0, 0.0, z.toDouble()))
         return result
     }
 
-    fun resetZ(): Abstract3dModel {
+    fun resetZ(): Model {
         val result = cloneModel()
         result.move = V3d(this.move.x, this.move.y, 0.0)
         return result
@@ -115,9 +115,9 @@ abstract class Abstract3dModel : IModel {
      * @param delta the collection of coordinates used by the move operation
      * @return a new object which holds the moved objects
      */
-    fun moves(delta: MutableCollection<V3d>): Abstract3dModel? {
+    fun moves(delta: MutableCollection<V3d>): Model? {
         if (!delta.isEmpty()) {
-            var result: Abstract3dModel = Empty3dModel()
+            var result: Model = Empty3dModel()
             for (c in delta) {
                 result = result.addModel(this.move(c))
             }
@@ -148,7 +148,7 @@ abstract class Abstract3dModel : IModel {
      * @return a new object which holds the moved objects
      * @throws IllegalValueException in case the number of moves and annotations are not equal
      */
-    fun moves(delta: MutableList<V3d>, vararg annotations: String): Abstract3dModel {
+    fun moves(delta: MutableList<V3d>, vararg annotations: String): Model {
         return moves(delta, Arrays.asList<String>(*annotations))
     }
 
@@ -169,14 +169,14 @@ abstract class Abstract3dModel : IModel {
      * @return a new object which holds the moved objects
      * @throws IllegalValueException in case the number of moves and annotations are not equal
      */
-    fun moves(delta: MutableList<V3d>, annotations: MutableList<String>): Abstract3dModel {
+    fun moves(delta: MutableList<V3d>, annotations: MutableList<String>): Model {
         AssertValue.isTrue(
             delta.size == annotations.size,
             ("There should be the same number of moves and annotations given, " + "but " + delta.size + " moves and " + annotations.size + " annotations have been given.")
         )
 
         if (!delta.isEmpty()) {
-            var result: Abstract3dModel = Empty3dModel()
+            var result: Model = Empty3dModel()
             var i = 0
             for (c in delta) {
                 result = result.addModel(this.move(c).annotate(annotations.get(i++)))
@@ -193,7 +193,7 @@ abstract class Abstract3dModel : IModel {
      * @param delta the collection of coordinates used by the move operation
      * @return a new object which holds the moved objects
      */
-    fun moves(vararg delta: V3d): Abstract3dModel {
+    fun moves(vararg delta: V3d): Model {
         return moves(Arrays.asList<V3d?>(*delta))
     }
 
@@ -203,14 +203,14 @@ abstract class Abstract3dModel : IModel {
      * @param delta the angle it will be rotated
      * @return the new object created
      */
-    fun rotate(delta: Angles3d): Abstract3dModel {
+    fun rotate(delta: Angles3d): Model {
         val result = cloneModel()
         result.rotate = this.rotate.rotate(delta)
         result.move = this.move.rotate(delta)
         return result
     }
 
-    fun rotate(x: Double, y: Double, z: Double): Abstract3dModel {
+    fun rotate(x: Double, y: Double, z: Double): Model {
         val result = cloneModel()
         val delta = Angles3d(x, y, z)
         result.rotate = this.rotate.rotate(delta)
@@ -226,9 +226,9 @@ abstract class Abstract3dModel : IModel {
      * @param delta the collection of angles used by the rotate operation
      * @return a new object which holds the moved objects
      */
-    fun rotates(delta: MutableCollection<Angles3d>): Abstract3dModel {
+    fun rotates(delta: MutableCollection<Angles3d>): Model {
         if (!delta.isEmpty()) {
-            val newModels: MutableList<Abstract3dModel> = ArrayList<Abstract3dModel>()
+            val newModels: MutableList<Model> = ArrayList<Model>()
             for (c in delta) {
                 newModels.add(this.rotate(c))
             }
@@ -245,7 +245,7 @@ abstract class Abstract3dModel : IModel {
      * @param delta the collection of angles used by the rotate operation
      * @return a new object which holds the moved objects
      */
-    fun rotates(vararg delta: Angles3d): Abstract3dModel {
+    fun rotates(vararg delta: Angles3d): Model {
         return rotates(Arrays.asList<Angles3d?>(*delta))
     }
 
@@ -256,7 +256,7 @@ abstract class Abstract3dModel : IModel {
      *
      * @return the new object created
      */
-    fun debug(): Abstract3dModel {
+    fun debug(): Model {
         val result = cloneModel()
         result.isDebug = true
         return result
@@ -270,26 +270,26 @@ abstract class Abstract3dModel : IModel {
      *
      * @return the new object created
      */
-    fun background(): Abstract3dModel {
+    fun background(): Model {
         val result = cloneModel()
         result.isBackground = true
         return result
     }
 
-    protected abstract val childrenModels: MutableList<Abstract3dModel>
+    protected abstract val childrenModels: MutableList<Model>
 
-    protected fun findAnnotatedModel(annotation: String?): MutableList<Abstract3dModel> {
+    protected fun findAnnotatedModel(annotation: String?): MutableList<Model> {
         if (annotation == null) {
             return mutableListOf(this)
         }
 
-        var result: MutableList<Abstract3dModel> =
+        var result: MutableList<Model> =
             if (annotations.contains(annotation)) mutableListOf(this) else mutableListOf()
         val children = this.childrenModels
         if (!children.isEmpty()) {
             result = ArrayList(result)
-            result.addAll(children.stream().flatMap { m: Abstract3dModel -> m.findAnnotatedModel(annotation).stream() }
-                .map { a: Abstract3dModel -> a.move(move) }.map { a: Abstract3dModel -> a.rotate(rotate) }
+            result.addAll(children.stream().flatMap { m: Model -> m.findAnnotatedModel(annotation).stream() }
+                .map { a: Model -> a.move(move) }.map { a: Model -> a.rotate(rotate) }
                 .collect(Collectors.toList()))
         }
         return result
@@ -307,7 +307,7 @@ abstract class Abstract3dModel : IModel {
      * @param annotation the annotation will be used - can be null
      * @return the new object created
      */
-    fun annotate(annotation: String): Abstract3dModel {
+    fun annotate(annotation: String): Model {
         if (annotation == null) {
             return this
         }
@@ -322,7 +322,7 @@ abstract class Abstract3dModel : IModel {
      *
      * @return a copy of this model
      */
-    protected fun cloneModel(): Abstract3dModel {
+    protected fun cloneModel(): Model {
         val model = innerCloneModel()
 
         model.tag = tag
@@ -337,7 +337,7 @@ abstract class Abstract3dModel : IModel {
         return model
     }
 
-    protected abstract fun innerCloneModel(): Abstract3dModel
+    protected abstract fun innerCloneModel(): Model
 
     protected abstract val modelBoundaries: Boundaries3d
 
@@ -390,8 +390,8 @@ abstract class Abstract3dModel : IModel {
      * @param inside controls which side of the aligned model will be aligned
      * @return the new object created
      */
-    @Deprecated("Use {@link #align(Side, Abstract3dModel)} instead.")
-    fun align(place: Side, model: Abstract3dModel, inside: Boolean): Abstract3dModel {
+    @Deprecated("Use {@link #align(Side, Model)} instead.")
+    fun align(place: Side, model: Model, inside: Boolean): Model {
         return move(place.calculateCoords(this.boundaries, model.boundaries, inside))
     }
 
@@ -405,16 +405,16 @@ abstract class Abstract3dModel : IModel {
      * @param model the model used as a reference point
      * @return the new object created
      */
-    fun align(place: Side, model: Abstract3dModel): Abstract3dModel {
+    fun align(place: Side, model: Model): Model {
         return move(place.calculateCoords(this.boundaries, model.boundaries))
     }
 
-    fun align(place1: Side, place2: Side, model: Abstract3dModel): Abstract3dModel {
+    fun align(place1: Side, place2: Side, model: Model): Model {
         val result = this.move(place1.calculateCoords(this.boundaries, model.boundaries))
         return result.move(place2.calculateCoords(result.boundaries, model.boundaries))
     }
 
-    fun align(place1: Side, place2: Side, place3: Side, model: Abstract3dModel): Abstract3dModel {
+    fun align(place1: Side, place2: Side, place3: Side, model: Model): Model {
         var result = this.move(place1.calculateCoords(this.boundaries, model.boundaries))
         result = result.move(place2.calculateCoords(result.boundaries, model.boundaries))
         return result.move(place3.calculateCoords(result.boundaries, model.boundaries))
@@ -435,9 +435,9 @@ abstract class Abstract3dModel : IModel {
      * @throws IllegalValueException if there are more than one pieces of this model is annotated
      * with innerAnnotation
      */
-    fun align(innerAnnotation: String, place: Side, model: Abstract3dModel): Abstract3dModel {
+    fun align(innerAnnotation: String, place: Side, model: Model): Model {
         val annotatedModel =
-            findAnnotatedModel(innerAnnotation).stream().reduce { a: Abstract3dModel, b: Abstract3dModel ->
+            findAnnotatedModel(innerAnnotation).stream().reduce { a: Model, b: Model ->
                 throw IllegalValueException(
                     "Multiple elements has been annotated with " + innerAnnotation
                 )
@@ -469,13 +469,13 @@ abstract class Abstract3dModel : IModel {
      * with externalAnnotation
      */
     fun align(
-        innerAnnotation: String, place: Side, model: Abstract3dModel, externalAnnotation: String
-    ): Abstract3dModel {
+        innerAnnotation: String, place: Side, model: Model, externalAnnotation: String
+    ): Model {
         val externalAnnotatedModels = model.findAnnotatedModel(externalAnnotation)
-        AssertValue.isNotEmpty<Abstract3dModel>(
+        AssertValue.isNotEmpty<Model>(
             externalAnnotatedModels, "No part of the model has been annotated with $externalAnnotation"
         )
-        var result: Abstract3dModel? = null
+        var result: Model? = null
         for (m in externalAnnotatedModels) {
             val tmp = align(innerAnnotation, place, m)
             result = result?.addModel(tmp) ?: tmp
@@ -493,7 +493,7 @@ abstract class Abstract3dModel : IModel {
      * @param coords the coordinates used as a reference point
      * @return the new object created
      */
-    fun align(place: Side, coords: V3d): Abstract3dModel {
+    fun align(place: Side, coords: V3d): Model {
         return move(place.calculateCoords(this.boundaries, coords))
     }
 
@@ -511,7 +511,7 @@ abstract class Abstract3dModel : IModel {
      * @throws IllegalValueException if the given radius is negative
      */
     @Throws(IllegalValueException::class)
-    fun round(plane: Plane, radius: Double): Abstract3dModel {
+    fun round(plane: Plane, radius: Double): Model {
         AssertValue.isNotNegative(radius, "Radius of the rounding should not be negative!")
 
         val result = cloneModel()
@@ -555,7 +555,7 @@ abstract class Abstract3dModel : IModel {
      * @param tag the value to be used
      * @return this object to make it possible to chain more method call
      */
-    fun withTag(tag: Int): Abstract3dModel {
+    fun withTag(tag: Int): Model {
         val result = cloneModel()
         result.tag = tag
         return result
@@ -567,15 +567,15 @@ abstract class Abstract3dModel : IModel {
      * @param model the model to be added to this object
      * @return a new model which contains the union of this object and the given object
      */
-    open fun addModel(model: Abstract3dModel?): Abstract3dModel {
+    open fun addModel(model: Model?): Model {
         if (model == null) {
             return this
         }
         return Union(this, model).withColor(color)
     }
 
-    fun addModels(models: List<Abstract3dModel>): Abstract3dModel {
-        val result: Abstract3dModel = Union(this, models.get(0))
+    fun addModels(models: List<Model>): Model {
+        val result: Model = Union(this, models.get(0))
         for (i in 1..<models.size) {
             result.addModel(models.get(i))
         }
@@ -592,9 +592,9 @@ abstract class Abstract3dModel : IModel {
      * @param side where to move this model
      * @param model the model to be added to this object
      * @return a new model which contains the union of this object and the given object
-     * @see Abstract3dModel.addModel
+     * @see Model.addModel
      */
-    fun addModelTo(side: Side, model: Abstract3dModel): Abstract3dModel {
+    fun addModelTo(side: Side, model: Model): Model {
         return addModel(model.align(side, this))
     }
 
@@ -604,19 +604,19 @@ abstract class Abstract3dModel : IModel {
      * @param model the model to be subtracted to this object
      * @return a new model which contains the difference of this object and the given object
      */
-    open fun subtractModel(model: Abstract3dModel?): Abstract3dModel {
+    open fun subtractModel(model: Model?): Model {
         if (model == null) {
             return this
         }
         return Difference(this, model)
     }
 
-    fun withColor(color: Color): Abstract3dModel {
+    fun withColor(color: Color): Model {
         this.color = color
         return this
     }
 
-    protected abstract fun innerSubModel(context: IScadGenerationContext?): Abstract3dModel?
+    protected abstract fun innerSubModel(context: IScadGenerationContext?): Model?
 
     /**
      *
@@ -633,7 +633,7 @@ abstract class Abstract3dModel : IModel {
      * @param context the context to be used as a filter during the copy process.
      * @return a copy of the selected parts of this model
      */
-    fun subModel(context: IScadGenerationContext): Abstract3dModel? {
+    fun subModel(context: IScadGenerationContext): Model? {
         val currentContext = context.applyTag(tag)
 
         val model = innerSubModel(currentContext)

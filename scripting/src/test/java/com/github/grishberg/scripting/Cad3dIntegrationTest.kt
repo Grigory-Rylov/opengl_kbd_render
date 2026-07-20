@@ -77,7 +77,7 @@ class Cad3dIntegrationTest {
                 }
             """.trimIndent())
             File(dir, "Main.kt").writeText("""
-                fun scriptMain(): Abstract3dModel {
+                fun scriptMain(): Model {
                     return bindings.cube(Cfg.columns * 19.0).moveZ(3.0)
                 }
             """.trimIndent())

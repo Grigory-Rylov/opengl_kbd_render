@@ -1,12 +1,12 @@
 package com.github.grishberg.cad3d.keyboard.casebody.wall
 
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 
 interface FrontRightToMatrixWallBuilder {
 
     fun create(
-        keyPlace: (Abstract3dModel) -> Abstract3dModel,
-        matrixOuterPlace: (Abstract3dModel) -> Abstract3dModel,
-        matrixInnerPlace: (Abstract3dModel) -> Abstract3dModel,
-    ): List<Abstract3dModel>
+        keyPlace: (Model) -> Model,
+        matrixOuterPlace: (Model) -> Model,
+        matrixInnerPlace: (Model) -> Model,
+    ): List<Model>
 }

@@ -2,7 +2,7 @@ package com.github.grishberg.cad3d.keyboard.casebody.controllers.battery
 
 import com.github.grishberg.javascad.basic.Radius
 import com.github.grishberg.javascad.coords.Angles3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Cube
 import com.github.grishberg.javascad.models.Cylinder
 
@@ -18,7 +18,7 @@ class RoundBattery18650 : Battery {
     override val depth: Double = innerDepth + wallWidth * 2 + contactsHolderDepth * 2 + 1
     override val height: Double = innerHeight + wallWidth
 
-    override fun create(): Abstract3dModel {
+    override fun create(): Model {
         return Cylinder(depth, Radius.fromDiameter(height)).rotate(Angles3d.xOnly(90.0)).addModel(
                 Cube(width, depth, height / 2).moveZ(-height / 4)
             ).subtractModel(
@@ -33,7 +33,7 @@ class RoundBattery18650 : Battery {
 
     }
 
-    private fun createContactsHolder(): Abstract3dModel {
+    private fun createContactsHolder(): Model {
         val holder = Cube(width, 1.0, height / 2)
             .subtractModel(
                 Cube(width - 8.0, 2.0, height/2 + 1)
@@ -43,7 +43,7 @@ class RoundBattery18650 : Battery {
             .addModel(holder.moveY(-depth/2 + 3.0))
     }
 
-    override fun createBatteryPreview(): Abstract3dModel {
+    override fun createBatteryPreview(): Model {
         return Cylinder(innerDepth, Radius.fromDiameter(innerHeight)).rotate(Angles3d.xOnly(90.0))
             .moveZ(innerHeight / 2)
     }

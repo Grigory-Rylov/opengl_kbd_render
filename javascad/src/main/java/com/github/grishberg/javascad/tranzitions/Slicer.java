@@ -5,7 +5,7 @@ import static com.github.grishberg.javascad.vrl.Const.EPSILON;
 import com.github.grishberg.javascad.context.IScadGenerationContext;
 import com.github.grishberg.javascad.coords.Boundaries3d;
 import com.github.grishberg.javascad.coords.Boundary;
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 import com.github.grishberg.javascad.models.Complex3dModel;
 import com.github.grishberg.javascad.tranzitions.slicer.CoverFactory;
 import com.github.grishberg.javascad.utils.AssertValue;
@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * <p>Slice a model into pieces; the result is one of the slices. It is very useful if the model
  * is too big to be printed in one piece.</p>
- * <p>The result is based on the {@link Abstract3dModel#getBoundaries()}, so if that cannot be calculated for
+ * <p>The result is based on the {@link Model#getBoundaries()}, so if that cannot be calculated for
  * any reason, the slice will fail. However, the result of a slice can be sliced again, so you can
  * slice a model first in the X direction and then in the Y.</p>
  *
@@ -24,7 +24,7 @@ import java.util.List;
  */
 public class Slicer extends Complex3dModel {
 
-    private final Abstract3dModel model;
+    private final Model model;
     private final Direction direction;
     private final double lowRate;
     private final double highRate;
@@ -40,7 +40,7 @@ public class Slicer extends Complex3dModel {
      * @param piece     the number of pieces
      * @param index     the index of this piece - it is start from 0 to piece-1
      */
-    public Slicer(Abstract3dModel model, Direction direction, int piece, int index) {
+    public Slicer(Model model, Direction direction, int piece, int index) {
         this(model, direction, (double) index / piece, (double) (piece - index - 1) / piece);
     }
 
@@ -55,7 +55,7 @@ public class Slicer extends Complex3dModel {
      * @param lowRate   the rate of the portion which has to be cut off from the lower side
      * @param highRate  the rate of the portion which has to be cut off from the higher side
      */
-    public Slicer(Abstract3dModel model, Direction direction, double lowRate, double highRate) {
+    public Slicer(Model model, Direction direction, double lowRate, double highRate) {
         AssertValue.isTrue(lowRate >= 0.0, "The rate of the lower part should be non-negateive," +
             " but was " + lowRate);
         AssertValue.isTrue(highRate >= 0.0, "The rate of the higher part should be non-negateive," +
@@ -71,7 +71,7 @@ public class Slicer extends Complex3dModel {
         this.highRate = highRate;
     }
 
-    private Abstract3dModel sliceModel() {
+    private Model sliceModel() {
         if (lowRate <= EPSILON) {
             if (highRate <= EPSILON) {
                 return null;
@@ -115,7 +115,7 @@ public class Slicer extends Complex3dModel {
     }
 
     @Override
-    protected Abstract3dModel innerCloneModel() {
+    protected Model innerCloneModel() {
         return new Slicer(model, direction, lowRate, highRate);
     }
 
@@ -125,13 +125,13 @@ public class Slicer extends Complex3dModel {
 	}
 
     @Override
-    protected Abstract3dModel innerSubModel(IScadGenerationContext context) {
-        Abstract3dModel subModel = model.subModel(context);
+    protected Model innerSubModel(IScadGenerationContext context) {
+        Model subModel = model.subModel(context);
         return subModel == null ? null : new Slicer(subModel, direction, lowRate, highRate);
     }
 
     @Override
-    protected List<Abstract3dModel> getChildrenModels() {
+    protected List<Model> getChildrenModels() {
         return Collections.singletonList(model);
     }
 }

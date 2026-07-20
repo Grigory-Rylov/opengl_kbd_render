@@ -1,11 +1,11 @@
 package com.github.grishberg.cad3d.keyboard.casebody
 
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 
 interface CornerWallBuilder {
 
-    fun backLeft(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel
-    fun backRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): List<Abstract3dModel>
-    fun frontLeft(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel
-    fun frontRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel
+    fun backLeft(keyPlace: (Model) -> Model): Model
+    fun backRight(keyPlace: (Model) -> Model): List<Model>
+    fun frontLeft(keyPlace: (Model) -> Model): Model
+    fun frontRight(keyPlace: (Model) -> Model): Model
 }

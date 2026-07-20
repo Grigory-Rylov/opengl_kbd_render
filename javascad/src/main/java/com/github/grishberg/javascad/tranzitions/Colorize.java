@@ -2,7 +2,7 @@ package com.github.grishberg.javascad.tranzitions;
 
 import com.github.grishberg.javascad.context.IScadGenerationContext;
 import com.github.grishberg.javascad.coords.Boundaries3d;
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 import com.github.grishberg.javascad.models.Complex3dModel;
 import com.github.grishberg.javascad.utils.AssertValue;
 import com.github.grishberg.javascad.utils.Color;
@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class Colorize extends Complex3dModel {
 	private final Color color;
-	private final Abstract3dModel baseModel;
+	private final Model baseModel;
 
 	/**
 	 * Creates a Colorized object of the given object with the given color.
@@ -28,7 +28,7 @@ public class Colorize extends Complex3dModel {
 	 * @param model the model which will be colored
 	 * @throws com.github.grishberg.javascad.exceptions.IllegalValueException if either the model or the color null
 	 */
-	public Colorize(Color color, Abstract3dModel model) {
+	public Colorize(Color color, Model model) {
 		AssertValue.isNotNull(model, "The model shouldn't be null for colorize");
 		AssertValue.isNotNull(color, "The color shouldn't be null for colorize");
 		
@@ -37,7 +37,7 @@ public class Colorize extends Complex3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new Colorize(color, baseModel);
 	}
 
@@ -72,13 +72,13 @@ public class Colorize extends Complex3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerSubModel(IScadGenerationContext context) {
-		Abstract3dModel subModel = baseModel.subModel(context);
+	protected Model innerSubModel(IScadGenerationContext context) {
+		Model subModel = baseModel.subModel(context);
 		return subModel==null ? null : new Colorize(color, subModel);
 	}
 
     @Override
-    protected List<Abstract3dModel> getChildrenModels() {
+    protected List<Model> getChildrenModels() {
         return Collections.singletonList(baseModel);
     }
 }

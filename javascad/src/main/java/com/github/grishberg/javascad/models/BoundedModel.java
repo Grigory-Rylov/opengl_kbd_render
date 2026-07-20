@@ -16,7 +16,7 @@ import java.util.List;
  * @author ivivan <ivivan@printingin3d.eu>
  */
 public class BoundedModel extends Complex3dModel {
-	private final Abstract3dModel baseModel;
+	private final Model baseModel;
 	private final Boundaries3d boundaries3d;
 
 	/**
@@ -25,7 +25,7 @@ public class BoundedModel extends Complex3dModel {
 	 * @param boundaries3d the boundary used by the alignment methods
 	 * @throws com.github.grishberg.javascad.exceptions.IllegalValueException if either of the parameters are null
 	 */
-	public BoundedModel(Abstract3dModel baseModel, Boundaries3d boundaries3d) {
+	public BoundedModel(Model baseModel, Boundaries3d boundaries3d) {
 		AssertValue.isNotNull(baseModel, "The baseModel parameter must not be null!");
 		AssertValue.isNotNull(boundaries3d, "The boundaries3d parameter must not be null!");
 		
@@ -34,7 +34,7 @@ public class BoundedModel extends Complex3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new BoundedModel(baseModel, boundaries3d);
 	}
 
@@ -49,13 +49,13 @@ public class BoundedModel extends Complex3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerSubModel(IScadGenerationContext context) {
-		Abstract3dModel subModel = baseModel.subModel(context);
+	protected Model innerSubModel(IScadGenerationContext context) {
+		Model subModel = baseModel.subModel(context);
 		return subModel==null ? null : new BoundedModel(subModel, boundaries3d);
 	}
 
     @Override
-    protected List<Abstract3dModel> getChildrenModels() {
+    protected List<Model> getChildrenModels() {
         return Collections.singletonList(baseModel);
     }
 }

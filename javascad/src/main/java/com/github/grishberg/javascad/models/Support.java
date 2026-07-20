@@ -78,13 +78,13 @@ public class Support extends Atomic3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new Support(dims, thickness);
 	}
 	
-	private Abstract3dModel getModel() {
-		Abstract3dModel base = new Cube(dims);
-		List<Abstract3dModel> slices = new ArrayList<>();
+	private Model getModel() {
+		Model base = new Cube(dims);
+		List<Model> slices = new ArrayList<>();
 		IStepper xStepper;
 		IStepper yStepper;
 		Dims3d sliceSize;

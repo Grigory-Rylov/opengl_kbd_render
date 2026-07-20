@@ -4,7 +4,7 @@ import com.github.grishberg.cad3d.keyboard.Utils.cube
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
 import com.github.grishberg.javascad.basic.Radius
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Cylinder
 
 object KeyPlaceholder {
@@ -27,11 +27,11 @@ object KeyPlaceholder {
     private const val VERTICAL_TOP_OFFSET = BASE_TOP_OFFSET - VERTICAL_WALL_HEIGHT / 2 + 2.6 / 2
     private const val HORIZONTAL_TOP_OFFSET = BASE_TOP_OFFSET - HORIZONTAL_WALL_HEIGHT / 2 + 2.6 / 2
 
-    fun placeHolder(cfg: KeyboardConfig): Abstract3dModel {
+    fun placeHolder(cfg: KeyboardConfig): Model {
         return if (cfg.keyPlaceConfig.isLowProfile) lowProfilePlaceholder(cfg) else standardProfilePlaceholder()
     }
 
-    private fun lowProfilePlaceholder(cfg: KeyboardConfig): Abstract3dModel {
+    private fun lowProfilePlaceholder(cfg: KeyboardConfig): Model {
         val delta = (TOP_THICKNESS - KEY_PLACE_TOP_THICKNESS)/2.0
 
         val cornerCubeHeight = 0.6
@@ -66,7 +66,7 @@ object KeyPlaceholder {
         }.moveZ(delta)
     }
 
-    private fun standardProfilePlaceholder(): Abstract3dModel =
+    private fun standardProfilePlaceholder(): Model =
         cube(OUTER_WIDTH, OUTER_HEIGHT, TOP_THICKNESS).move(0.0, 0.0, BASE_TOP_OFFSET)
             .subtractModel(cube(KEY_HOLE_INNER_WIDTH, KEY_HOLE_HEIGHT, 10.0)).subtractModel(
                 cube(KEY_HOLE_OUTER_WIDTH, KEY_HOLE_HEIGHT, TOP_THICKNESS).move(
@@ -82,82 +82,82 @@ object KeyPlaceholder {
 
     @JvmStatic
     @JvmOverloads
-    fun placeHolderBack(thickness: Double = WALL_THICKNESS): Abstract3dModel {
+    fun placeHolderBack(thickness: Double = WALL_THICKNESS): Model {
         return cube(OUTER_WIDTH, thickness, TOP_THICKNESS).move(
             0.0, CORNER_OFFSET + thickness, CORNER_PLACEHOLDER_TOP_OFFSET
         )
     }
 
     @JvmStatic
-    fun placeHolderLeft(obj: Abstract3dModel = cube(WALL_THICKNESS, OUTER_HEIGHT, TOP_THICKNESS)): Abstract3dModel {
+    fun placeHolderLeft(obj: Model = cube(WALL_THICKNESS, OUTER_HEIGHT, TOP_THICKNESS)): Model {
         return obj.move(
             -CORNER_OFFSET - WALL_THICKNESS, 0.0, CORNER_PLACEHOLDER_TOP_OFFSET
         )
     }
 
     @JvmStatic
-    fun placeHolderRight(obj: Abstract3dModel = cube(WALL_THICKNESS, OUTER_HEIGHT, TOP_THICKNESS)): Abstract3dModel {
+    fun placeHolderRight(obj: Model = cube(WALL_THICKNESS, OUTER_HEIGHT, TOP_THICKNESS)): Model {
         return obj.move(CORNER_OFFSET + WALL_THICKNESS, 0.0, CORNER_PLACEHOLDER_TOP_OFFSET)
     }
 
     @JvmStatic
-    fun placeHolderFront(): Abstract3dModel {
+    fun placeHolderFront(): Model {
         return cube(OUTER_WIDTH, WALL_THICKNESS, TOP_THICKNESS).move(
             0.0, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
         )
     }
 
     @JvmStatic
-    fun placeHolderBackLeft(): Abstract3dModel {
+    fun placeHolderBackLeft(): Model {
         return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS).move(
             -CORNER_OFFSET - WALL_THICKNESS, CORNER_OFFSET + WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
         )
     }
 
     @JvmStatic
-    fun placeHolderBackRight(): Abstract3dModel {
+    fun placeHolderBackRight(): Model {
         return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS).move(
             CORNER_OFFSET + WALL_THICKNESS, CORNER_OFFSET + WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
         )
     }
 
     @JvmStatic
-    fun placeHolderBackRight(height: Int): Abstract3dModel {
+    fun placeHolderBackRight(height: Int): Model {
         return cube(WALL_THICKNESS, WALL_THICKNESS, height.toDouble()).move(
             CORNER_OFFSET + WALL_THICKNESS, CORNER_OFFSET + WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
         )
     }
 
     @JvmStatic
-    fun placeHolderFrontLeft(): Abstract3dModel {
+    fun placeHolderFrontLeft(): Model {
         return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS).move(
             -CORNER_OFFSET - WALL_THICKNESS, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
         )
     }
 
     @JvmStatic
-    fun placeHolderFrontLeft(height: Int): Abstract3dModel {
+    fun placeHolderFrontLeft(height: Int): Model {
         return cube(WALL_THICKNESS, WALL_THICKNESS, height.toDouble()).move(
             -CORNER_OFFSET - WALL_THICKNESS, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
         )
     }
 
     @JvmStatic
-    fun placeHolderFrontRight(): Abstract3dModel {
+    fun placeHolderFrontRight(): Model {
         return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS).move(
             CORNER_OFFSET + WALL_THICKNESS, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
         )
     }
 
     @JvmStatic
-    fun placeHolderFrontRight(height: Int): Abstract3dModel {
+    fun placeHolderFrontRight(height: Int): Model {
         return cube(WALL_THICKNESS, WALL_THICKNESS, height.toDouble()).move(
             CORNER_OFFSET + WALL_THICKNESS, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
         )
     }
 
     @JvmStatic
-    fun placeSingleCorner(): Abstract3dModel {
+    fun placeSingleCorner(): Model {
         return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS).moveZ(CORNER_PLACEHOLDER_TOP_OFFSET)
     }
 }

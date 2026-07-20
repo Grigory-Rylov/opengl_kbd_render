@@ -5,7 +5,7 @@ import com.github.grishberg.javascad.coords.Angles3d;
 import com.github.grishberg.javascad.coords.Boundaries3d;
 import com.github.grishberg.javascad.exceptions.IllegalValueException;
 import com.github.grishberg.javascad.manifold.Manifold3dEngine;
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 import com.github.grishberg.javascad.models.Complex3dModel;
 import com.github.grishberg.javascad.tranform.TransformationFactory;
 import com.github.grishberg.javascad.utils.AssertValue;
@@ -15,12 +15,12 @@ import java.util.List;
 
 /**
  * This represents a rotate transition, but used rarely, because the convenient
- * methods of {@link Abstract3dModel} replace it most of the time.
+ * methods of {@link Model} replace it most of the time.
  *
  * @author ivivan <ivivan@printingin3d.eu>
  */
 public class Rotate extends Complex3dModel {
-	private final Abstract3dModel model;
+	private final Model model;
 	private final Angles3d angles;
 
 	/**
@@ -29,7 +29,7 @@ public class Rotate extends Complex3dModel {
 	 * @param angles the angles used by the rotation operation
 	 * @throws IllegalValueException if either of the two parameters is null
 	 */
-	public Rotate(Abstract3dModel model, Angles3d angles) throws IllegalValueException {
+	public Rotate(Model model, Angles3d angles) throws IllegalValueException {
 		AssertValue.isNotNull(model, "The model should not be null for a rotation!");
 		AssertValue.isNotNull(angles, "The angles should not be null for a rotation!");
 		
@@ -38,7 +38,7 @@ public class Rotate extends Complex3dModel {
 	}
 
 	/**
-	 * This method is used internally by the {@link Abstract3dModel} - do not use it!
+	 * This method is used internally by the {@link Model} - do not use it!
 	 * @param angles the angles used by the rotate operation
 	 * @return the string which represents the rotation in OpenSCAD
 	 */
@@ -52,7 +52,7 @@ public class Rotate extends Complex3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new Rotate(model, angles);
 	}
 
@@ -65,13 +65,13 @@ public class Rotate extends Complex3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerSubModel(IScadGenerationContext context) {
-		Abstract3dModel subModel = model.subModel(context);
+	protected Model innerSubModel(IScadGenerationContext context) {
+		Model subModel = model.subModel(context);
 		return subModel==null ? null : new Rotate(subModel, angles);
 	}
 
     @Override
-    protected List<Abstract3dModel> getChildrenModels() {
+    protected List<Model> getChildrenModels() {
         return Collections.singletonList(model);
     }
 }

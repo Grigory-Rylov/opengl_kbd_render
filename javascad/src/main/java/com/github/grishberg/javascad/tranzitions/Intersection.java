@@ -3,7 +3,7 @@ package com.github.grishberg.javascad.tranzitions;
 import com.github.grishberg.javascad.context.IScadGenerationContext;
 import com.github.grishberg.javascad.coords.Boundaries3d;
 import com.github.grishberg.javascad.manifold.Manifold3dEngine;
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 import com.github.grishberg.javascad.models.Complex3dModel;
 import com.github.grishberg.javascad.utils.ListUtils;
 import com.github.grishberg.javascad.vrl.FacetGenerationContext;
@@ -19,13 +19,13 @@ import java.util.List;
  * @author ivivan <ivivan@printingin3d.eu>
  */
 public class Intersection extends Complex3dModel {
-	private final List<Abstract3dModel> models;
+	private final List<Model> models;
 
 	/**
 	 * Creates the object with the models given.
 	 * @param models the models used to create the intersection
 	 */
-	public Intersection(List<Abstract3dModel> models) {
+	public Intersection(List<Model> models) {
 		this.models = models;
 	}
 
@@ -33,19 +33,19 @@ public class Intersection extends Complex3dModel {
 	 * Creates the object with the models given.
 	 * @param models the models used to create the intersection
 	 */
-	public Intersection(Abstract3dModel... models) {
+	public Intersection(Model... models) {
 		this(Arrays.asList(models));
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
-		return new Intersection(new ArrayList<Abstract3dModel>(models));
+	protected Model innerCloneModel() {
+		return new Intersection(new ArrayList<Model>(models));
 	}
 
 	@Override
 	protected Boundaries3d getModelBoundaries() {
 		List<Boundaries3d> boundaries = new ArrayList<>();
-		for (Abstract3dModel model : models) {
+		for (Model model : models) {
 			boundaries.add(model.getBoundaries());
 		}
 		return boundaries.isEmpty() ? Boundaries3d.EMPTY : Boundaries3d.intersect(boundaries);
@@ -55,7 +55,7 @@ public class Intersection extends Complex3dModel {
     protected long toInnerNativeMesh(FacetGenerationContext context) {
         long result = 0L;
         try {
-            for (Abstract3dModel model : models) {
+            for (Model model : models) {
                 long m = model.toNativeMesh(context);
                 if (m == 0L) {
                     continue;
@@ -77,16 +77,16 @@ public class Intersection extends Complex3dModel {
     }
 
 	@Override
-	protected Abstract3dModel innerSubModel(IScadGenerationContext context) {
-		List<Abstract3dModel> subModels = new ArrayList<>();
-		for (Abstract3dModel model : models) {
+	protected Model innerSubModel(IScadGenerationContext context) {
+		List<Model> subModels = new ArrayList<>();
+		for (Model model : models) {
 			subModels.add(model.subModel(context));
 		}
 		return new Intersection(ListUtils.removeNulls(subModels));
 	}
 
     @Override
-    protected List<Abstract3dModel> getChildrenModels() {
+    protected List<Model> getChildrenModels() {
         return models;
     }
 }

@@ -8,9 +8,9 @@ import com.github.grishberg.javascad.coords.Boundaries3d;
 import com.github.grishberg.javascad.coords.V3d;
 
 /**
- * This class is used by the {@link com.github.grishberg.javascad.models.Abstract3dModel
- * 		#align(Side, com.github.grishberg.javascad.models.Abstract3dModel, boolean)
- * 	    Abstract3dModel.align(Side, Abstract3dModel, boolean)} method to 
+ * This class is used by the {@link com.github.grishberg.javascad.models.Model
+ * 		#align(Side, com.github.grishberg.javascad.models.Model, boolean)
+ * 	    Model.align(Side, Model, boolean)} method to 
  * set the side where the other model should be aligned.
  *
  * @author ivivan <ivivan@printingin3d.eu>
@@ -188,9 +188,9 @@ public class Side {
 	}
 	
 	/**
-	 * This method is used internally by the {@link com.github.grishberg.javascad.models.Abstract3dModel
-	 * 		#align(Side, com.github.grishberg.javascad.models.Abstract3dModel, boolean) 
-	 * 		Abstract3dModel.align(Side, Abstract3dModel, boolean)}.
+	 * This method is used internally by the {@link com.github.grishberg.javascad.models.Model
+	 * 		#align(Side, com.github.grishberg.javascad.models.Model, boolean) 
+	 * 		Model.align(Side, Model, boolean)}.
 	 * It calculates the coordinates of the position the first model should be placed to be
 	 * in the desired position.
 	 * @param model the model we want to move
@@ -208,9 +208,9 @@ public class Side {
 	}
 	
 	/**
-	 * This method is used internally by the {@link com.github.grishberg.javascad.models.Abstract3dModel
-	 * 		#align(Side, com.github.grishberg.javascad.models.Abstract3dModel, boolean) 
-	 * 		Abstract3dModel.align(Side, Abstract3dModel, boolean)}.
+	 * This method is used internally by the {@link com.github.grishberg.javascad.models.Model
+	 * 		#align(Side, com.github.grishberg.javascad.models.Model, boolean) 
+	 * 		Model.align(Side, Model, boolean)}.
 	 * It calculates the coordinates of the position the first model should be placed to be
 	 * in the desired position.
 	 * @param model the model we want to move
@@ -226,8 +226,8 @@ public class Side {
 	
 	/**
 	 * This method is used internally by the 
-	 * {@link com.github.grishberg.javascad.models.Abstract3dModel#align(Side, V3d)
-	 * 		Abstract3dModel.align(Side, Coords3d)}.
+	 * {@link com.github.grishberg.javascad.models.Model#align(Side, V3d)
+	 * 		Model.align(Side, Coords3d)}.
 	 * It calculates the coordinates of the position the first model should be placed to be
 	 * in the desired position.
 	 * @param model the model we want to move

@@ -9,14 +9,14 @@ import java.util.List;
 
 public class Hull extends Atomic3dModel {
 
-    private final List<Abstract3dModel> models;
+    private final List<Model> models;
 
-    public Hull(Abstract3dModel... obj) {
+    public Hull(Model... obj) {
         this.models = new ArrayList<>();
         Collections.addAll(models, obj);
     }
 
-    public Hull(List<Abstract3dModel> obj) {
+    public Hull(List<Model> obj) {
         this.models = new ArrayList<>();
         models.addAll(obj);
     }
@@ -24,14 +24,14 @@ public class Hull extends Atomic3dModel {
     @Override
     protected Boundaries3d getModelBoundaries() {
         ArrayList<Boundaries3d> boundaries3ds = new ArrayList<>();
-        for (Abstract3dModel model : models) {
+        for (Model model : models) {
             boundaries3ds.add(model.getBoundaries());
         }
         return Boundaries3d.combine(boundaries3ds);
     }
 
     @Override
-    protected Abstract3dModel innerCloneModel() {
+    protected Model innerCloneModel() {
         return new Hull(models);
     }
 
@@ -40,7 +40,7 @@ public class Hull extends Atomic3dModel {
         long[] handles = new long[models.size()];
         int idx = 0;
         try {
-            for (Abstract3dModel model : models) {
+            for (Model model : models) {
                 long h = model.toNativeMesh(context);
                 handles[idx++] = h;
             }

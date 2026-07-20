@@ -4,7 +4,7 @@ package com.github.grishberg.javascad.tranzitions;
 import com.github.grishberg.javascad.context.IScadGenerationContext;
 import com.github.grishberg.javascad.coords.Boundaries3d;
 import com.github.grishberg.javascad.manifold.Manifold3dEngine;
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 import com.github.grishberg.javascad.models.Complex3dModel;
 import com.github.grishberg.javascad.utils.Color;
 import com.github.grishberg.javascad.utils.ListUtils;
@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * <p>Represents an union of models. It is a descendant of {@link Abstract3dModel}, which means you
+ * <p>Represents an union of models. It is a descendant of {@link Model}, which means you
  * can use the convenient methods on unions too.</p>
  * <p>You don't have to worry about the optimization either, because the generated OpenSCAD code
  * will be
@@ -25,16 +25,16 @@ import java.util.List;
  */
 public class Union extends Complex3dModel {
 
-    protected final List<Abstract3dModel> models;
+    protected final List<Model> models;
 
     /**
      * Construct the object.
      *
      * @param models list of models
      */
-    public Union(List<Abstract3dModel> models) {
+    public Union(List<Model> models) {
         this.models = models == null
-            ? Collections.<Abstract3dModel>emptyList()
+            ? Collections.<Model>emptyList()
             : ListUtils.removeNulls(models);
     }
 
@@ -43,7 +43,7 @@ public class Union extends Complex3dModel {
      *
      * @param models array of models
      */
-    public Union(Abstract3dModel... models) {
+    public Union(Model... models) {
         this(Arrays.asList(models));
     }
 
@@ -52,7 +52,7 @@ public class Union extends Complex3dModel {
      *
      * @param models array of models
      */
-    public Union(Color color, List<Abstract3dModel> models) {
+    public Union(Color color, List<Model> models) {
         this(new ArrayList<>(models));
         this.setColor(color);
     }
@@ -60,15 +60,15 @@ public class Union extends Complex3dModel {
     @Override
     protected Boundaries3d getModelBoundaries() {
         List<Boundaries3d> boundaries = new ArrayList<>();
-        for (Abstract3dModel model : models) {
+        for (Model model : models) {
             boundaries.add(model.getBoundaries());
         }
         return Boundaries3d.combine(boundaries);
     }
 
     @Override
-    protected Abstract3dModel innerCloneModel() {
-        return new Union(new ArrayList<Abstract3dModel>(models));
+    protected Model innerCloneModel() {
+        return new Union(new ArrayList<Model>(models));
     }
 
     @Override
@@ -76,7 +76,7 @@ public class Union extends Complex3dModel {
         synchronized (Manifold3dEngine.JNI_SYNC) {
             long result = 0L;
             try {
-                for (Abstract3dModel model : models) {
+                for (Model model : models) {
                     long m = model.toNativeMesh(context);
                     if (m == 0L) {
                         continue;
@@ -99,20 +99,20 @@ public class Union extends Complex3dModel {
     }
 
     @Override
-    public Abstract3dModel addModel(Abstract3dModel model) {
+    public Model addModel(Model model) {
         if (isMoved() || isRotated()) {
             return super.addModel(model);
         }
 
-        List<Abstract3dModel> newModels = new ArrayList<>(models);
+        List<Model> newModels = new ArrayList<>(models);
         newModels.add(model);
         return new Union(newModels);
     }
 
     @Override
-    protected Abstract3dModel innerSubModel(IScadGenerationContext context) {
-        List<Abstract3dModel> subModels = new ArrayList<>();
-        for (Abstract3dModel m : models) {
+    protected Model innerSubModel(IScadGenerationContext context) {
+        List<Model> subModels = new ArrayList<>();
+        for (Model m : models) {
             subModels.add(m.subModel(context));
         }
 
@@ -120,7 +120,7 @@ public class Union extends Complex3dModel {
     }
 
     @Override
-    protected List<Abstract3dModel> getChildrenModels() {
+    protected List<Model> getChildrenModels() {
         return models;
     }
 }

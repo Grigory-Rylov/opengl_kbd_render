@@ -5,7 +5,7 @@ import com.github.grishberg.javascad.coords.Boundaries3d;
 import com.github.grishberg.javascad.coords.V3d;
 import com.github.grishberg.javascad.exceptions.IllegalValueException;
 import com.github.grishberg.javascad.manifold.Manifold3dEngine;
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 import com.github.grishberg.javascad.models.Complex3dModel;
 import com.github.grishberg.javascad.tranform.TransformationFactory;
 import com.github.grishberg.javascad.utils.AssertValue;
@@ -15,12 +15,12 @@ import java.util.List;
 
 /**
  * This represents a move transition, but used rarely, because the convenient
- * methods of {@link Abstract3dModel} replace it most of the time.
+ * methods of {@link Model} replace it most of the time.
  *
  * @author ivivan <ivivan@printingin3d.eu>
  */
 public class Translate extends Complex3dModel {
-	private final Abstract3dModel model;
+	private final Model model;
 	private final V3d move;
 
 	/**
@@ -29,7 +29,7 @@ public class Translate extends Complex3dModel {
 	 * @param move the coordinates used by the move operation
 	 * @throws IllegalValueException if either of the two parameters is null
 	 */
-	public Translate(Abstract3dModel model, V3d move) throws IllegalValueException {
+	public Translate(Model model, V3d move) throws IllegalValueException {
 		AssertValue.isNotNull(model, "Model must not be null for translation!");
 		AssertValue.isNotNull(move, "Move must not be null for translation!");
 		
@@ -38,7 +38,7 @@ public class Translate extends Complex3dModel {
 	}
 
 	/**
-	 * This method is used internally by the {@link Abstract3dModel} - do not use it!
+	 * This method is used internally by the {@link Model} - do not use it!
 	 * @param move the coordinates used by the move operation
 	 * @return the string which represents the move in OpenSCAD
 	 */
@@ -55,7 +55,7 @@ public class Translate extends Complex3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new Translate(model, move);
 	}
 
@@ -68,13 +68,13 @@ public class Translate extends Complex3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerSubModel(IScadGenerationContext context) {
-		Abstract3dModel subModel = model.subModel(context);
+	protected Model innerSubModel(IScadGenerationContext context) {
+		Model subModel = model.subModel(context);
 		return subModel==null ? null : new Translate(subModel, move);
 	}
 
     @Override
-    protected List<Abstract3dModel> getChildrenModels() {
+    protected List<Model> getChildrenModels() {
         return Collections.singletonList(model);
     }
 }

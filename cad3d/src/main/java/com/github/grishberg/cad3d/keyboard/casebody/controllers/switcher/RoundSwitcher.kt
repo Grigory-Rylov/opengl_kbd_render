@@ -5,7 +5,7 @@ import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.util.fromModel
 import com.github.grishberg.javascad.basic.Radius
 import com.github.grishberg.javascad.coords.Angles3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Cylinder
 import com.github.grishberg.javascad.utils.Color
 
@@ -19,7 +19,7 @@ class RoundSwitcher(private val cfg: KeyboardConfig) : Switcher {
         return ModelHolder(cylinder, fromModel(cylinder, Color.PINK, 20))
     }
 
-    override fun createSwitcherHole(): Abstract3dModel {
+    override fun createSwitcherHole(): Model {
         return Cylinder(10.0, Radius.fromDiameter(holeDiameter)).addModel(
             Cylinder(2.0, Radius.fromDiameter(outerHoleDiameter)).moveZ(-cfg.wallsSettings.borderThickness - 0.5)
         ).rotate(Angles3d.xOnly(90.0))

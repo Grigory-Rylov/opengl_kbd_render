@@ -7,7 +7,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbPoints
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.utils.Color
 
 class TwoRowsButtonsFrontRightToMatrixWallBuilder(
@@ -21,10 +21,10 @@ class TwoRowsButtonsFrontRightToMatrixWallBuilder(
     private val isSkeletonMode = cfg.isSkeletonMode
 
     override fun create(
-        ThumbR: (Abstract3dModel) -> Abstract3dModel,
-        matrixOuterPlace: (Abstract3dModel) -> Abstract3dModel,
-        matrixInnerPlace: (Abstract3dModel) -> Abstract3dModel
-    ): List<Abstract3dModel> {
+        ThumbR: (Model) -> Model,
+        matrixOuterPlace: (Model) -> Model,
+        matrixInnerPlace: (Model) -> Model
+    ): List<Model> {
 
         val thumbVertexFront = ThumbR(
             KeyPlaceholder.placeHolderFrontRight().move(0.0, -wallsSettings.verticalOffset, wallsSettings.borderZOffset)
@@ -104,26 +104,26 @@ class TwoRowsButtonsFrontRightToMatrixWallBuilder(
         )
     }
 
-    private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
+    private fun verticalCube(obj: Model): Model {
         return borderObject(wallsSettings.borderThickness, wallsSettings.borderHeight).moveZ(topEdgeOffsetZ)
             .move(obj.move)
     }
 
-    private fun bottomCylinder(point: V3d): Abstract3dModel {
+    private fun bottomCylinder(point: V3d): Model {
         return Utils.cylinder(
             wallsSettings.borderThickness, wallsSettings.bottomBorderHeight
         ).move(point.projectionZ(wallsSettings.bottomBorderHeight / 2))
     }
 
-    private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
+    private fun borderObject(thickness: Double, height: Double): Model {
         return Utils.cylinder(thickness, height)
     }
 
-    private fun topBorderObj(obj: Abstract3dModel): Abstract3dModel {
+    private fun topBorderObj(obj: Model): Model {
         return Utils.sphere(wallsSettings.borderThickness / 2.0).move(obj.move)
     }
 
-    private fun topBorderObj(point: V3d): Abstract3dModel {
+    private fun topBorderObj(point: V3d): Model {
         return Utils.sphere(wallsSettings.borderThickness / 2.0).move(point)
     }
 }

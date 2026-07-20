@@ -4,7 +4,7 @@ import com.github.grishberg.cad3d.keyboard.KeyPlace
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import kotlin.math.max
 
 /**
@@ -17,8 +17,8 @@ class ControllerPlace(
 ) {
 
     fun place(
-        obj: Abstract3dModel,
-    ): Abstract3dModel {
+        obj: Model,
+    ): Model {
         val wallsSettings = cfg.wallsSettings
         val left = keyPlace.place(
             2,

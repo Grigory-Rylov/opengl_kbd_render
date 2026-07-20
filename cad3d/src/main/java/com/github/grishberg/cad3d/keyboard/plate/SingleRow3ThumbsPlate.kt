@@ -8,7 +8,7 @@ import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
 import com.github.grishberg.cad3d.util.fromModel
 import com.github.grishberg.javascad.basic.Radius
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Cylinder
 import com.github.grishberg.javascad.models.Hull
 import com.github.grishberg.javascad.tranzitions.Union
@@ -22,7 +22,7 @@ class SingleRow3ThumbsPlate(
 ): Plate {
 
     override fun create(): ModelHolder {
-        val models = mutableListOf<Abstract3dModel>()
+        val models = mutableListOf<Model>()
 
         val screw = screwBase.plateScrewHolder()
         val screws = screwWallPlaces.place(screw, ScrewWallPlaces.HeightMode.Plate)
@@ -128,7 +128,7 @@ class SingleRow3ThumbsPlate(
         )
     }
 
-    private fun platePoint(point: V3d): Abstract3dModel {
+    private fun platePoint(point: V3d): Model {
         return Cylinder(cfg.keyPlaceConfig.plateThickness, Radius.fromDiameter(3.0)).move(point)
     }
 }

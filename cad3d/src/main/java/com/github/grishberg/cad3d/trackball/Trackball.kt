@@ -10,7 +10,7 @@ import com.github.grishberg.javascad.basic.Radius
 import com.github.grishberg.javascad.coords.Angles3d
 import com.github.grishberg.javascad.coords.Dims3d
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Cube
 import com.github.grishberg.javascad.models.Cylinder
 import com.github.grishberg.javascad.models.Hull
@@ -55,7 +55,7 @@ class Trackball(private val cfg: KeyboardConfig) {
         )
     }
 
-    fun createTrackballWireHole(keyPlace: KeyPlace): Abstract3dModel {
+    fun createTrackballWireHole(keyPlace: KeyPlace): Model {
         return keyPlace.place(
             1, 0, Cylinder(12.0, Radius.fromDiameter(5.0)).rotate(Angles3d.xOnly(-75.0)), V3d(0.0, 20.0, -7.0)
         ).moveY(6.0)
@@ -64,7 +64,7 @@ class Trackball(private val cfg: KeyboardConfig) {
     /**
      * Держалка корзины трекбола
      */
-    fun trackBallCaseHolderOrigin(): Abstract3dModel {
+    fun trackBallCaseHolderOrigin(): Model {
         val legsBaseOffset = legHeight / 2 - cfg.trackball.ballDiameter / 2
 
         val legOffset = legsBaseOffset - distanceToLens - lensHeight
@@ -92,7 +92,7 @@ class Trackball(private val cfg: KeyboardConfig) {
     /**
      * Держалка корзины трекбола в нормальной ориентации
      */
-    fun trackBallCaseHolder(): Abstract3dModel {
+    fun trackBallCaseHolder(): Model {
         val holeDiameter = 3.2
         val wall = 1.5
         val height = holeDiameter + wall * 2
@@ -106,13 +106,13 @@ class Trackball(private val cfg: KeyboardConfig) {
         return Union(holder, base).withColor(Color.YELLOW_GREEN)
     }
 
-    fun placeTrackball(model: Abstract3dModel, keyPlace: KeyPlace): Abstract3dModel {
+    fun placeTrackball(model: Model, keyPlace: KeyPlace): Model {
         return keyPlace.place(
             1, 0, model.rotate(Angles3d.xOnly(60.0)), V3d(0.0, 26.5, 24.0)
         )
     }
 
-    private fun createTrackballModel(): Abstract3dModel {
+    private fun createTrackballModel(): Model {
 
         val legs = createSensorHolderLeg(legHeight).moveZ(legOffset)
 
@@ -129,7 +129,7 @@ class Trackball(private val cfg: KeyboardConfig) {
         return outerSphere.subtractModel(sensorCapLegs())
     }
 
-    private fun case(caseHeight: Double): Abstract3dModel {
+    private fun case(caseHeight: Double): Model {
         val holeDiameter = outerDiameter - wallWidth * 2
 
         val diameter = outerDiameter
@@ -150,14 +150,14 @@ class Trackball(private val cfg: KeyboardConfig) {
         return case.addModel(sensorCase).subtractModel(cylinderHoles().moveZ(-5.5))
     }
 
-    private fun cylinderHoles(): Abstract3dModel {
+    private fun cylinderHoles(): Model {
         val diameter = 14.0
         val cylinder = Cylinder(50.0, Radius.fromDiameter(diameter)).rotate(Angles3d.yOnly(90.0))
         val hole = Hull(cylinder, cylinder.moveZ(2.0))
         return hole.addModel(hole.rotate(Angles3d.zOnly(60.0))).addModel(hole.rotate(Angles3d.zOnly(-60.0)))
     }
 
-    private fun trackballHolder(): Abstract3dModel {
+    private fun trackballHolder(): Model {
         val holeDiameter = 3.2
         val wall = 1.5
         val height = holeDiameter + wall * 2
@@ -172,7 +172,7 @@ class Trackball(private val cfg: KeyboardConfig) {
     /**
      * Держатель сенсора (ножки)
      */
-    private fun createSensorHolderLeg(height: Double): Abstract3dModel {
+    private fun createSensorHolderLeg(height: Double): Model {
         val holesDiameter = cfg.trackball.controllerScrewDiameter
         val legDiameter = 5.5
 
@@ -188,7 +188,7 @@ class Trackball(private val cfg: KeyboardConfig) {
         )
     }
 
-    private fun bearingsHoles(): Abstract3dModel {
+    private fun bearingsHoles(): Model {
         val bearingPlaceRadius = cfg.trackball.ballDiameter / 2 + cfg.trackball.bearingDiameter / 2
 
         return Union(
@@ -202,7 +202,7 @@ class Trackball(private val cfg: KeyboardConfig) {
             )
     }
 
-    private fun bearingPlace(radius: Double, yAngle: Double, zAngle: Double): Abstract3dModel {
+    private fun bearingPlace(radius: Double, yAngle: Double, zAngle: Double): Model {
         val bearing = Sphere(Radius.fromDiameter(cfg.trackball.bearingDiameter))
         return bearing.moveX(radius).rotate(Angles3d(0.0, yAngle, zAngle))
     }
@@ -237,7 +237,7 @@ class Trackball(private val cfg: KeyboardConfig) {
         )
     }
 
-    private fun sensorCapModel(): Abstract3dModel {
+    private fun sensorCapModel(): Model {
         val height = 1.5
         val offset = legOffset - legHeight - (sensorCaseHeight - 6)
         val case = Cylinder(
@@ -246,7 +246,7 @@ class Trackball(private val cfg: KeyboardConfig) {
         return case
     }
 
-    private fun sensorCapLegs(): Abstract3dModel {
+    private fun sensorCapLegs(): Model {
         val height = 2.0
         val offset = legOffset - legHeight - (sensorCaseHeight - 6)
         val leg = Cylinder(3.0, Radius.fromRadius(1.0)).rotate(Angles3d.yOnly(90.0)).moveZ(2.0)

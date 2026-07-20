@@ -1,7 +1,7 @@
 // Connections.kt — соединительные стенки между клавишами
 
 interface Connector {
-    fun build(): Abstract3dModel
+    fun build(): Model
 }
 
 class HorizontalConnector(
@@ -10,7 +10,7 @@ class HorizontalConnector(
     private val row: Int,
     private val cfg: MatrixConfig,
 ) : Connector {
-    override fun build(): Abstract3dModel {
+    override fun build(): Model {
         val startX = fromCol * cfg.spacingX + cfg.keyConfig.width
         val endX = toCol * cfg.spacingX
         val length = endX - startX
@@ -31,7 +31,7 @@ class VerticalConnector(
     private val col: Int,
     private val cfg: MatrixConfig,
 ) : Connector {
-    override fun build(): Abstract3dModel {
+    override fun build(): Model {
         val startY = fromRow * cfg.spacingY + cfg.keyConfig.height
         val endY = toRow * cfg.spacingY
         val length = endY - startY
@@ -49,7 +49,7 @@ class VerticalConnector(
 
 class ConnectionBuilder(private val cfg: MatrixConfig) {
 
-    fun buildAllConnections(): Abstract3dModel {
+    fun buildAllConnections(): Model {
         val connectors = mutableListOf<Connector>()
 
         // Horizontal connections

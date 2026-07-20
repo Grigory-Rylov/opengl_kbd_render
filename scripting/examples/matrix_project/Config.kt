@@ -1,5 +1,5 @@
 // Config.kt — параметры клавиатурной матрицы
-// Доступно: bindings, V3d, Abstract3dModel
+// Доступно: bindings, V3d, Model
 
 data class KeyConfig(
     val width: Double = 18.0,

@@ -11,7 +11,7 @@ import com.github.grishberg.cad3d.util.fromModel
 import com.github.grishberg.javascad.basic.Radius
 import com.github.grishberg.javascad.coords.Angles3d
 import com.github.grishberg.javascad.enums.Side
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Cube
 import com.github.grishberg.javascad.models.Cylinder
 import com.github.grishberg.javascad.models.Hull
@@ -37,7 +37,7 @@ class ControllerHolderBuilder(
 
     fun create(showPreview: Boolean): ModelHolder {
         var models = createControllerModel()
-        var model: Abstract3dModel = Union(models)
+        var model: Model = Union(models)
 
         val vertexHolders = mutableListOf<VertexHolder>()
         models.forEach {
@@ -64,11 +64,11 @@ fromModel(
         return ModelHolder(model, vertexHolders)
     }
 
-    private fun placeBatteryHolder(o: Abstract3dModel): Abstract3dModel {
+    private fun placeBatteryHolder(o: Model): Model {
         return controllerPlace.place(o.rotate(Angles3d.zOnly(25.0))).move(7.0, -battery.depth + 20.7, -4.0)
     }
 
-    private fun createControllerModel(): List<Abstract3dModel> {
+    private fun createControllerModel(): List<Model> {
         val base = createBase().withColor(Color.BISQUE)
         val height = 10.0
         val screwOffset = cfg.screwHolderWallhickness + cfg.screwNutHoleDiameter / 2
@@ -90,7 +90,7 @@ fromModel(
         )
     }
 
-    private fun createControllerHolderCylinders(): Abstract3dModel {
+    private fun createControllerHolderCylinders(): Model {
         val diam = 1.5
         val length = 2.0
         val cylinder = Cylinder(length, Radius.fromDiameter(diam)).rotate(Angles3d.yOnly(90.0))
@@ -100,7 +100,7 @@ fromModel(
             .addModel(cylinder.move(offset, -depth, 0.0)).addModel(cylinder.move(-offset, -depth, 0.0))
     }
 
-    private fun usbHole(): Abstract3dModel {
+    private fun usbHole(): Model {
         val diameter = 3.5
         val width = 10.0
 
@@ -111,7 +111,7 @@ fromModel(
         return controllerPlace.place(controller.placeUsbPort(usb))
     }
 
-    private fun createHolder(): Abstract3dModel {
+    private fun createHolder(): Model {
         val holeWidth = controller.width + 0.2
         val holeDepth = controller.depth + 0.7
         val holeHeight = 6.0
@@ -129,7 +129,7 @@ fromModel(
         return body
     }
 
-    private fun createBase(): Abstract3dModel {
+    private fun createBase(): Model {
         val cylinder = Cube(7.0, 6.0, cfg.controllerPlateHeight)
         val hole = Cylinder(cfg.controllerPlateHeight + 5, Radius.fromDiameter(cfg.screwBoltDiameter + 0.5))
         val horizontal = Hull(

@@ -8,7 +8,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.javascad.basic.Radius
 import com.github.grishberg.javascad.coords.V3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Hull
 import com.github.grishberg.javascad.models.Sphere
 import com.github.grishberg.javascad.tranzitions.Union
@@ -26,8 +26,8 @@ class ControllerWallBuilder(
 
     ) {
 
-    fun createWall(): List<Abstract3dModel> {
-        val models = mutableListOf<Abstract3dModel>()
+    fun createWall(): List<Model> {
+        val models = mutableListOf<Model>()
 
         val left = keyPlace.place(
             0, 0, KeyPlaceholder.placeHolderBackLeft().move(-cfg.outerLeftOffset, 0.0, cfg.outerBorderZOffset)
@@ -84,13 +84,13 @@ class ControllerWallBuilder(
     }
 
     private fun skeletonWalls(
-        models: MutableList<Abstract3dModel>,
+        models: MutableList<Model>,
         backControllerLeft: V3d,
         backControllerRight: V3d,
-        left: Abstract3dModel,
-        mid: Abstract3dModel?,
+        left: Model,
+        mid: Model?,
         backControllerMid: V3d,
-        midLeft: Abstract3dModel?,
+        midLeft: Model?,
         backControllerMidLeft: V3d
     ) {
         //top edge
@@ -171,13 +171,13 @@ class ControllerWallBuilder(
     }
 
     private fun solidWalls(
-        models: MutableList<Abstract3dModel>,
+        models: MutableList<Model>,
         backControllerLeft: V3d,
         backControllerRight: V3d,
-        left: Abstract3dModel,
-        mid: Abstract3dModel,
+        left: Model,
+        mid: Model,
         backControllerMid: V3d,
-        midLeft: Abstract3dModel,
+        midLeft: Model,
         backControllerMidLeft: V3d
     ) {
         //top edge
@@ -282,7 +282,7 @@ class ControllerWallBuilder(
         )
     }
 
-    private fun backWall(column: Int): Abstract3dModel {
+    private fun backWall(column: Int): Model {
         val left = keyPlace.place(
             column, 0, KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
@@ -294,7 +294,7 @@ class ControllerWallBuilder(
         val backControllerLeft = controllerHolderWall.getWallPoint(left.move)
 
         if (isSkeletonMode) {
-            val objects = mutableListOf<Abstract3dModel>()
+            val objects = mutableListOf<Model>()
 
             val sphere = Sphere(Radius.fromRadius(cfg.borderThickness))
             objects.add(Utils.hull(left, sphere.move(backControllerLeft)))
@@ -351,7 +351,7 @@ class ControllerWallBuilder(
         return Union(wall)
     }
 
-    private fun backLeftCorner(): List<Abstract3dModel> {
+    private fun backLeftCorner(): List<Model> {
 
         val back = keyPlace.place(
             0, 0, KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
@@ -379,7 +379,7 @@ class ControllerWallBuilder(
         ).withColor(Color.PINK)
 
         if (isSkeletonMode) {
-            val objects = mutableListOf<Abstract3dModel>()
+            val objects = mutableListOf<Model>()
             objects.add(border)
 
             val sphere = Sphere(Radius.fromRadius(cfg.borderThickness))/*
@@ -456,26 +456,26 @@ class ControllerWallBuilder(
         )
     }
 
-    private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
+    private fun verticalCube(obj: Model): Model {
         return cylinder(cfg.borderThickness, cfg.borderHeight).moveZ(topEdgeOffsetZ).move(obj.move)
     }
 
-    private fun bottomCylinder(point: V3d): Abstract3dModel {
+    private fun bottomCylinder(point: V3d): Model {
         return cylinder(
             cfg.borderThickness,
             cfg.bottomBorderHeight
         ).move(point.projectionZ(cfg.bottomBorderHeight / 2))
     }
 
-    private fun cylinder(thickness: Double, height: Double): Abstract3dModel {
+    private fun cylinder(thickness: Double, height: Double): Model {
         return Utils.cylinder(thickness, height)
     }
 
-    private fun topBorderObj(obj: Abstract3dModel): Abstract3dModel {
+    private fun topBorderObj(obj: Model): Model {
         return Utils.sphere(cfg.borderThickness / 2.0).move(obj.move)
     }
 
-    private fun topBorderObj(point: V3d): Abstract3dModel {
+    private fun topBorderObj(point: V3d): Model {
         return Utils.sphere(cfg.borderThickness / 2.0).move(point)
     }
 }

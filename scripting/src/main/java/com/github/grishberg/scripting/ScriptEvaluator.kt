@@ -1,6 +1,6 @@
 package com.github.grishberg.scripting
 
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -12,13 +12,13 @@ import java.net.URLClassLoader
  * Результат выполнения скрипта.
  */
 data class ScriptResult(
-    val models: List<Abstract3dModel> = emptyList(),
+    val models: List<Model> = emptyList(),
     val error: String? = null,
     val stdout: String = "",
     val compilationTimeMs: Long = 0,
 ) {
     // Backward-compatible single-model accessor.
-    val model: Abstract3dModel? get() = models.firstOrNull()
+    val model: Model? get() = models.firstOrNull()
 }
 
 /**
@@ -101,8 +101,8 @@ import com.github.grishberg.javascad.*
         get() = baseImports + (if (hasCad3d) cad3dImports else "")
 
     private val globalDecls = """
-infix fun Abstract3dModel.union(other: Abstract3dModel) = this.addModel(other)
-infix fun Abstract3dModel.minus(other: Abstract3dModel) = this.subtractModel(other)
+infix fun Model.union(other: Model) = this.addModel(other)
+infix fun Model.minus(other: Model) = this.subtractModel(other)
 
 var bindings = ScriptBindings()
 
@@ -207,7 +207,7 @@ var bindings = ScriptBindings()
         return Triple(pkgStr, importsStr, rest)
     }
 
-    private fun executeMultiFile(classDir: File, ktFiles: List<File>): Abstract3dModel? {
+    private fun executeMultiFile(classDir: File, ktFiles: List<File>): Model? {
         // ktFiles unused — we scan classDir for scriptMain
         val urls = (jarFiles.map { it.toURI().toURL() } + classDir.toURI().toURL()).toTypedArray()
         val loader = URLClassLoader(urls, ScriptEvaluator::class.java.classLoader)
@@ -222,7 +222,7 @@ var bindings = ScriptBindings()
             try {
                 val clazz = loader.loadClass(className)
                 val mainMethod = clazz.getMethod("scriptMain")
-                return mainMethod.invoke(null) as? Abstract3dModel
+                return mainMethod.invoke(null) as? Model
             } catch (e: NoSuchMethodException) {
                 // not the entry point
             } catch (e: ClassNotFoundException) {
@@ -320,12 +320,12 @@ var bindings = ScriptBindings()
         }
         val scriptBody = buildString {
             if (modelExpressions.isEmpty()) {
-                appendLine("            emptyList<Abstract3dModel>()")
+                appendLine("            emptyList<Model>()")
             } else {
-                appendLine("            val __models = mutableListOf<Abstract3dModel>()")
+                appendLine("            val __models = mutableListOf<Model>()")
                 modelExpressions.forEach { e ->
                     val indented = e.prependIndent("            ")
-                    appendLine("            ;(run {\n$indented\n            } as? Abstract3dModel)?.let { __models.add(it) }")
+                    appendLine("            ;(run {\n$indented\n            } as? Model)?.let { __models.add(it) }")
                 }
                 appendLine("            __models")
             }
@@ -336,8 +336,8 @@ var bindings = ScriptBindings()
         val memberBlock = "$declBlock" + if (memberLines.isNotEmpty()) "\n    ${memberLines.joinToString("\n    ")}" else ""
 
         return """$fileImports
-infix fun Abstract3dModel?.union(other: Abstract3dModel?) = (this ?: emptyModel()).addModel(other ?: emptyModel())
-infix fun Abstract3dModel?.minus(other: Abstract3dModel?) = (this ?: emptyModel()).subtractModel(other ?: emptyModel())
+infix fun Model?.union(other: Model?) = (this ?: emptyModel()).addModel(other ?: emptyModel())
+infix fun Model?.minus(other: Model?) = (this ?: emptyModel()).subtractModel(other ?: emptyModel())
 
 var bindings = ScriptBindings()
 
@@ -353,24 +353,24 @@ fun sphere(radius: Number) = bindings.sphere(radius)
 fun prism(length: Number, radius: Number, sides: Int) = bindings.prism(length, radius, sides)
 fun prism(length: Number, r1: Number, r2: Number, sides: Int) = bindings.prism(length, r1, r2, sides)
 fun emptyModel() = bindings.emptyModel()
-fun hull(vararg models: Abstract3dModel) = bindings.hull(*models)
-fun hull(models: List<Abstract3dModel>) = bindings.hull(models)
-fun union(vararg models: Abstract3dModel) = bindings.union(*models)
-fun union(models: List<Abstract3dModel>) = bindings.union(models)
+fun hull(vararg models: Model) = bindings.hull(*models)
+fun hull(models: List<Model>) = bindings.hull(models)
+fun union(vararg models: Model) = bindings.union(*models)
+fun union(models: List<Model>) = bindings.union(models)
 fun v3(x: Number, y: Number, z: Number) = bindings.v3(x, y, z)
 fun v3(x: Number, y: Number) = bindings.v3(x, y)
 fun angles(x: Number = 0.0, y: Number = 0.0, z: Number = 0.0) = bindings.angles(x, y, z)
-fun repeat(count: Int, block: (Int) -> Abstract3dModel) = bindings.repeat(count, block)
+fun repeat(count: Int, block: (Int) -> Model) = bindings.repeat(count, block)
 fun deg(degrees: Number) = bindings.deg(degrees)
 fun importStl(path: String, color: String? = null) = bindings.importStl(path, color)
 
 class DslScript {$fieldBlock$memberBlock
 
-    fun execute(): List<Abstract3dModel> = scriptRun {
+    fun execute(): List<Model> = scriptRun {
 $scriptBody
     }
     
-    private fun scriptRun(block: DslScript.() -> List<Abstract3dModel>): List<Abstract3dModel> = block()
+    private fun scriptRun(block: DslScript.() -> List<Model>): List<Model> = block()
 }
 """
     }
@@ -418,7 +418,7 @@ $scriptBody
         return outputDir
     }
 
-    private fun executeCompiled(classDir: File): List<Abstract3dModel> {
+    private fun executeCompiled(classDir: File): List<Model> {
         val urls = (jarFiles.map { it.toURI().toURL() } + classDir.toURI().toURL()).toTypedArray()
         val loader = URLClassLoader(urls, ScriptEvaluator::class.java.classLoader)
 
@@ -428,7 +428,7 @@ $scriptBody
         // Java reflection для вызова run()
         val runMethod = clazz.getMethod("execute")
         @Suppress("UNCHECKED_CAST")
-        return runMethod.invoke(instance) as? List<Abstract3dModel> ?: emptyList()
+        return runMethod.invoke(instance) as? List<Model> ?: emptyList()
     }
 
     private fun buildErrorString(e: Exception): String {

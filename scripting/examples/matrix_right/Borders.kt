@@ -1,6 +1,6 @@
 package com.github.grishberg.scripting.matrix
 
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Cube
 import com.github.grishberg.javascad.models.Cylinder
 import com.github.grishberg.javascad.tranzitions.Hull
@@ -13,13 +13,13 @@ val borderLeftOffset = -8.0
 val borderRightOffset = 8.0
 val borderZOffset = -2.0
 
-fun borderObject(): Abstract3dModel =
+fun borderObject(): Model =
     Cylinder(borderThickness, borderHeight).moveZ(borderHeight / 2)
 
 // Matrix borders
-fun matrixBorders(): List<Abstract3dModel> {
+fun matrixBorders(): List<Model> {
     val kfc = KeyCfg
-    val models = mutableListOf<Abstract3dModel>()
+    val models = mutableListOf<Model>()
 
     // Back wall (top row)
     for (col in 0 until kfc.columnsCount) {
@@ -70,17 +70,17 @@ fun matrixBorders(): List<Abstract3dModel> {
     return models
 }
 
-fun verticalCube(keyModel: Abstract3dModel): Abstract3dModel =
+fun verticalCube(keyModel: Model): Model =
     Hull(keyModel, Cube(borderThickness * 2, borderThickness * 2, borderHeight).moveZ(borderHeight / 2))
 
-fun backWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel =
+fun backWall(keyPlace: (Model) -> Model): Model =
     Hull(
         keyPlace(placeHolderBack()),
         verticalCube(keyPlace(placeHolderBackLeft().move(0.0, borderVerticalOffset, borderZOffset))),
         verticalCube(keyPlace(placeHolderBackRight().move(0.0, borderVerticalOffset, borderZOffset)))
     )
 
-fun backMidWall(leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel =
+fun backMidWall(leftPlace: (Model) -> Model, rightPlace: (Model) -> Model): Model =
     Hull(
         leftPlace(placeHolderBackRight()),
         rightPlace(placeHolderBackLeft()),
@@ -88,14 +88,14 @@ fun backMidWall(leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Ab
         verticalCube(rightPlace(placeHolderBackLeft().move(borderRightOffset, borderVerticalOffset, borderZOffset)))
     )
 
-fun frontWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel =
+fun frontWall(keyPlace: (Model) -> Model): Model =
     Hull(
         keyPlace(placeHolderFront()),
         verticalCube(keyPlace(placeHolderFrontLeft().move(0.0, -borderVerticalOffset, borderZOffset))),
         verticalCube(keyPlace(placeHolderFrontRight().move(0.0, -borderVerticalOffset, borderZOffset)))
     )
 
-fun frontMidWall(leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel =
+fun frontMidWall(leftPlace: (Model) -> Model, rightPlace: (Model) -> Model): Model =
     Hull(
         leftPlace(placeHolderFrontRight()),
         rightPlace(placeHolderFrontLeft()),
@@ -103,7 +103,7 @@ fun frontMidWall(leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (A
         verticalCube(rightPlace(placeHolderFrontLeft().move(borderRightOffset, -borderVerticalOffset, borderZOffset)))
     )
 
-fun leftWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): List<Abstract3dModel> =
+fun leftWall(keyPlace: (Model) -> Model): List<Model> =
     listOf(
         Hull(
             keyPlace(placeHolderLeft()),
@@ -112,7 +112,7 @@ fun leftWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): List<Abstract3dMod
         )
     )
 
-fun leftMidWall(leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel =
+fun leftMidWall(leftPlace: (Model) -> Model, rightPlace: (Model) -> Model): Model =
     Hull(
         leftPlace(placeHolderLeft()),
         rightPlace(placeHolderLeft()),
@@ -120,14 +120,14 @@ fun leftMidWall(leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Ab
         verticalCube(rightPlace(placeHolderFrontLeft().move(borderLeftOffset, 0.0, borderZOffset)))
     )
 
-fun rightWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel =
+fun rightWall(keyPlace: (Model) -> Model): Model =
     Hull(
         keyPlace(placeHolderRight()),
         verticalCube(keyPlace(placeHolderBackRight().move(borderRightOffset, 0.0, borderZOffset))),
         verticalCube(keyPlace(placeHolderFrontRight().move(borderRightOffset, 0.0, borderZOffset)))
     )
 
-fun rightMidWall(backPlace: (Abstract3dModel) -> Abstract3dModel, frontPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel =
+fun rightMidWall(backPlace: (Model) -> Model, frontPlace: (Model) -> Model): Model =
     Hull(
         backPlace(placeHolderRight()),
         frontPlace(placeHolderRight()),
@@ -136,8 +136,8 @@ fun rightMidWall(backPlace: (Abstract3dModel) -> Abstract3dModel, frontPlace: (A
     )
 
 // Thumb borders
-fun thumbBorders(): List<Abstract3dModel> {
-    val models = mutableListOf<Abstract3dModel>()
+fun thumbBorders(): List<Model> {
+    val models = mutableListOf<Model>()
     val borderOffset = 2.0
 
     // Back wall of thumb (top-most button = R)
@@ -182,8 +182,8 @@ fun thumbBorders(): List<Abstract3dModel> {
 }
 
 // Between thumb and matrix borders
-fun betweenThumbAndMatrixBorders(): List<Abstract3dModel> {
-    val models = mutableListOf<Abstract3dModel>()
+fun betweenThumbAndMatrixBorders(): List<Model> {
+    val models = mutableListOf<Model>()
     models.add(Hull(
         placeKey(placeHolderBackRight(), 2, 0),
         placeThumbR(placeHolderBackLeft()),
@@ -194,18 +194,18 @@ fun betweenThumbAndMatrixBorders(): List<Abstract3dModel> {
 }
 
 // Screw holes
-fun screwHole(): Abstract3dModel {
+fun screwHole(): Model {
     return Cylinder(5.0, 2.0).moveZ(1.0).addModel(
         Cylinder(3.1, 10.0).moveZ(-5.0 + 1.0)
     )
 }
 
-fun buildScrews(): Abstract3dModel {
+fun buildScrews(): Model {
     val screwHorizontalOffset = (1.6 * 2 + 4.0) / 2
     val screwLeftOffset = -10.0 + screwHorizontalOffset + 1
     val screwRightOffset = 10.0 - screwHorizontalOffset - 1
 
-    val models = mutableListOf<Abstract3dModel>()
+    val models = mutableListOf<Model>()
     models.add(placeKey(screwHole().moveX(screwLeftOffset), 0, 0))
     models.add(placeKey(screwHole().moveX(screwLeftOffset), 0, KeyCfg.lastRow))
     models.add(placeKey(screwHole().moveX(screwRightOffset), KeyCfg.lastCol, 0))
@@ -216,8 +216,8 @@ fun buildScrews(): Abstract3dModel {
 }
 
 // Final borders: union all borders, subtract screws
-fun buildBorders(): Abstract3dModel {
-    val allBorders = mutableListOf<Abstract3dModel>()
+fun buildBorders(): Model {
+    val allBorders = mutableListOf<Model>()
     allBorders.addAll(matrixBorders())
     allBorders.addAll(thumbBorders())
     allBorders.addAll(betweenThumbAndMatrixBorders())

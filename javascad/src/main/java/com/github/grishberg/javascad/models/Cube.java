@@ -28,8 +28,8 @@ public class Cube extends Atomic3dModel {
 	 * @throws com.github.grishberg.javascad.exceptions.IllegalValueException the minCorner has bigger value 
 	 * 			then maxCorner in any coordinate (x, y or z)
 	 */
-	public static Abstract3dModel fromCoordinates(V3d minCorner, V3d maxCorner) {
-		Abstract3dModel result = new Cube(new Dims3d(
+	public static Model fromCoordinates(V3d minCorner, V3d maxCorner) {
+		Model result = new Cube(new Dims3d(
 				maxCorner.getX()-minCorner.getX(), 
 				maxCorner.getY()-minCorner.getY(), 
 				maxCorner.getZ()-minCorner.getZ()));
@@ -68,7 +68,7 @@ public class Cube extends Atomic3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new Cube(size);
 	}
 

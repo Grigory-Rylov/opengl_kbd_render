@@ -10,7 +10,7 @@ import com.github.grishberg.javascad.vrl.Polygon
 /**
  * 3D модель, созданная из STL файла (списка полигонов)
  */
-class StlModel(private val polygons: List<Polygon>) : Abstract3dModel() {
+class StlModel(private val polygons: List<Polygon>) : Model() {
 
     init {
         require(polygons.isNotEmpty()) { "Список полигонов не может быть пустым" }
@@ -23,7 +23,7 @@ class StlModel(private val polygons: List<Polygon>) : Abstract3dModel() {
     // Кэшируем границы для производительности
     private val cachedBoundaries by lazy { calculateBoundaries() }
 
-    override fun innerCloneModel(): Abstract3dModel {
+    override fun innerCloneModel(): Model {
         return StlModel(polygons).apply {
             this.color = this@StlModel.color
         }
@@ -88,6 +88,6 @@ class StlModel(private val polygons: List<Polygon>) : Abstract3dModel() {
         return "StlModel(polygons=${polygons.size}, boundaries=$modelBoundaries)"
     }
 
-    override val childrenModels: MutableList<Abstract3dModel> = mutableListOf()
-    override fun innerSubModel(context: IScadGenerationContext?): Abstract3dModel? = null
+    override val childrenModels: MutableList<Model> = mutableListOf()
+    override fun innerSubModel(context: IScadGenerationContext?): Model? = null
 }

@@ -2,7 +2,7 @@ package com.github.grishberg.cad3d.common
 
 import com.github.grishberg.javascad.basic.Radius
 import com.github.grishberg.javascad.manifold.Manifold3dEngine
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Cylinder
 import com.github.grishberg.javascad.models.StlModel
 import com.github.grishberg.javascad.vrl.FacetGenerationContext
@@ -15,7 +15,7 @@ class Nuts {
         MetricType.M2 to NutsParams(4.0, 8.0, 8.87),
     )
 
-    fun createNutHole(m: MetricType, height: Number): Abstract3dModel {
+    fun createNutHole(m: MetricType, height: Number): Model {
         val params = map[m]!!
         val context = FacetGenerationContext.DEFAULT
         context.setFn(6)

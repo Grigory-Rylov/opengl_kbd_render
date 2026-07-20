@@ -6,7 +6,7 @@ import com.github.grishberg.javascad.enums.Plane;
 import com.github.grishberg.javascad.exceptions.IllegalValueException;
 
 /**
- * <p>Internal class used by the Abstract3dModel used to represent the properties 
+ * <p>Internal class used by the Model used to represent the properties 
  * of the rounding operation.</p>
  * <p>This class is immutable.</p>
  *

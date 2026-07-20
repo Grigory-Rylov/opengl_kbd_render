@@ -55,7 +55,7 @@ public class LinearExtrude extends Atomic3dModel {
 	}
 
 	@Override
-	protected Abstract3dModel innerCloneModel() {
+	protected Model innerCloneModel() {
 		return new LinearExtrude(model, height, twist, scale);
 	}
 

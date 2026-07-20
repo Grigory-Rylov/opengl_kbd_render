@@ -5,7 +5,7 @@ import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.util.fromModel
 import com.github.grishberg.javascad.basic.Radius
 import com.github.grishberg.javascad.coords.Angles3d
-import com.github.grishberg.javascad.models.Abstract3dModel
+import com.github.grishberg.javascad.models.Model
 import com.github.grishberg.javascad.models.Cube
 import com.github.grishberg.javascad.models.Cylinder
 import com.github.grishberg.javascad.models.Hull
@@ -32,20 +32,20 @@ class RP2040Mini(
         )
     }
 
-    override fun createBody(controllerPlace: ControllerPlace): Abstract3dModel {
+    override fun createBody(controllerPlace: ControllerPlace): Model {
         val model = Cube(width, depth, height).moveZ(height / 2)
         return place(controllerPlace, model).withColor(Color.CYAN)
     }
 
-    override fun createResetButton(controllerPlace: ControllerPlace): Abstract3dModel? {
+    override fun createResetButton(controllerPlace: ControllerPlace): Model? {
         return null
     }
 
-    override fun placeUsbPort(obj: Abstract3dModel): Abstract3dModel {
+    override fun placeUsbPort(obj: Model): Model {
         return obj.move(0.0, depth / 2 - 1.0, height / 2)
     }
 
-    private fun createUsb(): Abstract3dModel {
+    private fun createUsb(): Model {
         val diameter = 3.2
         val width = 8.34
 
@@ -55,7 +55,7 @@ class RP2040Mini(
         ).moveZ(diameter / 2)
     }
 
-    private fun place(controllerPlace: ControllerPlace, o: Abstract3dModel): Abstract3dModel {
+    private fun place(controllerPlace: ControllerPlace, o: Model): Model {
         return controllerPlace.place(o).moveZ(1.5)
     }
 }

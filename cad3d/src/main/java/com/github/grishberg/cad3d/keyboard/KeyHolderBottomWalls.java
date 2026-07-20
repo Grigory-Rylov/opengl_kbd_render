@@ -8,7 +8,7 @@ import static com.github.grishberg.cad3d.keyboard.Utils.union;
 
 import com.github.grishberg.cad3d.kbd.core.cfg.KeyPlaceConfig;
 import com.github.grishberg.javascad.coords.V3d;
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,8 +26,8 @@ public class KeyHolderBottomWalls {
         this.keyPlace = keyPlace;
     }
 
-    public Abstract3dModel build() {
-        final List<Abstract3dModel> models = new ArrayList<>();
+    public Model build() {
+        final List<Model> models = new ArrayList<>();
 
         final double offsetZ = BOTTOM_OFFSET;
         final V3d offset = new V3d(0, 0, offsetZ);
@@ -113,7 +113,7 @@ public class KeyHolderBottomWalls {
         return union(models);
     }
 
-    private static Abstract3dModel singleHole() {
+    private static Model singleHole() {
         return
             hull(
                 cornerModel().move(-OFFSET, -OFFSET, 0),
@@ -123,7 +123,7 @@ public class KeyHolderBottomWalls {
             );
     }
 
-    private static Abstract3dModel cornerModel() {
+    private static Model cornerModel() {
         return sphere(HOLE_RADIUS).subtractModel(cylinder(HOLE_RADIUS, HOLE_RADIUS).move(
             0,
             0,

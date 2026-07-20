@@ -3,7 +3,7 @@ package com.github.grishberg.cad3d.keyboard.wristrest;
 import static com.github.grishberg.cad3d.keyboard.Utils.v3d;
 
 import com.github.grishberg.javascad.coords.V3d;
-import com.github.grishberg.javascad.models.Abstract3dModel;
+import com.github.grishberg.javascad.models.Model;
 import com.github.grishberg.javascad.models.Cylinder;
 import com.github.grishberg.javascad.models.EdgeType;
 import com.github.grishberg.javascad.models.surfaces.BicubicInterpolator;
@@ -42,11 +42,11 @@ public class WristRest {
         }
     };
 
-    public static Abstract3dModel build() {
+    public static Model build() {
         //V3d[][] points = S6x3Linear.create(controlPoints, 5).buildSurface();
         V3d[][] points = new BicubicInterpolator(controlPoints).generateSurface(10);
 
-        Abstract3dModel surfaceBuilder = new SmoothSurface(
+        Model surfaceBuilder = new SmoothSurface(
             BicubicSurfaceSpline.bSplineSurface(controlPoints, resolution),
             thickness,
             EdgeType.Vertical,
@@ -54,25 +54,25 @@ public class WristRest {
             EdgeType.Normal,
             EdgeType.Vertical
         );
-        //       List<Abstract3dModel> models = new ArrayList<>();
+        //       List<Model> models = new ArrayList<>();
         //       for(V3d[] w: points) {
         //           for (V3d p: w) {
         //               models.add(new Cube(1).move(p));
         //           }
         //       }
 
-        //      Abstract3dModel topSurface = new SmoothSurface3(
+        //      Model topSurface = new SmoothSurface3(
         //          S6x3.s6x3(controlPoints).buildSurfaceStrategy(resolution),
         //          thickness
         //      );
         //
-        //      Abstract3dModel wristRest = topSurface.addModel(wristRestMount())
+        //      Model wristRest = topSurface.addModel(wristRestMount())
         //          .subtractModel(new Cube(300, 300, 50).move(0, 0, -25));
 
         return surfaceBuilder;//Utils.union(models);
     }
 
-    private static Abstract3dModel wristRestMount() {
+    private static Model wristRestMount() {
         // left back
         int r = 6;
         return new Cylinder(42, r)
@@ -93,7 +93,7 @@ public class WristRest {
             );
     }
 
-    private static Abstract3dModel padsHoles() {
+    private static Model padsHoles() {
         double padsRad = 5;
         double h = 20;
         double offsetZ = -9;
