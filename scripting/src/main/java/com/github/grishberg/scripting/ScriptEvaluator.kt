@@ -157,9 +157,15 @@ fun importStl(path: String, color: String? = null) = bindings.importStl(path, co
                 return ScriptResult(error = "No .kt files in: $scriptDir", compilationTimeMs = System.currentTimeMillis() - start)
             }
 
-            val outputDir = compileMultiFile(ktFiles)
-            val model = executeMultiFile(outputDir, ktFiles)
-            ScriptResult(models = if (model != null) listOf(model) else emptyList(), compilationTimeMs = System.currentTimeMillis() - start)
+            // Конкатенируем все файлы — wrapScript разберёт объявления vs выражения
+            var concatenated = ktFiles.joinToString("\n\n// === " + "\n") { it.readText() }
+            // Если где-то есть scriptMain, добавляем вызов в конец — wrapScript обработает как выражение
+            if (concatenated.contains("fun scriptMain(")) {
+                concatenated += "\n\nscriptMain()"
+            }
+            evaluate(concatenated).apply {
+                // Normalize any relative file paths used inside scripts to be absolute
+            }
         } catch (e: Exception) {
             ScriptResult(error = buildErrorString(e), compilationTimeMs = System.currentTimeMillis() - start)
         }

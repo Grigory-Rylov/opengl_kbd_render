@@ -38,14 +38,15 @@ fun main(args: Array<String>) {
             printResult(result)
 
             val outArgIdx = if (input.isDirectory) 1 else 1
-            val mdl = result.model
-            if (mdl != null && args.size > outArgIdx) {
+            val models = result.models
+            if (models.isNotEmpty() && args.size > outArgIdx) {
                 val outputFile = File(args[outArgIdx])
                 val context = FacetGenerationContext.DEFAULT.apply { setFn(60) }
-                val mesh = mdl.toNativeMesh(context)
+                val combined = models.reduce { a, b -> a.addModel(b) }
+                val mesh = combined.toNativeMesh(context)
                 Manifold3dEngine.exportStl(mesh, outputFile)
                 Manifold3dEngine.delete(mesh)
-                println("[DSL] Exported STL: ${outputFile.absolutePath}")
+                println("[DSL] Exported STL (${models.size} model${if (models.size > 1) "s" else ""}): ${outputFile.absolutePath}")
             }
         }
         else -> {
