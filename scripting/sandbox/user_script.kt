@@ -190,6 +190,79 @@ fun thumbBorders(bt: Double = 1.5, bh: Double = 2.5): Model {
 // === THUMB-WALL CONNECTOR ===
 fun thumbMatrixWall(): Model { return hull(tR(kphBR().move(0.0, 2.0, -2.0)), kpPlace(3, rowsCount - 1, kphFL())).addModel(hull(tR(kphBR().move(0.0, 2.0, -2.0)), kpPlace(4, rowsCount - 1, kphFL()))) }
 
+// === CASE: BOTTOM PLATE ===
+val caseBottomThickness = 2.0
+val caseWallHeight = 12.0
+val caseWallThickness = 2.0
+val caseOverhang = 10.0
+
+fun caseBottom(): Model {
+    // Collect all corner points of matrix keys and thumb keys
+    val corners = mutableListOf<Model>()
+    // Matrix corners (outer edge with overhang)
+    for (c in 0 until columnsCount) {
+        corners.add(kpPlace(c, 0, cube(caseOverhang, caseOverhang, caseBottomThickness).moveZ(caseBottomThickness / 2)))
+        corners.add(kpPlace(c, rowsCount - 1, cube(caseOverhang, caseOverhang, caseBottomThickness).moveZ(caseBottomThickness / 2)))
+    }
+    for (r in 0 until rowsCount) {
+        corners.add(kpPlace(0, r, cube(caseOverhang, caseOverhang, caseBottomThickness).moveZ(caseBottomThickness / 2)))
+        corners.add(kpPlace(columnsCount - 1, r, cube(caseOverhang, caseOverhang, caseBottomThickness).moveZ(caseBottomThickness / 2)))
+    }
+    // Thumb corners
+    for (ti in 0 until thumbButtonsCount) {
+        val base = cube(caseOverhang, caseOverhang, caseBottomThickness).moveZ(caseBottomThickness / 2)
+        val placed = when (ti) {
+            0 -> tL(base)
+            1 -> tM(base)
+            else -> tR(base)
+        }
+        corners.add(placed)
+    }
+    return hull(corners)
+}
+
+// === CASE: OUTER WALLS ===
+fun caseWalls(): Model {
+    val m = mutableListOf<Model>()
+    val wallH = caseWallHeight
+    val wallT = caseWallThickness
+
+    // Back wall (row 0)
+    for (c in 0 until columnsCount) {
+        m.add(kpPlace(c, 0, cube(caseWallThickness, wallH, caseWallThickness).move(0.0, -wallH / 2, wallH / 2)))
+    }
+
+    // Left wall (col 0)
+    for (r in 0 until rowsCount) {
+        m.add(kpPlace(0, r, cube(wallH, caseWallThickness, caseWallThickness).move(-wallH / 2, 0.0, wallH / 2)))
+    }
+
+    // Right wall (last col)
+    for (r in 0 until rowsCount) {
+        m.add(kpPlace(columnsCount - 1, r, cube(caseWallThickness, caseWallThickness, caseWallThickness).move(caseWallThickness / 2, 0.0, wallH / 2)))
+    }
+
+    // Front wall (cols 3..last, last row)
+    for (c in 3 until columnsCount) {
+        m.add(kpPlace(c, rowsCount - 1, cube(caseWallThickness, wallH, caseWallThickness).move(0.0, wallH / 2, wallH / 2)))
+    }
+
+    // Thumb walls
+    // Left side of thumb
+    m.add(tL(cube(wallH, caseWallThickness, caseWallThickness).move(-wallH / 2, 0.0, wallH / 2)))
+    // Back side of thumb
+    m.add(tL(cube(caseWallThickness, wallH, caseWallThickness).move(0.0, -wallH / 2, wallH / 2)))
+    m.add(tM(cube(caseWallThickness, wallH, caseWallThickness).move(0.0, -wallH / 2, wallH / 2)))
+    m.add(tR(cube(caseWallThickness, wallH, caseWallThickness).move(0.0, -wallH / 2, wallH / 2)))
+
+    return m.merge()
+}
+
+// === CASE: FULL ===
+fun caseFull(): Model {
+    return caseBottom().addModel(caseWalls())
+}
+
 // === ASSEMBLY ===
 val placeholders = (0 until columnsCount).flatMap { c -> (0 until rowsCount).map { r -> kpPlace(c, r, kph()) } }.merge().addModel(tPlace(kph()))
 val connections = matrixConnections().addModel(thumbConnections())
