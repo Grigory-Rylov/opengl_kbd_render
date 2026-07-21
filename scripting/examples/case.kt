@@ -312,33 +312,9 @@ fun wallThumbFront(side: Int): Model {
     return hull(topBorder(topM), vertCube(vertM), bottomPoint(topM))
 }
 
-// === BOTTOM PLATE ===
-fun caseBottom(): Model {
-    val pts = mutableListOf<Model>()
-    val overhang = 8.0
-    // Matrix corners
-    for (c in 0 until columnsCount) {
-        pts.add(kpPlace(c, 0, sphere(2.0).move(0.0, -overhang, 0.0)))
-        pts.add(kpPlace(c, rowsCount - 1, sphere(2.0).move(0.0, overhang, 0.0)))
-    }
-    for (r in 0 until rowsCount) {
-        pts.add(kpPlace(0, r, sphere(2.0).move(-overhang, 0.0, 0.0)))
-        pts.add(kpPlace(columnsCount - 1, r, sphere(2.0).move(overhang, 0.0, 0.0)))
-    }
-    // Thumb corners
-    val base = sphere(2.0)
-    pts.add(tL(base))
-    pts.add(tM(base))
-    pts.add(tR(base))
-    return hull(pts)
-}
-
 // === ASSEMBLY ===
 fun caseFull(): Model {
     val m = mutableListOf<Model>()
-
-    // Bottom plate
-    m.add(caseBottom())
 
     // Back walls
     for (c in 0 until columnsCount) m.add(wallBack(c))
