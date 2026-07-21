@@ -14,10 +14,6 @@ fun Iterable<Model>.merge(): Model {
     return r
 }
 
-fun hull(vararg models: Model): Model {
-    return com.github.grishberg.javascad.tranzitions.Hull(models.toList())
-}
-
 // === CONFIG ===
 val plateZOffset = 8.0
 val rowCurvature = 20.1

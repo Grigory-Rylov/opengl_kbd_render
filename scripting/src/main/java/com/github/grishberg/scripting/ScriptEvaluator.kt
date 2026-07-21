@@ -348,19 +348,30 @@ fun trace(msg: String) = bindings.trace(msg)
                     current.append(line)
                     depth += countBraces(l)
                 } else {
-                    // New expression — finalize previous if any
-                    if (current.isNotEmpty()) {
-                        rawExpressions.add(current.toString())
-                        current = StringBuilder()
-                        depth = 0
-                    }
-                    current.append(line)
-                    depth += countBraces(l)
-                    // Don't finalize if depth > 0 (open parens/braces)
-                    if (depth <= 0 && l.isNotEmpty()) {
-                        rawExpressions.add(current.toString())
-                        current = StringBuilder()
-                        depth = 0
+                    // If depth > 0, we're inside { ... } — continue current expression
+                    if (depth > 0) {
+                        current.append('\n')
+                        current.append(line)
+                        depth += countBraces(l)
+                        if (depth <= 0 && l.isNotEmpty()) {
+                            rawExpressions.add(current.toString())
+                            current = StringBuilder()
+                            depth = 0
+                        }
+                    } else {
+                        // New expression — finalize previous if any
+                        if (current.isNotEmpty()) {
+                            rawExpressions.add(current.toString())
+                            current = StringBuilder()
+                            depth = 0
+                        }
+                        current.append(line)
+                        depth += countBraces(l)
+                        if (depth <= 0 && l.isNotEmpty()) {
+                            rawExpressions.add(current.toString())
+                            current = StringBuilder()
+                            depth = 0
+                        }
                     }
                 }
             }
@@ -381,9 +392,23 @@ fun trace(msg: String) = bindings.trace(msg)
                     line.startsWith("fun ") || line.startsWith("class ") ||
                     line.startsWith("interface ") || line.startsWith("object ")
         }
-        val (fieldLines, memberLines) = declLines.partition { line ->
-            line.startsWith("val ") || line.startsWith("var ")
+
+        // In Kotlin, top-level val/var are lazily initialized in dependency order.
+        // fun/class are also resolved regardless of order.
+        // So: put ALL declarations at top-level, and model expressions in execute().
+        val topDecls = buildString {
+            // Simple val/var first
+            declLines.filter { it.trim().startsWith("val ") || it.trim().startsWith("var ") }
+                .forEach { appendLine("${it.trim()}") }
+            // Then fun/class/interface/object from first pass
+            if (declarations.isNotEmpty()) {
+                declarations.forEach { appendLine("${it}") }
+            }
+            // Then fun/class/interface/object from expressions
+            declLines.filter { !it.trim().startsWith("val ") && !it.trim().startsWith("var ") }
+                .forEach { appendLine("${it.trim()}") }
         }
+
         val scriptBody = buildString {
             if (modelExpressions.isEmpty()) {
                 appendLine("            emptyList<Model>()")
@@ -396,10 +421,6 @@ fun trace(msg: String) = bindings.trace(msg)
                 appendLine("            __models")
             }
         }
-
-        val fieldBlock = if (fieldLines.isNotEmpty()) "\n    ${fieldLines.joinToString("\n    ")}" else ""
-        val declBlock = if (declarations.isNotEmpty()) "\n    ${declarations.joinToString("\n    ")}" else ""
-        val memberBlock = "$declBlock" + if (memberLines.isNotEmpty()) "\n    ${memberLines.joinToString("\n    ")}" else ""
 
         return """$fileImports
 infix fun Model?.union(other: Model?) = (this ?: emptyModel()).addModel(other ?: emptyModel())
@@ -440,7 +461,9 @@ fun deg(degrees: Number) = bindings.deg(degrees)
 fun importStl(path: String, color: String? = null) = bindings.importStl(path, color)
 fun trace(msg: String) = bindings.trace(msg)
 
-class DslScript {$fieldBlock$memberBlock
+$topDecls
+
+class DslScript {
 
     fun execute(): List<Model> = scriptRun {
 $scriptBody
@@ -455,8 +478,8 @@ $scriptBody
         var count = 0
         for (c in s) {
             when (c) {
-                '{', '(' -> count++
-                '}', ')' -> count--
+                '{' -> count++
+                '}' -> count--
             }
         }
         return count
@@ -484,6 +507,7 @@ $scriptBody
         val compilerOutput = String(baos.toByteArray())
 
         if (exitCode.getCode() != 0) {
+            // Keep source file for debugging
             println("===== SCRIPT COMPILE ERROR =====")
             println(compilerOutput)
             println("===== END SCRIPT COMPILE ERROR =====")
