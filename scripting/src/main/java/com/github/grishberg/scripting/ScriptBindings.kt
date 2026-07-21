@@ -149,13 +149,22 @@ class ScriptBindings {
      * @param rows количество рядов (default 3)
      * @param centerCol центральный столбец для кривизны (default 2)
      * @param centerRow центральный ряд для кривизны (default 1)
-     * @param rowCurvature кривизна рядов (default 2.0)
-     * @param tentingAngle угол наклона (default 3.0)
+     * @param rowCurvature кривизна рядов (default 20.1)
+     * @param columnCurvature кривизна колонок (default 12.1)
+     * @param tentingAngle угол наклона (default 8.0)
+     * @param plateZOffset смещение клавиш по Z (default 8.0)
+     * @param plateThickness толщина платы (default 2.0)
+     * @param saProfileKeyHeight высота SA профиля (default 4.5)
+     * @param isLowProfile режим low-profile (default true)
+     * @param bordersOffset отступ бордеров (default 4.0)
      * @param thumbType тип thumb-кластера
-     * @param thumbXOffset смещение thumb по X (default -10.0)
+     * @param thumbXOffset смещение thumb по X (default 0.0)
      * @param thumbYOffset смещение thumb по Y (default -50.0)
-     * @param thumbYRotation поворот thumb по Y (default -30.0)
-     * @param thumbZRotation поворот thumb по Z (default 10.0)
+     * @param thumbZOffset смещение thumb по Z (default 37.0)
+     * @param thumbYRotation поворот thumb по Y (default -45.0)
+     * @param thumbZRotation поворот thumb по Z (default 18.0)
+     * @param thumbArcRadiusY радиус дуги Y (default -80.0)
+     * @param thumbArcRadiusZ радиус дуги Z (default 0.0)
      * @param onStep лямбда для отладки: получает название шага
      */
     fun buildMatrixRight(
@@ -163,14 +172,23 @@ class ScriptBindings {
         rows: Int = 3,
         centerCol: Int = 2,
         centerRow: Int = 1,
-        rowCurvature: Number = 2.0,
-        tentingAngle: Number = 3.0,
+        rowCurvature: Number = 20.1,
+        columnCurvature: Number = 12.1,
+        tentingAngle: Number = 8.0,
+        plateZOffset: Number = 8.0,
+        plateThickness: Number = 2.0,
+        saProfileKeyHeight: Number = 4.5,
+        isLowProfile: Boolean = true,
+        bordersOffset: Number = 4.0,
         thumbType: com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode =
             com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode.SingleColumn3Buttons,
-        thumbXOffset: Number = -10.0,
+        thumbXOffset: Number = 0.0,
         thumbYOffset: Number = -50.0,
-        thumbYRotation: Number = -30.0,
-        thumbZRotation: Number = 10.0,
+        thumbZOffset: Number = 37.0,
+        thumbYRotation: Number = -45.0,
+        thumbZRotation: Number = 18.0,
+        thumbArcRadiusY: Number = -80.0,
+        thumbArcRadiusZ: Number = 0.0,
         onStep: ((String) -> Unit)? = null,
     ): Model {
         val step = onStep ?: { _ -> }
@@ -180,17 +198,17 @@ class ScriptBindings {
             stlFn = 60,
             powerSwitcherType = com.github.grishberg.cad3d.plugin.cfg.PowerSwitcherType.None,
             isMagneticWristRestHolder = false,
-            bordersOffset = 0.0,
+            bordersOffset = bordersOffset.toDouble(),
             visibleKeyboardParts = setOf(com.github.grishberg.cad3d.plugin.cfg.KeyboardPart.KeyMatrix),
             modifiedKeyboardParts = emptySet(),
             thumbClusterSettings = com.github.grishberg.cad3d.plugin.cfg.ThumbClusterSettings(
                 xOffset = thumbXOffset.toDouble(),
                 yOffset = thumbYOffset.toDouble(),
-                zOffset = 37.0,
+                zOffset = thumbZOffset.toDouble(),
                 rotateY = thumbYRotation.toDouble(),
                 rotateZ = thumbZRotation.toDouble(),
-                arcRadiusZ = 0.0,
-                arcRadiusY = 0.0,
+                arcRadiusZ = thumbArcRadiusZ.toDouble(),
+                arcRadiusY = thumbArcRadiusY.toDouble(),
                 spaceBetweenKey = 6.5,
                 type = thumbType,
             ),
@@ -207,10 +225,10 @@ class ScriptBindings {
             controllerType = com.github.grishberg.cad3d.plugin.cfg.ControllerType.SuperMiniNRF52840,
             innerBatteryType = com.github.grishberg.cad3d.plugin.cfg.BatteryType.None,
             keyPlaceConfig = com.github.grishberg.cad3d.kbd.core.cfg.KeyPlaceConfig(
-                plateZOffset = 0.0,
+                plateZOffset = plateZOffset.toDouble(),
                 rowCurvature = rowCurvature.toDouble(),
                 tentingAngle = tentingAngle.toDouble(),
-                columnCurvature = 0.0,
+                columnCurvature = columnCurvature.toDouble(),
                 keyswitchHeight = 18.0,
                 keyswitchWidth = 18.0,
                 extraWidth = 2.5,
@@ -222,13 +240,13 @@ class ScriptBindings {
                 verticalExtraSpace = 1.0,
                 zAngleProvider = com.github.grishberg.cad3d.kbd.core.cfg.KeyZAngleProvider(),
                 columnOffsetProvider = com.github.grishberg.cad3d.kbd.core.cfg.KeyOffsetProvider(),
-                plateThickness = 1.6,
-                saProfileKeyHeight = 17.5,
+                plateThickness = plateThickness.toDouble(),
+                saProfileKeyHeight = saProfileKeyHeight.toDouble(),
                 columnsCount = columns,
                 rowsCount = rows,
                 centerCol = centerCol,
                 centerRow = centerRow,
-                isLowProfile = false,
+                isLowProfile = isLowProfile,
                 isHasHotswap = false,
                 keyPlaceholderType = com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType.None,
             ),
