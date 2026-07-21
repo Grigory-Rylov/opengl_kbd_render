@@ -60,8 +60,32 @@ val kpRowRadius = ((mountHeight + extraWidth) / 2.0) / sin(Math.toRadians(rowCur
 fun kpCalcYAngle(col: Int) = columnCurvature * (centerCol - col)
 fun kpCalcXAngle(row: Int) = rowCurvature * (centerRow - row)
 
+fun kpColumnOffset(col: Int): V3d {
+    return when (col) {
+        0 -> V3d(-6.0, -7.8, 3.0)
+        1 -> V3d(-2.0, -5.8, 3.0)
+        2 -> V3d(1.5, 2.82, -3.5)
+        3 -> V3d(6.0, -2.0, 0.0)
+        4 -> V3d(9.5, -15.0, 5.64)
+        5 -> V3d(14.0, -20.0, 5.64)
+        else -> V3d(0.0, -2.0, 0.0)
+    }
+}
+
+fun kpZAngle(col: Int): Double {
+    return when (col) {
+        0 -> 4.0
+        1 -> 2.0
+        3 -> -7.0
+        4 -> -13.0
+        5 -> -15.0
+        else -> 0.0
+    }
+}
+
 fun kpPlace(col: Int, row: Int, obj: Model): Model {
-    return obj.move(0, 0, -kpRowRadius).rotate(Angles3d.xOnly(kpCalcXAngle(row))).move(0, 0, kpRowRadius).move(0, 0, -kpColumnRadius).rotate(Angles3d.yOnly(kpCalcYAngle(col))).move(0, 0, kpColumnRadius).rotate(Angles3d.yOnly(tentingAngle)).move(0, 0, plateZOffset)
+    val co = kpColumnOffset(col)
+    return obj.move(0, 0, -kpRowRadius).rotate(Angles3d.xOnly(kpCalcXAngle(row))).move(0, 0, kpRowRadius).move(0, 0, -kpColumnRadius).rotate(Angles3d.yOnly(kpCalcYAngle(col))).move(0, 0, kpColumnRadius).move(co.x, co.y, co.z).rotate(Angles3d.zOnly(kpZAngle(col))).rotate(Angles3d.yOnly(tentingAngle)).move(0, 0, plateZOffset)
 }
 
 fun kpCoords(col: Int, row: Int, init: V3d = V3d(0.0, 0.0, 0.0)): V3d {
