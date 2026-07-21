@@ -1,20 +1,24 @@
-// Пример DSL-скрипта для 3D-моделирования
-// Компилируется и выполняется на лету через ScriptEvaluator
+// case.kt — функция для генерации корпуса клавиатуры
 
-val base = bindings.cube(100.0, 60.0, 15.0)
+fun case(): Model {
+    val base = cube(180.0, 140.0, 10.0)
+        .move(0.0, 0.0, 5.0)
+        .withColor(Color.GRAY)
 
-val hole = bindings.cylinder(20.0, 3.0).move(0.0, 0.0, 0.0)
+    val lip = cube(180.0, 140.0, 6.0)
+        .move(0.0, 0.0, 4.0)
+        .withColor(Color.GRAY)
 
-val leg1 = bindings.cylinder(8.0, 4.0).moveZ(-8.0)
-val leg2 = leg1.moveX(85.0).moveY(46.0)
-val leg3 = leg1.moveX(-85.0).moveY(46.0)
-val leg4 = leg1.moveX(85.0).moveY(-46.0)
-val leg5 = leg1.moveX(-85.0).moveY(-46.0)
+    val backWall = cube(180.0, 12.0, 24.0)
+        .move(0.0, -64.0, 12.0)
+        .withColor(Color.GRAY)
 
-base
-    .subtractModel(hole)
-    .addModel(leg1)
-    .addModel(leg2)
-    .addModel(leg3)
-    .addModel(leg4)
-    .addModel(leg5)
+    val corners = listOf(
+        cube(8.0, 8.0, 20.0).move(-86.0, -66.0, 10.0),
+        cube(8.0, 8.0, 20.0).move(86.0, -66.0, 10.0),
+        cube(8.0, 8.0, 20.0).move(-86.0, 66.0, 10.0),
+        cube(8.0, 8.0, 20.0).move(86.0, 66.0, 10.0)
+    ).map { it.withColor(Color.GRAY) }
+
+    return union(listOf(base, lip, backWall) + corners)
+}

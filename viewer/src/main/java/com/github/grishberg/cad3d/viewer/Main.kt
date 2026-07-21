@@ -163,6 +163,18 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
         return null
     }
 
+    private fun findScriptDir(): String? {
+        var dir = java.io.File(System.getProperty("user.dir"))
+        repeat(6) {
+            val candidate = dir.resolve("scripting/examples")
+            if (candidate.exists() && candidate.isDirectory) {
+                return candidate.absolutePath
+            }
+            dir = dir.parentFile ?: return null
+        }
+        return null
+    }
+
     private fun loadMatrixRightText(): String {
         val file = findUserScriptFile()
         return if (file != null) {
@@ -176,14 +188,14 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
         }
     }
 
-    private fun createScriptEditorPanel(initialScript: String = loadMatrixRightText()): ScriptEditorPanel {
+    private fun createScriptEditorPanel(initialScript: String = loadMatrixRightText(), scriptDirectory: String? = null): ScriptEditorPanel {
         val classPaths = filterScriptClasspath()
 
         return ScriptEditorPanel(classPaths, { holders ->
             vertexHolderList.clear()
             vertexHolderList.addAll(holders)
             requestRender()
-        }, initialScript)
+        }, initialScript, scriptDirectory)
     }
 
     fun setup() {
@@ -251,7 +263,7 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
             val f = java.io.File(lastScript)
             if (f.exists()) {
                 try {
-                    scriptEditorPanel = createScriptEditorPanel(f.readText())
+                    scriptEditorPanel = createScriptEditorPanel(f.readText(), f.parent)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -288,7 +300,7 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
         try {
             val text = file.readText()
             if (!::scriptEditorPanel.isInitialized) {
-                scriptEditorPanel = createScriptEditorPanel(text)
+                scriptEditorPanel = createScriptEditorPanel(text, file.parent)
             } else {
                 scriptEditorPanel.loadScript(text)
             }
@@ -304,7 +316,7 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
 
     private fun showScriptPanel() {
         if (!::scriptEditorPanel.isInitialized) {
-            scriptEditorPanel = createScriptEditorPanel()
+            scriptEditorPanel = createScriptEditorPanel(scriptDirectory = findScriptDir())
         }
         if (splitPane == null) {
             // Переносим GLCanvas из CENTER в сплиттер вместе с панелью кода

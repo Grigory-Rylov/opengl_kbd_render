@@ -36,10 +36,10 @@ val holes = repeat(ys.size) { i ->
 }
 
 // Imported STL placed above the body
-val post = importStl("5U+Vertical+Post.stl")
+// val post = importStl("5U+Vertical+Post.stl")
 
 place(prism(4.0, nutDiameter / 2.0, 6)).move(0,0,4).withColor(Color.RED)
 place(cylinder(2.0, holeDiameter / 2.0)).withColor(Color.YELLOW)
 
-post
+case()
 //body.subtractModel(nuts).subtractModel(holes).addModel(post)
