@@ -60,6 +60,7 @@ class ScriptEditorPanel(
     private var isModified = false
     private var scriptDirectory: String? = scriptDir
     private var lastHolders: List<VertexHolder> = emptyList()
+    private val scriptDirectory: String? = scriptDir
 
     init {
         border = BorderFactory.createTitledBorder("Script Editor")
