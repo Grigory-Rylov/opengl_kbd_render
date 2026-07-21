@@ -16,6 +16,7 @@ data class ScriptResult(
     val error: String? = null,
     val stdout: String = "",
     val compilationTimeMs: Long = 0,
+    val traceMessages: List<String> = emptyList(),
 ) {
     // Backward-compatible single-model accessor.
     val model: Model? get() = models.firstOrNull()
@@ -42,8 +43,9 @@ class ScriptEvaluator(
             val models = executeCompiled(outputDir)
             ScriptResult(
                 models = models,
-                compilationTimeMs = System.currentTimeMillis() - start
-            )
+                compilationTimeMs = System.currentTimeMillis() - start,
+                traceMessages = bindings.traceMessages.toList()
+            ).also { bindings.traceMessages.clear() }
         } catch (e: Exception) {
             ScriptResult(
                 error = buildErrorString(e),
@@ -57,6 +59,7 @@ class ScriptEvaluator(
     }
 
     private val baseImports = """
+import kotlin.math.*
 import com.github.grishberg.javascad.models.*
 import com.github.grishberg.javascad.coords.*
 import com.github.grishberg.javascad.tranzitions.*
@@ -140,6 +143,7 @@ fun angles(x: Number = 0.0, y: Number = 0.0, z: Number = 0.0) = bindings.angles(
 fun repeat(count: Int, block: (Int) -> Model) = bindings.repeat(count, block)
 fun deg(degrees: Number) = bindings.deg(degrees)
 fun importStl(path: String, color: String? = null) = bindings.importStl(path, color)
+fun trace(msg: String) = bindings.trace(msg)
 
 """
 
@@ -197,7 +201,6 @@ fun importStl(path: String, color: String? = null) = bindings.importStl(path, co
         } + sharedStub
 
         val args = arrayOf(
-            "-no-stdlib",
             "-no-reflect",
             "-cp", extraClasspath,
             "-d", outputDir.absolutePath,
@@ -334,13 +337,42 @@ fun importStl(path: String, color: String? = null) = bindings.importStl(path, co
                 }
                 firstDeclLine = false
             } else {
-                if (current.isNotEmpty()) current.append('\n')
-                current.append(line)
-                depth += countBraces(l)
-                if (depth <= 0 && l.isNotEmpty()) {
-                    rawExpressions.add(current.toString())
-                    current = StringBuilder()
-                    depth = 0
+                val isContinuation = l.startsWith(".")
+                if (isContinuation) {
+                    // Method chaining continuation — merge back if we already finalized
+                    if (current.isEmpty() && rawExpressions.isNotEmpty()) {
+                        current.append(rawExpressions.removeAt(rawExpressions.lastIndex))
+                    } else if (current.isNotEmpty()) {
+                        current.append('\n')
+                    }
+                    current.append(line)
+                    depth += countBraces(l)
+                } else {
+                    // If depth > 0, we're inside { ... } — continue current expression
+                    if (depth > 0) {
+                        current.append('\n')
+                        current.append(line)
+                        depth += countBraces(l)
+                        if (depth <= 0 && l.isNotEmpty()) {
+                            rawExpressions.add(current.toString())
+                            current = StringBuilder()
+                            depth = 0
+                        }
+                    } else {
+                        // New expression — finalize previous if any
+                        if (current.isNotEmpty()) {
+                            rawExpressions.add(current.toString())
+                            current = StringBuilder()
+                            depth = 0
+                        }
+                        current.append(line)
+                        depth += countBraces(l)
+                        if (depth <= 0 && l.isNotEmpty()) {
+                            rawExpressions.add(current.toString())
+                            current = StringBuilder()
+                            depth = 0
+                        }
+                    }
                 }
             }
         }
@@ -360,9 +392,23 @@ fun importStl(path: String, color: String? = null) = bindings.importStl(path, co
                     line.startsWith("fun ") || line.startsWith("class ") ||
                     line.startsWith("interface ") || line.startsWith("object ")
         }
-        val (fieldLines, memberLines) = declLines.partition { line ->
-            line.startsWith("val ") || line.startsWith("var ")
+
+        // In Kotlin, top-level val/var are lazily initialized in dependency order.
+        // fun/class are also resolved regardless of order.
+        // So: put ALL declarations at top-level, and model expressions in execute().
+        val topDecls = buildString {
+            // Simple val/var first
+            declLines.filter { it.trim().startsWith("val ") || it.trim().startsWith("var ") }
+                .forEach { appendLine("${it.trim()}") }
+            // Then fun/class/interface/object from first pass
+            if (declarations.isNotEmpty()) {
+                declarations.forEach { appendLine("${it}") }
+            }
+            // Then fun/class/interface/object from expressions
+            declLines.filter { !it.trim().startsWith("val ") && !it.trim().startsWith("var ") }
+                .forEach { appendLine("${it.trim()}") }
         }
+
         val scriptBody = buildString {
             if (modelExpressions.isEmpty()) {
                 appendLine("            emptyList<Model>()")
@@ -375,10 +421,6 @@ fun importStl(path: String, color: String? = null) = bindings.importStl(path, co
                 appendLine("            __models")
             }
         }
-
-        val fieldBlock = if (fieldLines.isNotEmpty()) "\n    ${fieldLines.joinToString("\n    ")}" else ""
-        val declBlock = if (declarations.isNotEmpty()) "\n    ${declarations.joinToString("\n    ")}" else ""
-        val memberBlock = "$declBlock" + if (memberLines.isNotEmpty()) "\n    ${memberLines.joinToString("\n    ")}" else ""
 
         return """$fileImports
 infix fun Model?.union(other: Model?) = (this ?: emptyModel()).addModel(other ?: emptyModel())
@@ -417,8 +459,11 @@ fun angles(x: Number = 0.0, y: Number = 0.0, z: Number = 0.0) = bindings.angles(
 fun repeat(count: Int, block: (Int) -> Model) = bindings.repeat(count, block)
 fun deg(degrees: Number) = bindings.deg(degrees)
 fun importStl(path: String, color: String? = null) = bindings.importStl(path, color)
+fun trace(msg: String) = bindings.trace(msg)
 
-class DslScript {$fieldBlock$memberBlock
+$topDecls
+
+class DslScript {
 
     fun execute(): List<Model> = scriptRun {
 $scriptBody
@@ -433,8 +478,8 @@ $scriptBody
         var count = 0
         for (c in s) {
             when (c) {
-                '{', '(' -> count++
-                '}', ')' -> count--
+                '{' -> count++
+                '}' -> count--
             }
         }
         return count
@@ -449,7 +494,6 @@ $scriptBody
         }
 
         val args = arrayOf(
-            "-no-stdlib",
             "-no-reflect",
             "-cp", extraClasspath,
             "-d", outputDir.absolutePath,
@@ -463,6 +507,7 @@ $scriptBody
         val compilerOutput = String(baos.toByteArray())
 
         if (exitCode.getCode() != 0) {
+            // Keep source file for debugging
             println("===== SCRIPT COMPILE ERROR =====")
             println(compilerOutput)
             println("===== END SCRIPT COMPILE ERROR =====")

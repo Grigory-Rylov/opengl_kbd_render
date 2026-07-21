@@ -58,6 +58,7 @@ class ScriptEditorPanel(
     private val evaluator = ScriptEvaluator(classPaths)
 
     private var isModified = false
+    private var scriptDirectory: String? = scriptDir
     private var lastHolders: List<VertexHolder> = emptyList()
     private val scriptDirectory: String? = scriptDir
 
@@ -193,7 +194,7 @@ class ScriptEditorPanel(
     }
 
     private fun concatenateSiblingScripts(mainSource: String): String {
-        if (scriptDirectory == null) return mainSource
+        if (scriptDirectory.isNullOrEmpty()) return mainSource
         val dir = java.io.File(scriptDirectory)
         if (!dir.isDirectory) return mainSource
 
@@ -203,8 +204,7 @@ class ScriptEditorPanel(
 
         if (siblingFiles.isEmpty()) return mainSource
 
-        val siblingContents = siblingFiles.joinToString("\n\n") { it.readText() }
-        return "$siblingContents\n\n$mainSource"
+        return siblingFiles.joinToString("\n\n") { it.readText() } + "\n\n" + mainSource
     }
 
     fun runScript() {
@@ -241,7 +241,14 @@ class ScriptEditorPanel(
                         onModelReady(holders)
                         statusLabel.text = "OK (${result.compilationTimeMs}ms, $totalVerts вершин, ${holders.size} фигур)"
                         statusLabel.foreground = AwtColor.GREEN
-                        setOutput("OK (${result.compilationTimeMs}ms, $totalVerts вершин, ${holders.size} фигур)")
+                        val output = buildString {
+                            appendLine("OK (${result.compilationTimeMs}ms, $totalVerts вершин, ${holders.size} фигур)")
+                            if (result.traceMessages.isNotEmpty()) {
+                                appendLine("---")
+                                result.traceMessages.forEach { appendLine(it) }
+                            }
+                        }
+                        setOutput(output)
                         isModified = false
                     } catch (e: Exception) {
                         val msg = "Ошибка конвертации: ${e.message}"
@@ -252,21 +259,29 @@ class ScriptEditorPanel(
                 } else {
                     statusLabel.text = "Null model"
                     statusLabel.foreground = AwtColor.ORANGE
-                    setOutput("Модель не построена (null). ${result.compilationTimeMs}ms")
+                    val output = buildString {
+                        appendLine("Модель не построена (null). ${result.compilationTimeMs}ms")
+                        if (result.traceMessages.isNotEmpty()) {
+                            appendLine("---")
+                            result.traceMessages.forEach { appendLine(it) }
+                        }
+                    }
+                    setOutput(output)
                 }
             }
         }.start()
     }
 
-    fun loadScript(text: String) {
+    fun loadScript(text: String, directory: String? = scriptDirectory) {
         scriptText.text = text
+        scriptDirectory = directory
         isModified = false
     }
 
     private fun findSaveDir(): java.io.File {
         var dir = java.io.File(System.getProperty("user.dir"))
         repeat(6) {
-            val candidate = dir.resolve("scripting/examples")
+            val candidate = dir.resolve("scripting/sandbox")
             if (candidate.exists() && candidate.isDirectory) {
                 return candidate
             }
@@ -276,7 +291,8 @@ class ScriptEditorPanel(
     }
 
     private fun saveScript() {
-        val file = findSaveDir().resolve("user_script.kt")
+        val dir = scriptDirectory?.let { java.io.File(it) }.takeIf { it?.isDirectory == true } ?: findSaveDir()
+        val file = dir.resolve("user_script.kt")
         try {
             file.writeText(scriptText.text)
             isModified = false

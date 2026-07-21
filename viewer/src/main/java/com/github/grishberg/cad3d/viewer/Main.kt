@@ -154,7 +154,7 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
     private fun findUserScriptFile(): java.io.File? {
         var dir = java.io.File(System.getProperty("user.dir"))
         repeat(6) {
-            val candidate = dir.resolve("scripting/examples/user_script.kt")
+            val candidate = dir.resolve("scripting/sandbox/user_script.kt")
             if (candidate.exists() && candidate.isFile) {
                 return candidate
             }
@@ -166,7 +166,7 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
     private fun findScriptDir(): String? {
         var dir = java.io.File(System.getProperty("user.dir"))
         repeat(6) {
-            val candidate = dir.resolve("scripting/examples")
+            val candidate = dir.resolve("scripting/sandbox")
             if (candidate.exists() && candidate.isDirectory) {
                 return candidate.absolutePath
             }
@@ -302,7 +302,7 @@ body.subtractModel(nuts).subtractModel(holes).addModel(post)
             if (!::scriptEditorPanel.isInitialized) {
                 scriptEditorPanel = createScriptEditorPanel(text, file.parent)
             } else {
-                scriptEditorPanel.loadScript(text)
+                scriptEditorPanel.loadScript(text, file.parent)
             }
             settingsHolder.lastScriptFile = file.absolutePath
             settingsHolder.saveSettings()
