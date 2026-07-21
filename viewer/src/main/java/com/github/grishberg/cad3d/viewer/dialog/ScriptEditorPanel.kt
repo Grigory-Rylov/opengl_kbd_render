@@ -33,6 +33,7 @@ class ScriptEditorPanel(
     private val classPaths: List<String>,
     private val onModelReady: (List<VertexHolder>) -> Unit,
     initialScript: String = "",
+    scriptDir: String? = null,
 ) : JPanel(BorderLayout()) {
 
     companion object {
@@ -57,6 +58,7 @@ class ScriptEditorPanel(
     private val evaluator = ScriptEvaluator(classPaths)
 
     private var isModified = false
+    private var scriptDirectory: String? = scriptDir
     private var lastHolders: List<VertexHolder> = emptyList()
 
     init {
@@ -190,6 +192,20 @@ class ScriptEditorPanel(
         errorArea.text = text
     }
 
+    private fun concatenateSiblingScripts(mainSource: String): String {
+        if (scriptDirectory.isNullOrEmpty()) return mainSource
+        val dir = java.io.File(scriptDirectory)
+        if (!dir.isDirectory) return mainSource
+
+        val siblingFiles = dir.listFiles { _, name ->
+            name.endsWith(".kt") && name != "user_script.kt"
+        }?.sortedBy { it.name } ?: emptyList()
+
+        if (siblingFiles.isEmpty()) return mainSource
+
+        return siblingFiles.joinToString("\n\n") { it.readText() } + "\n\n" + mainSource
+    }
+
     fun runScript() {
         runButton.isEnabled = false
         statusLabel.text = "Рендеринг..."
@@ -205,7 +221,8 @@ class ScriptEditorPanel(
             }
 
             val source = scriptText.text
-            val result = evaluator.evaluate(source)
+            val concatenatedSource = concatenateSiblingScripts(source)
+            val result = evaluator.evaluate(concatenatedSource)
             val err = result.error
             val models = result.models
 
@@ -240,15 +257,16 @@ class ScriptEditorPanel(
         }.start()
     }
 
-    fun loadScript(text: String) {
+    fun loadScript(text: String, directory: String? = scriptDirectory) {
         scriptText.text = text
+        scriptDirectory = directory
         isModified = false
     }
 
     private fun findSaveDir(): java.io.File {
         var dir = java.io.File(System.getProperty("user.dir"))
         repeat(6) {
-            val candidate = dir.resolve("scripting/examples")
+            val candidate = dir.resolve("scripting/sandbox")
             if (candidate.exists() && candidate.isDirectory) {
                 return candidate
             }
@@ -258,7 +276,8 @@ class ScriptEditorPanel(
     }
 
     private fun saveScript() {
-        val file = findSaveDir().resolve("user_script.kt")
+        val dir = scriptDirectory?.let { java.io.File(it) }.takeIf { it?.isDirectory == true } ?: findSaveDir()
+        val file = dir.resolve("user_script.kt")
         try {
             file.writeText(scriptText.text)
             isModified = false
