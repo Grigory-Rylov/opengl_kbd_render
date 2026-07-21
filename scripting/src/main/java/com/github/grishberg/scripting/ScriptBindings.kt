@@ -18,6 +18,12 @@ import com.github.grishberg.javascad.utils.Color
  */
 class ScriptBindings {
 
+    val traceMessages = mutableListOf<String>()
+
+    fun trace(msg: String) {
+        traceMessages.add("[TRACE] $msg")
+    }
+
     // Примитивы
     fun cube(size: Number): Model = Cube(size.toDouble())
     fun cube(x: Number, y: Number, z: Number): Model =

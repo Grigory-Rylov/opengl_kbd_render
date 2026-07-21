@@ -240,7 +240,14 @@ class ScriptEditorPanel(
                         onModelReady(holders)
                         statusLabel.text = "OK (${result.compilationTimeMs}ms, $totalVerts вершин, ${holders.size} фигур)"
                         statusLabel.foreground = AwtColor.GREEN
-                        setOutput("OK (${result.compilationTimeMs}ms, $totalVerts вершин, ${holders.size} фигур)")
+                        val output = buildString {
+                            appendLine("OK (${result.compilationTimeMs}ms, $totalVerts вершин, ${holders.size} фигур)")
+                            if (result.traceMessages.isNotEmpty()) {
+                                appendLine("---")
+                                result.traceMessages.forEach { appendLine(it) }
+                            }
+                        }
+                        setOutput(output)
                         isModified = false
                     } catch (e: Exception) {
                         val msg = "Ошибка конвертации: ${e.message}"
@@ -251,7 +258,14 @@ class ScriptEditorPanel(
                 } else {
                     statusLabel.text = "Null model"
                     statusLabel.foreground = AwtColor.ORANGE
-                    setOutput("Модель не построена (null). ${result.compilationTimeMs}ms")
+                    val output = buildString {
+                        appendLine("Модель не построена (null). ${result.compilationTimeMs}ms")
+                        if (result.traceMessages.isNotEmpty()) {
+                            appendLine("---")
+                            result.traceMessages.forEach { appendLine(it) }
+                        }
+                    }
+                    setOutput(output)
                 }
             }
         }.start()

@@ -16,6 +16,7 @@ data class ScriptResult(
     val error: String? = null,
     val stdout: String = "",
     val compilationTimeMs: Long = 0,
+    val traceMessages: List<String> = emptyList(),
 ) {
     // Backward-compatible single-model accessor.
     val model: Model? get() = models.firstOrNull()
@@ -42,8 +43,9 @@ class ScriptEvaluator(
             val models = executeCompiled(outputDir)
             ScriptResult(
                 models = models,
-                compilationTimeMs = System.currentTimeMillis() - start
-            )
+                compilationTimeMs = System.currentTimeMillis() - start,
+                traceMessages = bindings.traceMessages.toList()
+            ).also { bindings.traceMessages.clear() }
         } catch (e: Exception) {
             ScriptResult(
                 error = buildErrorString(e),
@@ -141,6 +143,7 @@ fun angles(x: Number = 0.0, y: Number = 0.0, z: Number = 0.0) = bindings.angles(
 fun repeat(count: Int, block: (Int) -> Model) = bindings.repeat(count, block)
 fun deg(degrees: Number) = bindings.deg(degrees)
 fun importStl(path: String, color: String? = null) = bindings.importStl(path, color)
+fun trace(msg: String) = bindings.trace(msg)
 
 """
 
@@ -417,6 +420,7 @@ fun angles(x: Number = 0.0, y: Number = 0.0, z: Number = 0.0) = bindings.angles(
 fun repeat(count: Int, block: (Int) -> Model) = bindings.repeat(count, block)
 fun deg(degrees: Number) = bindings.deg(degrees)
 fun importStl(path: String, color: String? = null) = bindings.importStl(path, color)
+fun trace(msg: String) = bindings.trace(msg)
 
 class DslScript {$fieldBlock$memberBlock
 
