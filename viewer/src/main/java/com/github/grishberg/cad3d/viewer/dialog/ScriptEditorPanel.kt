@@ -60,7 +60,6 @@ class ScriptEditorPanel(
     private var isModified = false
     private var scriptDirectory: String? = scriptDir
     private var lastHolders: List<VertexHolder> = emptyList()
-    private val scriptDirectory: String? = scriptDir
 
     init {
         border = BorderFactory.createTitledBorder("Script Editor")
@@ -175,6 +174,26 @@ class ScriptEditorPanel(
         scriptText.registerKeyboardAction(
             ActionListener { exportStl() },
             javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F7, 0),
+            javax.swing.JComponent.WHEN_FOCUSED
+        )
+
+        // Ctrl+S (Linux/Win) key binding - save + rerender
+        scriptText.registerKeyboardAction(
+            ActionListener {
+                saveScript()
+                runScript()
+            },
+            javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_DOWN_MASK),
+            javax.swing.JComponent.WHEN_FOCUSED
+        )
+
+        // Cmd+S (macOS) key binding - save + rerender
+        scriptText.registerKeyboardAction(
+            ActionListener {
+                saveScript()
+                runScript()
+            },
+            javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.META_DOWN_MASK),
             javax.swing.JComponent.WHEN_FOCUSED
         )
     }
