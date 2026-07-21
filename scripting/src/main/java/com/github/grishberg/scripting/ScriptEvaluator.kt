@@ -57,6 +57,7 @@ class ScriptEvaluator(
     }
 
     private val baseImports = """
+import kotlin.math.*
 import com.github.grishberg.javascad.models.*
 import com.github.grishberg.javascad.coords.*
 import com.github.grishberg.javascad.tranzitions.*
@@ -197,7 +198,6 @@ fun importStl(path: String, color: String? = null) = bindings.importStl(path, co
         } + sharedStub
 
         val args = arrayOf(
-            "-no-stdlib",
             "-no-reflect",
             "-cp", extraClasspath,
             "-d", outputDir.absolutePath,
@@ -449,7 +449,6 @@ $scriptBody
         }
 
         val args = arrayOf(
-            "-no-stdlib",
             "-no-reflect",
             "-cp", extraClasspath,
             "-d", outputDir.absolutePath,
