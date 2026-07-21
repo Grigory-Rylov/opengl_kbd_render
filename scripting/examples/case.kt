@@ -1,7 +1,7 @@
 // case.kt — корпус для matrix_right, портирован из cad3d (Walls/OuterWallsBuilder)
 // Запуск: ./gradlew :scripting:run --args="examples/case.kt /tmp/case.stl"
 
-// === SHARED CONFIG (copy from sandbox/user_script.kt) ===
+// === SHARED CONFIG ===
 val plateZOffset = 8.0
 val rowCurvature = 20.1
 val tentingAngle = 8.0
@@ -71,25 +71,6 @@ fun kpPlace(col: Int, row: Int, obj: Model): Model {
     return obj.move(0, 0, -kpRowRadius).rotate(Angles3d.xOnly(kpCalcXAngle(row))).move(0, 0, kpRowRadius).move(0, 0, -kpColumnRadius).rotate(Angles3d.yOnly(kpCalcYAngle(col))).move(0, 0, kpColumnRadius).move(co.x, co.y, co.z).rotate(Angles3d.zOnly(kpZAngle(col))).rotate(Angles3d.yOnly(tentingAngle)).move(0, 0, plateZOffset)
 }
 
-// === KEY PLACEHOLDER CORNERS ===
-val KPH_CORNER_OFFSET = 18.5 / 2
-val KPH_OW = 18.0 + 2
-val KPH_OH = 18.0 + 2
-val KPH_WT = 1.5
-val KPH_TT = 4.0
-val KPH_KPTT = 3.0
-val KPH_CPTO = 2.0
-val KPH_BTO = 1.5 + 0.5
-
-fun kphBack(t: Double = KPH_WT): Model { return cube(KPH_OW, t, KPH_TT).move(0.0, KPH_CORNER_OFFSET + t, KPH_CPTO) }
-fun kphLeft(): Model { return cube(KPH_WT, KPH_OH, KPH_TT).move(-KPH_CORNER_OFFSET - KPH_WT, 0.0, KPH_CPTO) }
-fun kphRight(): Model { return cube(KPH_WT, KPH_OH, KPH_TT).move(KPH_CORNER_OFFSET + KPH_WT, 0.0, KPH_CPTO) }
-fun kphFront(): Model { return cube(KPH_OW, KPH_WT, KPH_TT).move(0.0, -KPH_CORNER_OFFSET - KPH_WT, KPH_CPTO) }
-fun kphBL(): Model { return cube(KPH_WT, KPH_WT, KPH_TT).move(-KPH_CORNER_OFFSET - KPH_WT, KPH_CORNER_OFFSET + KPH_WT, KPH_CPTO) }
-fun kphBR(): Model { return cube(KPH_WT, KPH_WT, KPH_TT).move(KPH_CORNER_OFFSET + KPH_WT, KPH_CORNER_OFFSET + KPH_WT, KPH_CPTO) }
-fun kphFL(): Model { return cube(KPH_WT, KPH_WT, KPH_TT).move(-KPH_CORNER_OFFSET - KPH_WT, -KPH_CORNER_OFFSET - KPH_WT, KPH_CPTO) }
-fun kphFR(): Model { return cube(KPH_WT, KPH_WT, KPH_TT).move(KPH_CORNER_OFFSET + KPH_WT, -KPH_CORNER_OFFSET - KPH_WT, KPH_CPTO) }
-
 // === THUMB KEY PLACE ===
 val thumbCoords = run {
     val l = mutableListOf<V3d>()
@@ -116,6 +97,20 @@ fun tL(obj: Model): Model { val a = tArc(thumbCoords[0]); return tSingle(obj, a)
 fun tSingle(obj: Model, a: TArc): Model =
     obj.rotate(0.0, a.ay, a.az).move(a.o).rotate(0.0, thumbRotateY, thumbRotateZ).move(thumbXOffset, thumbYOffset, thumbZOffset + plateZOffset)
 
+// === KEY CORNER HELPERS (from KeyPlaceholder) ===
+val KPH_CORNER_OFFSET = 18.5 / 2
+val KPH_WT = 1.5
+val KPH_CPTO = 2.0
+
+fun phBL(): Model = cube(KPH_WT, KPH_WT, KPH_WT).move(-KPH_CORNER_OFFSET - KPH_WT, KPH_CORNER_OFFSET + KPH_WT, KPH_CPTO)
+fun phBR(): Model = cube(KPH_WT, KPH_WT, KPH_WT).move(KPH_CORNER_OFFSET + KPH_WT, KPH_CORNER_OFFSET + KPH_WT, KPH_CPTO)
+fun phFL(): Model = cube(KPH_WT, KPH_WT, KPH_WT).move(-KPH_CORNER_OFFSET - KPH_WT, -KPH_CORNER_OFFSET - KPH_WT, KPH_CPTO)
+fun phFR(): Model = cube(KPH_WT, KPH_WT, KPH_WT).move(KPH_CORNER_OFFSET + KPH_WT, -KPH_CORNER_OFFSET - KPH_WT, KPH_CPTO)
+fun phBack(): Model = cube(KPH_WT, KPH_WT, KPH_WT).move(0.0, KPH_CORNER_OFFSET + KPH_WT, KPH_CPTO)
+fun phFront(): Model = cube(KPH_WT, KPH_WT, KPH_WT).move(0.0, -KPH_CORNER_OFFSET - KPH_WT, KPH_CPTO)
+fun phLeft(): Model = cube(KPH_WT, KPH_WT, KPH_WT).move(-KPH_CORNER_OFFSET - KPH_WT, 0.0, KPH_CPTO)
+fun phRight(): Model = cube(KPH_WT, KPH_WT, KPH_WT).move(KPH_CORNER_OFFSET + KPH_WT, 0.0, KPH_CPTO)
+
 // === CASE WALLS SETTINGS (from cad3d WallsSettings) ===
 val bottomBorderHeight = 1.0
 val outerVerticalOffset = 10.0
@@ -130,12 +125,8 @@ val borderZOffset = -2.0
 val outerLeftOffset = 15.0
 val outerRightOffset = 15.0
 val topEdgeOffsetZ = 0.0
-val isSkeletonMode = false
 
 // === CASE HELPERS ===
-fun borderObj(): Model = cylinder(borderThickness, borderHeight)
-fun sphereBorder(): Model = sphere(borderThickness / 2.0)
-fun bottomCylinder(): Model = cylinder(borderThickness, bottomBorderHeight)
 fun List<Model>.merge(): Model {
     if (isEmpty()) return emptyModel()
     var r = this[0]
@@ -143,77 +134,243 @@ fun List<Model>.merge(): Model {
     return r
 }
 
-fun topBorderObj(obj: Model): Model = sphereBorder().move(obj.move)
-fun topBorderObj(point: V3d): Model = sphereBorder().move(point)
+fun sphereBorder(): Model = sphere(borderThickness / 2.0)
+fun borderObj(): Model = cylinder(borderThickness, borderHeight)
+fun bottomCyl(): Model = cylinder(borderThickness, bottomBorderHeight)
 
-fun verticalCube(obj: Model): Model = borderObj().moveZ(topEdgeOffsetZ).move(obj.move)
+fun topBorder(obj: Model): Model = sphereBorder().move(obj.move)
+fun vertCube(obj: Model): Model = borderObj().moveZ(topEdgeOffsetZ).move(obj.move)
 
-fun bottomPoint(obj: Model): Model = bottomCylinder().moveZ(bottomBorderHeight / 2).move(obj.move)
+// Default bottom edge patcher: projects point to Z=bottomBorderHeight/2
+fun bottomPoint(obj: Model): Model {
+    val p = obj.move
+    return bottomCyl().move(V3d(p.x, p.y, bottomBorderHeight / 2))
+}
 
-// === CASE WALLS (simplified from OuterWallsBuilder) ===
-fun caseBackWall(col: Int): Model {
-    val left = kpPlace(col, 0, cube(borderThickness, borderThickness, borderThickness).move(0.0, outerVerticalOffset, outerBorderZOffset))
-    val right = kpPlace(col, 0, cube(borderThickness, borderThickness, borderThickness).move(0.0, outerVerticalOffset, outerBorderZOffset))
-    return hull(
-        topBorderObj(left), topBorderObj(right),
-        verticalCube(kpPlace(col, 0, cube(borderThickness, borderThickness, borderThickness).move(0.0, verticalOffset, borderZOffset))),
-        verticalCube(kpPlace(col, 0, cube(borderThickness, borderThickness, borderThickness).move(0.0, verticalOffset, borderZOffset))),
+// === WALL BUILDERS (from cad3d OuterWallsBuilder) ===
+
+// Back wall for a single column (row 0)
+fun wallBack(col: Int): Model {
+    val left = kpPlace(col, 0, phBL().move(0.0, outerVerticalOffset, outerBorderZOffset))
+    val right = kpPlace(col, 0, phBR().move(0.0, outerVerticalOffset, outerBorderZOffset))
+
+    val border = hull(
+        topBorder(left), topBorder(right),
+        vertCube(kpPlace(col, 0, phBL().move(0.0, verticalOffset, borderZOffset))),
+        vertCube(kpPlace(col, 0, phBR().move(0.0, verticalOffset, borderZOffset)))
+    )
+    val wall = hull(
+        topBorder(left), topBorder(right),
         bottomPoint(left), bottomPoint(right)
     )
+    return border.addModel(wall)
 }
 
-fun caseLeftWall(row: Int): Model {
-    val top = kpPlace(0, row, cube(borderThickness, borderThickness, borderThickness).move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
-    val bottom = kpPlace(0, row, cube(borderThickness, borderThickness, borderThickness).move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
-    return hull(
-        topBorderObj(top), topBorderObj(bottom),
-        bottomPoint(top), bottomPoint(bottom)
+// Left wall for a single row (col 0)
+fun wallLeft(row: Int): Model {
+    val back = kpPlace(0, row, phBL().move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
+    val front = kpPlace(0, row, phFL().move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
+
+    val border = hull(
+        topBorder(back), topBorder(front),
+        vertCube(kpPlace(0, row, phBL().move(-leftOffset, 0.0, borderZOffset))),
+        vertCube(kpPlace(0, row, phFL().move(-leftOffset, 0.0, borderZOffset)))
     )
-}
-
-fun caseRightWall(row: Int): Model {
-    val top = kpPlace(columnsCount - 1, row, cube(borderThickness, borderThickness, borderThickness).move(outerHorizontalOffset, 0.0, outerBorderZOffset))
-    val bottom = kpPlace(columnsCount - 1, row, cube(borderThickness, borderThickness, borderThickness).move(outerHorizontalOffset, 0.0, outerBorderZOffset))
-    return hull(
-        topBorderObj(top), topBorderObj(bottom),
-        bottomPoint(top), bottomPoint(bottom)
+    val wall = hull(
+        topBorder(back), topBorder(front),
+        bottomPoint(back), bottomPoint(front)
     )
+    return border.addModel(wall)
 }
 
-fun caseFrontWall(col: Int): Model {
-    val left = kpPlace(col, rowsCount - 1, cube(borderThickness, borderThickness, borderThickness).move(0.0, -outerVerticalOffset, outerBorderZOffset))
-    val right = kpPlace(col, rowsCount - 1, cube(borderThickness, borderThickness, borderThickness).move(0.0, -outerVerticalOffset, outerBorderZOffset))
-    return hull(
-        topBorderObj(left), topBorderObj(right),
+// Right wall for a single row (last col)
+fun wallRight(row: Int): Model {
+    val back = kpPlace(columnsCount - 1, row, phBR().move(outerHorizontalOffset, 0.0, outerBorderZOffset))
+    val front = kpPlace(columnsCount - 1, row, phFR().move(outerHorizontalOffset, 0.0, outerBorderZOffset))
+
+    val border = hull(
+        topBorder(back), topBorder(front),
+        vertCube(kpPlace(columnsCount - 1, row, phBR().move(rightOffset, 0.0, borderZOffset))),
+        vertCube(kpPlace(columnsCount - 1, row, phFR().move(rightOffset, 0.0, borderZOffset)))
+    )
+    val wall = hull(
+        topBorder(back), topBorder(front),
+        bottomPoint(back), bottomPoint(front)
+    )
+    return border.addModel(wall)
+}
+
+// Front wall for a single column (last row)
+fun wallFront(col: Int): Model {
+    val left = kpPlace(col, rowsCount - 1, phFL().move(0.0, -outerVerticalOffset, outerBorderZOffset))
+    val right = kpPlace(col, rowsCount - 1, phFR().move(0.0, -outerVerticalOffset, outerBorderZOffset))
+
+    val border = hull(
+        topBorder(left), topBorder(right),
+        vertCube(kpPlace(col, rowsCount - 1, phFL().move(0.0, -verticalOffset, borderZOffset))),
+        vertCube(kpPlace(col, rowsCount - 1, phFR().move(0.0, -verticalOffset, borderZOffset)))
+    )
+    val wall = hull(
+        topBorder(left), topBorder(right),
         bottomPoint(left), bottomPoint(right)
     )
+    return border.addModel(wall)
+}
+
+// Mid wall between two keys (back edge)
+fun wallBackMid(leftCol: Int, rightCol: Int): Model {
+    val left = kpPlace(leftCol, 0, phBR().move(0.0, outerVerticalOffset, outerBorderZOffset))
+    val right = kpPlace(rightCol, 0, phBL().move(0.0, outerVerticalOffset, outerBorderZOffset))
+
+    val border = hull(
+        topBorder(left), topBorder(right),
+        vertCube(kpPlace(leftCol, 0, phBR().move(0.0, verticalOffset, borderZOffset))),
+        vertCube(kpPlace(rightCol, 0, phBL().move(0.0, verticalOffset, borderZOffset)))
+    )
+    val wall = hull(
+        topBorder(left), topBorder(right),
+        bottomPoint(left), bottomPoint(right)
+    )
+    return border.addModel(wall)
+}
+
+// Mid wall between two keys (left edge, vertical)
+fun wallLeftMid(topRow: Int, bottomRow: Int): Model {
+    val top = kpPlace(0, topRow, phFL().move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
+    val bottom = kpPlace(0, bottomRow, phBL().move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
+
+    val border = hull(
+        topBorder(top), topBorder(bottom),
+        vertCube(kpPlace(0, topRow, phFL().move(-leftOffset, 0.0, borderZOffset))),
+        vertCube(kpPlace(0, bottomRow, phBL().move(-leftOffset, 0.0, borderZOffset)))
+    )
+    val wall = hull(
+        topBorder(top), topBorder(bottom),
+        bottomPoint(top), bottomPoint(bottom)
+    )
+    return border.addModel(wall)
+}
+
+// Mid wall between two keys (right edge, vertical)
+fun wallRightMid(topRow: Int, bottomRow: Int): Model {
+    val top = kpPlace(columnsCount - 1, topRow, phFR().move(outerHorizontalOffset, 0.0, outerBorderZOffset))
+    val bottom = kpPlace(columnsCount - 1, bottomRow, phBR().move(outerHorizontalOffset, 0.0, outerBorderZOffset))
+
+    val border = hull(
+        topBorder(top), topBorder(bottom),
+        vertCube(kpPlace(columnsCount - 1, topRow, phFR().move(rightOffset, 0.0, borderZOffset))),
+        vertCube(kpPlace(columnsCount - 1, bottomRow, phBR().move(rightOffset, 0.0, borderZOffset)))
+    )
+    val wall = hull(
+        topBorder(top), topBorder(bottom),
+        bottomPoint(top), bottomPoint(bottom)
+    )
+    return border.addModel(wall)
+}
+
+// Mid wall between two keys (front edge)
+fun wallFrontMid(leftCol: Int, rightCol: Int): Model {
+    val left = kpPlace(leftCol, rowsCount - 1, phFR().move(0.0, -outerVerticalOffset, outerBorderZOffset))
+    val right = kpPlace(rightCol, rowsCount - 1, phFL().move(0.0, -outerVerticalOffset, outerBorderZOffset))
+
+    val border = hull(
+        topBorder(left), topBorder(right),
+        vertCube(kpPlace(leftCol, rowsCount - 1, phFR().move(0.0, -verticalOffset, borderZOffset))),
+        vertCube(kpPlace(rightCol, rowsCount - 1, phFL().move(0.0, -verticalOffset, borderZOffset)))
+    )
+    val wall = hull(
+        topBorder(left), topBorder(right),
+        bottomPoint(left), bottomPoint(right)
+    )
+    return border.addModel(wall)
+}
+
+// === THUMB WALLS (simplified) ===
+fun wallThumbBack(side: Int): Model {
+    val ph = phBack()
+    val topM = when (side) { 0 -> tL(ph.move(0.0, outerVerticalOffset, outerBorderZOffset)) 1 -> tM(ph.move(0.0, outerVerticalOffset, outerBorderZOffset)) else -> tR(ph.move(0.0, outerVerticalOffset, outerBorderZOffset)) }
+    val vertM = when (side) { 0 -> tL(ph.move(0.0, verticalOffset, borderZOffset)) 1 -> tM(ph.move(0.0, verticalOffset, borderZOffset)) else -> tR(ph.move(0.0, verticalOffset, borderZOffset)) }
+    return hull(topBorder(topM), vertCube(vertM), bottomPoint(topM))
+}
+
+fun wallThumbLeft(): Model {
+    val ph = phLeft()
+    val top = tL(ph.move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
+    return hull(topBorder(top), vertCube(tL(ph.move(-leftOffset, 0.0, borderZOffset))), bottomPoint(top))
+}
+
+fun wallThumbRight(): Model {
+    val ph = phRight()
+    val top = tR(ph.move(outerHorizontalOffset, 0.0, outerBorderZOffset))
+    return hull(topBorder(top), vertCube(tR(ph.move(rightOffset, 0.0, borderZOffset))), bottomPoint(top))
+}
+
+fun wallThumbFront(side: Int): Model {
+    val ph = phFront()
+    val topM = when (side) { 0 -> tL(ph.move(0.0, -outerVerticalOffset, outerBorderZOffset)) 1 -> tM(ph.move(0.0, -outerVerticalOffset, outerBorderZOffset)) else -> tR(ph.move(0.0, -outerVerticalOffset, outerBorderZOffset)) }
+    val vertM = when (side) { 0 -> tL(ph.move(0.0, -verticalOffset, borderZOffset)) 1 -> tM(ph.move(0.0, -verticalOffset, borderZOffset)) else -> tR(ph.move(0.0, -verticalOffset, borderZOffset)) }
+    return hull(topBorder(topM), vertCube(vertM), bottomPoint(topM))
+}
+
+// === BOTTOM PLATE ===
+fun caseBottom(): Model {
+    val pts = mutableListOf<Model>()
+    val overhang = 8.0
+    // Matrix corners
+    for (c in 0 until columnsCount) {
+        pts.add(kpPlace(c, 0, sphere(2.0).move(0.0, -overhang, 0.0)))
+        pts.add(kpPlace(c, rowsCount - 1, sphere(2.0).move(0.0, overhang, 0.0)))
+    }
+    for (r in 0 until rowsCount) {
+        pts.add(kpPlace(0, r, sphere(2.0).move(-overhang, 0.0, 0.0)))
+        pts.add(kpPlace(columnsCount - 1, r, sphere(2.0).move(overhang, 0.0, 0.0)))
+    }
+    // Thumb corners
+    val base = sphere(2.0)
+    pts.add(tL(base))
+    pts.add(tM(base))
+    pts.add(tR(base))
+    return hull(pts)
 }
 
 // === ASSEMBLY ===
-fun caseWalls(): Model {
+fun caseFull(): Model {
     val m = mutableListOf<Model>()
-    
-    // Back walls (row 0)
-    for (c in 0 until columnsCount) {
-        m.add(caseBackWall(c))
-    }
-    
-    // Left wall (col 0)
-    for (r in 0 until rowsCount) {
-        m.add(caseLeftWall(r))
-    }
-    
-    // Right wall (last col)
-    for (r in 0 until rowsCount) {
-        m.add(caseRightWall(r))
-    }
-    
-    // Front walls (cols 3..last, last row)
-    for (c in 3 until columnsCount) {
-        m.add(caseFrontWall(c))
-    }
-    
+
+    // Bottom plate
+    m.add(caseBottom())
+
+    // Back walls
+    for (c in 0 until columnsCount) m.add(wallBack(c))
+
+    // Left walls
+    for (r in 0 until rowsCount) m.add(wallLeft(r))
+
+    // Right walls
+    for (r in 0 until rowsCount) m.add(wallRight(r))
+
+    // Front walls (cols 3+)
+    for (c in 3 until columnsCount) m.add(wallFront(c))
+
+    // Back mid walls
+    for (c in 0 until columnsCount - 1) m.add(wallBackMid(c, c + 1))
+
+    // Left mid walls
+    for (r in 0 until rowsCount - 1) m.add(wallLeftMid(r, r + 1))
+
+    // Right mid walls
+    for (r in 0 until rowsCount - 1) m.add(wallRightMid(r, r + 1))
+
+    // Front mid walls
+    for (c in 3 until columnsCount - 1) m.add(wallFrontMid(c, c + 1))
+
+    // Thumb walls
+    for (s in 0 until thumbButtonsCount) m.add(wallThumbBack(s))
+    for (s in 0 until thumbButtonsCount) m.add(wallThumbFront(s))
+    m.add(wallThumbLeft())
+    m.add(wallThumbRight())
+
     return m.merge()
 }
 
-caseWalls()
+caseFull()
