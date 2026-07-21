@@ -337,13 +337,31 @@ fun trace(msg: String) = bindings.trace(msg)
                 }
                 firstDeclLine = false
             } else {
-                if (current.isNotEmpty()) current.append('\n')
-                current.append(line)
-                depth += countBraces(l)
-                if (depth <= 0 && l.isNotEmpty()) {
-                    rawExpressions.add(current.toString())
-                    current = StringBuilder()
-                    depth = 0
+                val isContinuation = l.startsWith(".")
+                if (isContinuation) {
+                    // Method chaining continuation — merge back if we already finalized
+                    if (current.isEmpty() && rawExpressions.isNotEmpty()) {
+                        current.append(rawExpressions.removeAt(rawExpressions.lastIndex))
+                    } else if (current.isNotEmpty()) {
+                        current.append('\n')
+                    }
+                    current.append(line)
+                    depth += countBraces(l)
+                } else {
+                    // New expression — finalize previous if any
+                    if (current.isNotEmpty()) {
+                        rawExpressions.add(current.toString())
+                        current = StringBuilder()
+                        depth = 0
+                    }
+                    current.append(line)
+                    depth += countBraces(l)
+                    // Don't finalize if depth > 0 (open parens/braces)
+                    if (depth <= 0 && l.isNotEmpty()) {
+                        rawExpressions.add(current.toString())
+                        current = StringBuilder()
+                        depth = 0
+                    }
                 }
             }
         }
